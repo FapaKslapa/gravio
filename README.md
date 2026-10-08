@@ -1,97 +1,75 @@
 # Gravio
 
-Gravio è un'app per tenere sotto controllo le proprie spese, pensata prima di tutto per il telefono (PWA) e che funziona bene anche da desktop. Registra spese ed entrate in più valute, ti dice quanto puoi ancora spendere nel mese e ti aiuta a dividere i conti con gli amici.
+Le spese di ogni giorno, registrate in pochi tocchi dal telefono: quanto hai speso, quanto puoi ancora spendere questo mese e chi ti deve cosa.
 
-Produzione: https://gravio.zimaserver.it
+È un progetto personale, pensato prima per il telefono (si installa come app) e poi per il desktop.
 
-## Funzionalità
+## Come ragiona
 
-- **Panoramica**: budget del mese in grande, "Puoi spendere X al giorno", spese recenti, budget per categoria, saldi con gli amici, convertitore di valuta e una pila di carte "Da sistemare" (richieste d'amicizia, budget oltre l'80%, ricorrenti in scadenza, liste da importare).
-- **Aggiunta rapida**: importo, categoria, data e valuta in pochi tocchi, con le ultime combinazioni usate e "Ripeti ultima". La categoria viene suggerita dallo storico mentre scrivi la descrizione.
-- **Transazioni**: timeline per giorno, tabella ordinabile, filtri, ricorrenti, categorie personalizzabili, swipe sulle righe su mobile (modifica, duplica, elimina con annulla).
-- **Import estratti conto**: CSV, Excel (`.xlsx`) e PDF con testo, letti direttamente nel browser (il file non lascia il dispositivo). Mappatura colonne, anteprima, rilevamento dei duplicati e categoria suggerita.
-- **Scansione scontrini**: foto dello scontrino, lettura con Workers AI e form di conferma precompilato.
-- **Consulente di risparmio**: "Dove puoi risparmiare". I numeri sono calcolati senza AI (categorie in crescita, abbonamenti, micro-spese, budget a rischio); l'AI scrive solo i consigli, riceve solo totali per categoria e il risultato è in cache per una settimana.
-- **Obiettivi di risparmio** con versamenti, scadenza e importo mensile necessario.
-- **Liste della spesa** con conversione delle voci in transazioni.
-- **Statistiche**: trend, ripartizione per categoria, calendario di spesa.
-- **Amici e gruppi**: spese condivise con divisione uguale, per percentuale, importo o parti, saldi e richieste.
-- **Ricerca globale** (Cmd/Ctrl+K) per azioni, pagine, transazioni, amici e liste.
-- **Impostazioni**: tema chiaro/scuro, colore d'accento, valuta preferita, budget, notifiche.
-- Accesso senza password con link via email.
+**Registrare una spesa deve costare pochi tocchi.** Il pulsante "Aggiungi spesa" apre un foglio con l'importo in grande, le categorie a tessere e la data già impostata. Mentre scrivi la descrizione l'app suggerisce la categoria in base alle spese che hai già registrato, e sotto trovi le ultime combinazioni usate e "Ripeti ultima".
 
-Su mobile gli overlay sono drawer (bottom sheet), su desktop sono dialog. Date e select non sono mai quelle del browser.
+**Il budget del mese è la prima cosa che vedi.** La Panoramica mostra quanto resta, se sei in linea, e quanto puoi spendere al giorno da qui a fine mese. Una pila di carte "Da sistemare" raccoglie ciò che richiede attenzione: richieste d'amicizia, categorie oltre l'80% del budget, ricorrenti in scadenza, liste della spesa da importare.
 
-## Stack
+**Gli estratti conto della banca si importano senza uscire dal telefono.** Si carica un CSV, un Excel o un PDF con testo e il file viene letto nel browser, senza passare dal server. Gravio propone da solo le colonne giuste, segna i movimenti già presenti e suggerisce la categoria; tu controlli l'anteprima e importi.
 
-- Next.js 16 (App Router, React 19), TypeScript
-- Tailwind CSS 4, shadcn/ui (Radix), vaul, motion, recharts
-- tRPC + TanStack Query, zod
-- better-auth (magic link), email transazionali con Brevo
-- Cloudflare Workers con l'adapter OpenNext, database D1, drizzle ORM
-- Workers AI (modello `@cf/google/gemma-4-26b-a4b-it`) per scontrini e consigli
-- Biome per lint e formattazione, changesets per le release, pnpm
+**Gli scontrini si fotografano.** Una foto, la lettura con un modello di Workers AI e un form già compilato da confermare. La foto non viene salvata.
 
-`next` è fissato a `16.3.8`: la `16.4.0` non funziona con l'adapter OpenNext attuale (errore `preview-props.json` in avvio). Prima di aggiornarlo verifica la compatibilità.
+**I consigli di risparmio partono dai numeri, non dall'AI.** Categorie che crescono rispetto ai mesi scorsi, abbonamenti, micro-spese frequenti e budget a rischio sono calcolati senza AI. Il modello riceve solo i totali per categoria, mai le descrizioni delle spese, e scrive 3-5 consigli in italiano. Il risultato resta in cache una settimana e, se l'AI non risponde, la card funziona comunque con testi di riserva.
 
-## Sviluppo locale
+**I conti con gli amici sono nello stesso posto.** Amici e gruppi, spese condivise divise in parti uguali, per percentuale, per importo o per quote, saldi e richieste.
 
-Requisiti: Node 20+ e pnpm.
+Poi c'è il resto: transazioni ricorrenti, liste della spesa convertibili in transazioni, obiettivi di risparmio con scadenza, statistiche, ricerca globale (Cmd/Ctrl+K), tema chiaro e scuro, colore d'accento e valuta preferita. L'accesso è senza password, con un link via email.
+
+Su telefono gli overlay sono drawer, su desktop sono dialog, e date e select non sono mai quelle del browser.
+
+## Provarlo in locale
+
+Servono Node 20 o superiore e pnpm.
 
 ```bash
 pnpm install
-```
-
-Crea un file `.dev.vars` (ignorato da Git) con:
-
-```
-BETTER_AUTH_SECRET=una-stringa-casuale-di-almeno-32-caratteri
-BETTER_AUTH_URL=http://localhost:3000
-BREVO_API_KEY=            # opzionale: senza chiave le email non partono
-BREVO_FROM_EMAIL=         # opzionale
-BREVO_FROM_NAME=          # opzionale
-```
-
-Poi:
-
-```bash
 pnpm dev
 ```
 
-In sviluppo i link delle email vengono stampati nel terminale. Il binding `DB` usa il database D1 locale di Wrangler; il binding `AI` accede sempre alle risorse remote, quindi richiede `wrangler login`.
+L'app parte su http://localhost:3000. Crea un file `.dev.vars` (ignorato da Git) con queste variabili:
 
-Comandi utili:
+- `BETTER_AUTH_SECRET`: una stringa casuale di almeno 32 caratteri, firma le sessioni
+- `BETTER_AUTH_URL`: l'indirizzo dell'app, in locale `http://localhost:3000`
+- `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_FROM_NAME`: per le email, facoltative
 
-| Comando | Cosa fa |
-| --- | --- |
-| `pnpm lint` | controlla `src` con Biome |
-| `pnpm build` | build di Next.js |
-| `pnpm preview` | build OpenNext e anteprima nel runtime Workers |
-| `pnpm deploy` | build OpenNext e deploy su Cloudflare |
-| `pnpm db:generate` | genera una migration da `src/db/schema.ts` |
+In sviluppo i link delle email non vengono inviati ma stampati nel terminale. Il database è un D1 locale di Wrangler, quindi non tocca i dati di produzione. Il binding di Workers AI invece usa sempre le risorse remote e richiede `wrangler login`.
 
-## Database
+Gli altri comandi utili sono `pnpm lint`, `pnpm preview` (build per Cloudflare in anteprima) e `pnpm db:generate` per creare una migration dallo schema.
 
-Lo schema è in `src/db/schema.ts` e le migration in `src/db/migrations`. Dopo `pnpm db:generate`, controlla il `.sql` generato: se contiene ricostruzioni di tabelle esistenti, tieni solo i `CREATE` nuovi. Le migration si applicano a mano:
+## Com'è fatto
 
-```bash
-npx wrangler d1 execute gravio --remote --file src/db/migrations/<file>.sql
+Next.js 16 con App Router, React 19 e TypeScript, interfaccia in Tailwind CSS 4 con shadcn/ui, vaul per i drawer, recharts per i grafici e `motion` per le animazioni. I dati passano da tRPC con validazione zod e TanStack Query. Il database è Cloudflare D1 con Drizzle, il login è better-auth con magic link e le email partono da Brevo. Gira su Cloudflare Workers tramite OpenNext, con Workers AI (`@cf/google/gemma-4-26b-a4b-it`) per scontrini e consigli. Lint e formattazione con Biome, release con changesets.
+
 ```
+src/app/            pagine: panoramica, transazioni, liste, statistiche, amici, obiettivi, impostazioni
+src/components/     shell di navigazione, componenti base (ui), notifiche
+src/lib/import/     lettura di CSV, Excel e PDF, colonne, duplicati, categorie suggerite
+src/lib/insights/   analisi della spesa e testi dei consigli
+src/lib/receipt/    ridimensionamento delle foto degli scontrini
+src/server/         procedure tRPC e client di Workers AI con quota per utente
+src/db/             schema Drizzle e migration di D1
+```
+
+`next` è fissato alla 16.3.8: la 16.4.0 non parte con l'adapter OpenNext attuale. Prima di aggiornarlo conviene verificare la compatibilità.
 
 ## Deploy
 
-Il Worker si chiama `gravio` ed è collegato al dominio `gravio.zimaserver.it` (vedi `wrangler.jsonc`). Segreti da impostare sul Worker:
+1. Crea il database D1 e metti il suo id in `wrangler.jsonc`, insieme al dominio.
+2. Applica le migration in `src/db/migrations`, una alla volta: `wrangler d1 execute <database> --remote --file src/db/migrations/<file>.sql`. Dopo `pnpm db:generate` controlla il `.sql` generato e tieni solo i `CREATE` nuovi se contiene ricostruzioni di tabelle esistenti.
+3. Imposta i secret con `wrangler secret put` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BREVO_API_KEY`).
+4. `pnpm deploy`.
 
-```bash
-npx wrangler secret put BETTER_AUTH_SECRET --name gravio
-npx wrangler secret put BETTER_AUTH_URL --name gravio    # https://gravio.zimaserver.it
-npx wrangler secret put BREVO_API_KEY --name gravio
-```
+Sul piano gratuito di Cloudflare i limiti da tenere d'occhio sono 10 ms di CPU per richiesta, 100.000 richieste al giorno e 10.000 neuron al giorno di Workers AI per l'intero account. Per questo scontrini e consigli hanno una quota per utente (20 scansioni al giorno).
 
-Poi `pnpm deploy`. Con il piano gratuito di Cloudflare i limiti da tenere d'occhio sono 10 ms di CPU per richiesta, 100.000 richieste al giorno e 10.000 neuron al giorno di Workers AI per l'intero account (il limite per utente è di 20 scansioni al giorno).
+## Cosa manca
 
-## Flusso di lavoro
+La lettura dei PDF funziona solo per quelli con testo: una scansione dà un avviso e basta. I file Excel vecchi (`.xls`) non sono supportati. Le righe di uno scontrino vengono mostrate in conferma ma non salvate con la transazione. Il consumo reale di neuron per foto e per consiglio non è ancora misurato.
 
-- Si lavora e si fa commit solo su `development`.
-- Le release si fanno solo su `main`: merge di `development`, aggiornamento di versione e `CHANGELOG.md`, commit `chore: release vX.Y.Z`.
-- Il workflow `.github/workflows/deploy.yml` parte sui tag `v*` e fa il deploy sul vecchio server via SSH: prima di creare un tag, verifica se serve ancora.
+## Come lavoro
+
+Si lavora e si fa commit solo su `development`. Le release si fanno solo su `main`, con il commit `chore: release vX.Y.Z`. Il workflow `.github/workflows/deploy.yml` parte sui tag `v*` e fa il deploy sul vecchio server via SSH: prima di creare un tag conviene controllare se serve ancora.
