@@ -256,6 +256,18 @@ export function CsvImportModal({
                 onToggleAll={(selected) =>
                   setItems((prev) => prev.map((i) => ({ ...i, selected })))
                 }
+                onFlip={(id) =>
+                  setItems((prev) =>
+                    prev.map((i) =>
+                      i.id === id ? { ...i, amount: -i.amount } : i,
+                    ),
+                  )
+                }
+                onFlipAll={() =>
+                  setItems((prev) =>
+                    prev.map((i) => ({ ...i, amount: -i.amount })),
+                  )
+                }
                 onCategory={(id, categoryId) =>
                   setItems((prev) =>
                     prev.map((i) => (i.id === id ? { ...i, categoryId } : i)),

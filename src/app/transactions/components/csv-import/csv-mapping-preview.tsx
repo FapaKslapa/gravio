@@ -19,6 +19,7 @@ const FIELDS: { key: MappingField; label: string; hint?: string }[] = [
   { key: "amount", label: "Importo", hint: "con segno" },
   { key: "debit", label: "Uscite", hint: "se separate" },
   { key: "credit", label: "Entrate", hint: "se separate" },
+  { key: "sign", label: "Segno (D/A)", hint: "se l'importo è sempre positivo" },
   { key: "currency", label: "Valuta" },
 ];
 

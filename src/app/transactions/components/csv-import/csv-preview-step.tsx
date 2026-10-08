@@ -1,7 +1,9 @@
 "use client";
 
+import { ArrowLeftRight } from "lucide-react";
 import { CategoryIcon } from "@/components/icon-helper";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -24,6 +26,8 @@ type CsvPreviewStepProps = {
   onToggle: (id: number, selected: boolean) => void;
   onToggleAll: (selected: boolean) => void;
   onCategory: (id: number, categoryId: string | null) => void;
+  onFlip: (id: number) => void;
+  onFlipAll: () => void;
 };
 
 export function summarize(items: PreviewItem[]) {
@@ -45,11 +49,17 @@ export function CsvPreviewStep({
   onToggle,
   onToggleAll,
   onCategory,
+  onFlip,
+  onFlipAll,
 }: CsvPreviewStepProps) {
   const { count, totals } = summarize(items);
   const duplicates = items.filter((i) => i.duplicate).length;
   const allChecked = count === items.length;
   const catMap = new Map(categories.map((c) => [c.id, c]));
+  const noExpenses =
+    count > 0 && totals.every(([, t]) => t.expense === 0 && t.income > 0);
+  const noIncome =
+    count > 0 && totals.every(([, t]) => t.income === 0 && t.expense > 0);
 
   return (
     <div className="flex flex-col gap-3">
@@ -78,17 +88,40 @@ export function CsvPreviewStep({
         ))}
       </div>
 
-      <label
-        htmlFor="csv-select-all"
-        className="flex min-h-11 items-center gap-3 px-1 text-sm font-medium"
-      >
-        <Checkbox
-          id="csv-select-all"
-          checked={allChecked ? true : count === 0 ? false : "indeterminate"}
-          onCheckedChange={(v) => onToggleAll(v === true)}
-        />
-        Seleziona tutti
-      </label>
+      {(noExpenses || noIncome) && (
+        <p
+          role="status"
+          className="rounded-lg border border-warning bg-warning/10 p-3 text-sm"
+        >
+          {noExpenses
+            ? "Nessuna uscita trovata: se la tua banca indica le spese come importi positivi, inverti entrate e uscite."
+            : "Nessuna entrata trovata: se alcune righe sono accrediti, toccane il tipo per cambiarlo."}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between gap-2">
+        <label
+          htmlFor="csv-select-all"
+          className="flex min-h-11 items-center gap-3 px-1 text-sm font-medium"
+        >
+          <Checkbox
+            id="csv-select-all"
+            checked={allChecked ? true : count === 0 ? false : "indeterminate"}
+            onCheckedChange={(v) => onToggleAll(v === true)}
+          />
+          Seleziona tutti
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-11 rounded-full px-4"
+          onClick={onFlipAll}
+        >
+          <ArrowLeftRight data-icon="inline-start" />
+          Inverti
+        </Button>
+      </div>
 
       <ul className="flex flex-col gap-1.5">
         {items.map((row) => {
@@ -119,7 +152,7 @@ export function CsvPreviewStep({
                       {new Date(`${row.date}T00:00:00`).toLocaleDateString(
                         "it-IT",
                       )}{" "}
-                      · {expense ? "Spesa" : "Entrata"} · {row.currency}
+                      · {row.currency}
                     </p>
                   </div>
                   <span
@@ -133,6 +166,17 @@ export function CsvPreviewStep({
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 rounded-full px-3"
+                    aria-label={`Tipo: ${expense ? "spesa" : "entrata"}. Tocca per cambiare`}
+                    onClick={() => onFlip(row.id)}
+                  >
+                    <ArrowLeftRight data-icon="inline-start" />
+                    {expense ? "Spesa" : "Entrata"}
+                  </Button>
                   <Select
                     value={row.categoryId ?? NONE}
                     onValueChange={(v) =>

@@ -12,6 +12,7 @@ export type ColumnMapping = {
   amount: number | null;
   debit: number | null;
   credit: number | null;
+  sign: number | null;
   currency: number | null;
   balance: number | null;
 };

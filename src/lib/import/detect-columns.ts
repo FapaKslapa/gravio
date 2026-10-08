@@ -134,6 +134,27 @@ const KEYWORDS: Record<Field, { exact: string[]; words: string[] }> = {
       "innskudd",
     ],
   },
+  sign: {
+    exact: [
+      "segno",
+      "d a",
+      "dare avere",
+      "tipo",
+      "tipo movimento",
+      "tipo operazione",
+      "tipologia",
+      "verso",
+      "debit credit",
+      "credit debit",
+      "db cr",
+      "cr db",
+      "dc",
+      "type",
+      "transaction type",
+      "indicator",
+    ],
+    words: ["segno", "tipo", "tipologia", "verso", "indicator"],
+  },
   currency: {
     exact: [
       "valuta",
@@ -267,6 +288,7 @@ export function suggestMapping(
     amount: null,
     debit: null,
     credit: null,
+    sign: null,
     currency: null,
     balance: null,
   };
@@ -279,6 +301,7 @@ export function suggestMapping(
     "credit",
     "balance",
     "currency",
+    "sign",
     "description",
   ];
 
@@ -347,6 +370,24 @@ export function suggestMapping(
       used.add(c);
     }
   }
+  if (mapping.sign === null) {
+    const signCol = free().find((i) => {
+      const values = sampleRows
+        .map((r) => r[i])
+        .filter((c) => cellToString(c) !== "");
+      if (values.length < 2) return false;
+      const signs = values.map(signOf);
+      return (
+        signs.every((v) => v !== 0) &&
+        new Set(signs).size >= 1 &&
+        new Set(values.map((v) => cellToString(v).toLowerCase())).size <= 4
+      );
+    });
+    if (signCol !== undefined) {
+      mapping.sign = signCol;
+      used.add(signCol);
+    }
+  }
   if (
     mapping.amount !== null &&
     mapping.debit !== null &&
@@ -355,6 +396,53 @@ export function suggestMapping(
     mapping.amount = null;
   }
   return mapping;
+}
+
+const NEGATIVE_SIGN = new Set([
+  "d",
+  "db",
+  "dr",
+  "dare",
+  "addebito",
+  "debit",
+  "debito",
+  "uscita",
+  "uscite",
+  "u",
+  "out",
+  "-",
+  "ut",
+  "uttak",
+  "kjop",
+  "spesa",
+  "expense",
+  "pagamento",
+]);
+const POSITIVE_SIGN = new Set([
+  "a",
+  "c",
+  "cr",
+  "avere",
+  "accredito",
+  "credit",
+  "credito",
+  "entrata",
+  "entrate",
+  "e",
+  "in",
+  "+",
+  "inn",
+  "innskudd",
+  "income",
+  "incasso",
+]);
+
+function signOf(raw: Cell): -1 | 1 | 0 {
+  const t = stripAccents(cellToString(raw)).toLowerCase().replace(/[.\s]/g, "");
+  if (!t) return 0;
+  if (NEGATIVE_SIGN.has(t)) return -1;
+  if (POSITIVE_SIGN.has(t)) return 1;
+  return 0;
 }
 
 export type ApplyMappingOptions = {
@@ -393,6 +481,10 @@ export function applyMapping(
       }
     }
     if (amount === null || amount === 0) continue;
+    if (mapping.sign !== null && mapping.amount !== null) {
+      const dir = signOf(get(r, mapping.sign));
+      if (dir !== 0) amount = dir * Math.abs(amount);
+    }
 
     const description = cellToString(get(r, mapping.description))
       .replace(/\s+/g, " ")
