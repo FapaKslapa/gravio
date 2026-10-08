@@ -1,71 +1,73 @@
 # Gravio
 
-Le spese di ogni giorno, registrate in pochi tocchi dal telefono: quanto hai speso, quanto puoi ancora spendere questo mese e chi ti deve cosa.
+Everyday expenses, logged in a few taps from your phone: how much you spent, how much you can still spend this month, and who owes what.
 
-È un progetto personale, pensato prima per il telefono (si installa come app) e poi per il desktop.
+It is a personal project, built phone-first (it installs as an app) and then adapted to the desktop.
 
-## Come ragiona
+## How it thinks
 
-**Registrare una spesa deve costare pochi tocchi.** Il pulsante "Aggiungi spesa" apre un foglio con l'importo in grande, le categorie a tessere e la data già impostata. Mentre scrivi la descrizione l'app suggerisce la categoria in base alle spese che hai già registrato, e sotto trovi le ultime combinazioni usate e "Ripeti ultima".
+**Logging an expense should take a few taps.** The "Aggiungi spesa" button opens a sheet with a large amount field, categories as tiles and the date already set. While you type the description, the app suggests a category based on the expenses you have already logged, and below it you find your latest combinations and a "repeat last" shortcut.
 
-**Il budget del mese è la prima cosa che vedi.** La Panoramica mostra quanto resta, se sei in linea, e quanto puoi spendere al giorno da qui a fine mese. Una pila di carte "Da sistemare" raccoglie ciò che richiede attenzione: richieste d'amicizia, categorie oltre l'80% del budget, ricorrenti in scadenza, liste della spesa da importare.
+**The monthly budget is the first thing you see.** The overview shows how much is left, whether you are on track, and how much you can spend per day from now until the end of the month. A stack of "Da sistemare" cards collects whatever needs attention: friend requests, categories past 80% of their budget, recurring payments about to be due, shopping lists ready to import.
 
-**Gli estratti conto della banca si importano senza uscire dal telefono.** Si carica un CSV, un Excel o un PDF con testo e il file viene letto nel browser, senza passare dal server. Gravio propone da solo le colonne giuste, segna i movimenti già presenti e suggerisce la categoria; tu controlli l'anteprima e importi.
+**Bank statements are imported without leaving the phone.** Upload a CSV, an Excel file or a PDF with a text layer and it is read in the browser, never sent to the server. Gravio guesses the right columns, flags movements you already have and suggests a category; you check the preview and import.
 
-**Gli scontrini si fotografano.** Una foto, la lettura con un modello di Workers AI e un form già compilato da confermare. La foto non viene salvata.
+**Receipts are photographed.** One photo, a read by a Workers AI model, and a pre-filled form to confirm. The photo is not stored.
 
-**I consigli di risparmio partono dai numeri, non dall'AI.** Categorie che crescono rispetto ai mesi scorsi, abbonamenti, micro-spese frequenti e budget a rischio sono calcolati senza AI. Il modello riceve solo i totali per categoria, mai le descrizioni delle spese, e scrive 3-5 consigli in italiano. Il risultato resta in cache una settimana e, se l'AI non risponde, la card funziona comunque con testi di riserva.
+**Saving advice starts from numbers, not from AI.** Categories growing compared to previous months, subscriptions, frequent small purchases and budgets at risk are computed without AI. The model only receives totals per category, never the descriptions of your expenses, and writes 3 to 5 tips in Italian. The result is cached for a week, and if the AI does not answer the card still works with fallback text.
 
-**I conti con gli amici sono nello stesso posto.** Amici e gruppi, spese condivise divise in parti uguali, per percentuale, per importo o per quote, saldi e richieste.
+**Splitting costs with friends lives in the same place.** Friends and groups, shared expenses split equally, by percentage, by amount or by shares, balances and requests.
 
-Poi c'è il resto: transazioni ricorrenti, liste della spesa convertibili in transazioni, obiettivi di risparmio con scadenza, statistiche, ricerca globale (Cmd/Ctrl+K), tema chiaro e scuro, colore d'accento e valuta preferita. L'accesso è senza password, con un link via email.
+On top of that: recurring transactions, shopping lists that convert into transactions, savings goals with a deadline, statistics, global search (Cmd/Ctrl+K), light and dark theme, accent colour and preferred currency. Sign-in is passwordless, with a link sent by email.
 
-Su telefono gli overlay sono drawer, su desktop sono dialog, e date e select non sono mai quelle del browser.
+On phones overlays are drawers, on desktop they are dialogs, and dates and selects are never the browser's native ones.
 
-## Provarlo in locale
+## Running it locally
 
-Servono Node 20 o superiore e pnpm.
+You need Node 20 or later and pnpm.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-L'app parte su http://localhost:3000. Crea un file `.dev.vars` (ignorato da Git) con queste variabili:
+The app starts on http://localhost:3000. Create a `.dev.vars` file (ignored by Git) with these variables:
 
-- `BETTER_AUTH_SECRET`: una stringa casuale di almeno 32 caratteri, firma le sessioni
-- `BETTER_AUTH_URL`: l'indirizzo dell'app, in locale `http://localhost:3000`
-- `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_FROM_NAME`: per le email, facoltative
+- `BETTER_AUTH_SECRET`: a random string of at least 32 characters, signs the sessions
+- `BETTER_AUTH_URL`: the address of the app, `http://localhost:3000` locally
+- `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_FROM_NAME`: for emails, optional
 
-In sviluppo i link delle email non vengono inviati ma stampati nel terminale. Il database è un D1 locale di Wrangler, quindi non tocca i dati di produzione. Il binding di Workers AI invece usa sempre le risorse remote e richiede `wrangler login`.
+In development emails are not sent, their links are printed in the terminal instead. The database is a local Wrangler D1, so production data is never touched. The Workers AI binding, on the other hand, always uses remote resources and needs `wrangler login`.
 
-Gli altri comandi utili sono `pnpm lint`, `pnpm preview` (build per Cloudflare in anteprima) e `pnpm db:generate` per creare una migration dallo schema.
+Other useful commands are `pnpm lint`, `pnpm preview` (a Cloudflare build in preview) and `pnpm db:generate` to create a migration from the schema.
 
-## Com'è fatto
+## How it is built
 
-Next.js 16 con App Router, React 19 e TypeScript, interfaccia in Tailwind CSS 4 con shadcn/ui, vaul per i drawer, recharts per i grafici e `motion` per le animazioni. I dati passano da tRPC con validazione zod e TanStack Query. Il database è Cloudflare D1 con Drizzle, il login è better-auth con magic link e le email partono da Brevo. Gira su Cloudflare Workers tramite OpenNext, con Workers AI (`@cf/google/gemma-4-26b-a4b-it`) per scontrini e consigli. Lint e formattazione con Biome, release con changesets.
+Next.js 16 with the App Router, React 19 and TypeScript, with a Tailwind CSS 4 interface built on shadcn/ui, vaul for drawers, recharts for charts and `motion` for animation. Data goes through tRPC with zod validation and TanStack Query. The database is Cloudflare D1 with Drizzle, sign-in is better-auth with magic links and emails go out through Brevo. It runs on Cloudflare Workers through OpenNext, with Workers AI (`@cf/google/gemma-4-26b-a4b-it`) for receipts and advice. Linting and formatting with Biome, releases with changesets.
 
 ```
-src/app/            pagine: panoramica, transazioni, liste, statistiche, amici, obiettivi, impostazioni
-src/components/     shell di navigazione, componenti base (ui), notifiche
-src/lib/import/     lettura di CSV, Excel e PDF, colonne, duplicati, categorie suggerite
-src/lib/insights/   analisi della spesa e testi dei consigli
-src/lib/receipt/    ridimensionamento delle foto degli scontrini
-src/server/         procedure tRPC e client di Workers AI con quota per utente
-src/db/             schema Drizzle e migration di D1
+src/app/            pages: overview, transactions, lists, statistics, friends, goals, settings
+src/components/     navigation shell, base components (ui), notifications
+src/lib/import/     CSV, Excel and PDF reading, columns, duplicates, suggested categories
+src/lib/insights/   spending analysis and advice text
+src/lib/receipt/    receipt photo resizing
+src/server/         tRPC procedures and the Workers AI client with per-user quota
+src/db/             Drizzle schema and D1 migrations
 ```
 
-`next` è fissato alla 16.3.8: la 16.4.0 non parte con l'adapter OpenNext attuale. Prima di aggiornarlo conviene verificare la compatibilità.
+`next` is pinned to 16.3.8: 16.4.0 does not start with the current OpenNext adapter. Check compatibility before upgrading.
 
 ## Deploy
 
-1. Crea il database D1 e metti il suo id in `wrangler.jsonc`, insieme al dominio.
-2. Applica le migration in `src/db/migrations`, una alla volta: `wrangler d1 execute <database> --remote --file src/db/migrations/<file>.sql`. Dopo `pnpm db:generate` controlla il `.sql` generato e tieni solo i `CREATE` nuovi se contiene ricostruzioni di tabelle esistenti.
-3. Imposta i secret con `wrangler secret put` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BREVO_API_KEY`).
-4. `pnpm deploy`.
+1. Create the D1 database and put its id in `wrangler.jsonc`, together with the domain.
+2. Apply the migrations in `src/db/migrations`, one at a time: `wrangler d1 execute <database> --remote --file src/db/migrations/<file>.sql`. After `pnpm db:generate`, check the generated `.sql` and keep only the new `CREATE` statements if it contains rebuilds of existing tables.
+3. Set the secrets with `wrangler secret put` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BREVO_API_KEY`).
+4. `pnpm run deploy`.
 
-Sul piano gratuito di Cloudflare i limiti da tenere d'occhio sono 10 ms di CPU per richiesta, 100.000 richieste al giorno e 10.000 neuron al giorno di Workers AI per l'intero account. Per questo scontrini e consigli hanno una quota per utente (20 scansioni al giorno).
+On Cloudflare's free plan the limits to watch are 10 ms of CPU per request, 100,000 requests per day and 10,000 Workers AI neurons per day for the whole account. That is why receipts and advice have a per-user quota (20 scans per day).
 
-## Come lavoro
+## How I work
 
-Si lavora e si fa commit solo su `development`. Le release si fanno solo su `main`, con il commit `chore: release vX.Y.Z`. Il workflow `.github/workflows/deploy.yml` parte sui tag `v*` e fa il deploy sul vecchio server via SSH: prima di creare un tag conviene controllare se serve ancora.
+Work and commits happen only on `development`. Releases happen only on `main`, with the `chore: release vX.Y.Z` commit.
+
+Pushing a `v*` tag runs `.github/workflows/deploy.yml`, which publishes the GitHub release using the notes from `CHANGELOG.md` and deploys to Cloudflare Workers. The deploy needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets; without them it is skipped and the release is still created. D1 migrations stay manual.
