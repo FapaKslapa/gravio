@@ -155,13 +155,16 @@ export function CategoryPicker({
       )}
       <div
         data-vaul-no-drag
-        className="-m-1 max-h-72 overflow-y-auto overscroll-contain p-1"
+        className={cn(
+          "-m-1 p-1",
+          searchable && "max-h-72 overflow-y-auto overscroll-contain",
+        )}
       >
         <div
           ref={groupRef}
           role="radiogroup"
           aria-label={label}
-          className="grid grid-cols-3 gap-2 md:grid-cols-4 xl:grid-cols-5"
+          className="grid grid-cols-[repeat(auto-fill,minmax(6.25rem,1fr))] gap-2"
         >
           {tiles.map((cat) => {
             const id = cat?.id ?? "";
@@ -194,7 +197,7 @@ export function CategoryPicker({
                     <Ban className="size-[18px]" />
                   </span>
                 )}
-                <span className="line-clamp-2 w-full break-words text-sm leading-tight text-foreground">
+                <span className="w-full text-balance text-[13px] font-medium leading-tight text-foreground [hyphens:none] [overflow-wrap:normal]">
                   {cat ? cat.name : noneLabel}
                 </span>
                 {active && (
@@ -211,22 +214,22 @@ export function CategoryPicker({
             );
           })}
         </div>
-        q && visible.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          Nessuna categoria trovata.
-        </p>
-        )
+        {q && visible.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Nessuna categoria trovata.
+          </p>
+        )}
       </div>
-      onCreateNew && (
-      <button
-        type="button"
-        onClick={onCreateNew}
-        className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <Plus className="size-4 text-brand" aria-hidden />
-        Nuova categoria
-      </button>
-      )
+      {onCreateNew && (
+        <button
+          type="button"
+          onClick={onCreateNew}
+          className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <Plus className="size-4 text-brand" aria-hidden />
+          Nuova categoria
+        </button>
+      )}
     </div>
   );
 }

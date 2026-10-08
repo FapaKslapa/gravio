@@ -276,18 +276,17 @@ export function SubmitButton({
   type: "expense" | "income";
 }) {
   return (
-    <div className="sticky bottom-0 -mx-4 border-t bg-popover px-4 pb-1 pt-3 md:-mx-0 md:px-0">
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className={
-          type === "expense"
-            ? "h-12 w-full bg-expense text-white hover:bg-expense/90"
-            : "h-12 w-full bg-income text-white hover:bg-income/90"
-        }
-      >
-        {isSubmitting ? "Salvataggio..." : "Salva transazione"}
-      </Button>
-    </div>
+    <Button
+      type="submit"
+      form="transaction-form"
+      disabled={isSubmitting}
+      className={
+        type === "expense"
+          ? "h-12 w-full bg-expense text-white hover:bg-expense/90"
+          : "h-12 w-full bg-income text-white hover:bg-income/90"
+      }
+    >
+      {isSubmitting ? "Salvataggio..." : "Salva transazione"}
+    </Button>
   );
 }

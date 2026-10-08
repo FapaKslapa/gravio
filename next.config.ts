@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
+  agentRules: false,
   allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok.io"],
 };
 

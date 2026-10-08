@@ -24,6 +24,7 @@ type ResponsiveSheetProps = {
   title: string;
   description?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   className?: string;
 };
 
@@ -33,6 +34,7 @@ export function ResponsiveSheet({
   title,
   description,
   children,
+  footer,
   className,
 }: ResponsiveSheetProps) {
   const isMobile = useIsMobile();
@@ -51,12 +53,18 @@ export function ResponsiveSheet({
           </DrawerHeader>
           <div
             className={cn(
-              "overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
+              "min-h-0 flex-1 overflow-y-auto px-4",
+              !footer && "pb-[max(1rem,env(safe-area-inset-bottom))]",
               className,
             )}
           >
             {children}
           </div>
+          {footer && (
+            <div className="shrink-0 border-t bg-popover px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {footer}
+            </div>
+          )}
         </DrawerContent>
       </Drawer>
     );
@@ -64,7 +72,12 @@ export function ResponsiveSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("max-h-[90dvh] overflow-y-auto", className)}>
+      <DialogContent
+        className={cn(
+          "flex max-h-[90dvh] flex-col gap-4 overflow-hidden",
+          className,
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? (
@@ -73,7 +86,10 @@ export function ResponsiveSheet({
             <DialogDescription className="sr-only">{title}</DialogDescription>
           )}
         </DialogHeader>
-        {children}
+        <div className="-mx-4 min-h-0 flex-1 overflow-y-auto px-4">
+          {children}
+        </div>
+        {footer && <div className="shrink-0 border-t pt-3">{footer}</div>}
       </DialogContent>
     </Dialog>
   );

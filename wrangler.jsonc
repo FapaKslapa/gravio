@@ -8,6 +8,7 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "routes": [{ "pattern": "gravio.zimaserver.it", "custom_domain": true }],
   "observability": { "enabled": true },
   "ai": { "binding": "AI" },
   "d1_databases": [

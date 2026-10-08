@@ -162,8 +162,16 @@ export function TransactionModal({
           : "Nuova spesa o guadagno"
       }
       className="md:max-w-md"
+      footer={
+        <SubmitButton isSubmitting={form.isSubmitting} type={form.txType} />
+      }
     >
-      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form
+        id="transaction-form"
+        noValidate
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6 pb-4"
+      >
         <div className="flex flex-col gap-1">
           <AmountField
             amount={form.txAmount}
@@ -219,7 +227,6 @@ export function TransactionModal({
             onChange={(v) => set({ txDesc: v })}
           />
         </FieldGroup>
-        <SubmitButton isSubmitting={form.isSubmitting} type={form.txType} />
       </form>
     </ResponsiveSheet>
   );
