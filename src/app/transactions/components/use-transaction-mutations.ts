@@ -1,27 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDashboard } from "@/components/dashboard-layout";
 import { useTRPC } from "@/lib/trpc/client";
+import type { CsvImportRow, SaveTxPayload } from "./transaction-mutation-types";
 
-export type SaveTxPayload = {
-  id?: string;
-  description: string;
-  type: "expense" | "income";
-  amount: number;
-  currency: string;
-  categoryId: string | null;
-  date: string;
-};
-
-export type CsvImportRow = {
-  type: "expense" | "income";
-  amount: number;
-  currency: string;
-  exchangeRate: number;
-  exchangeRateNok: number;
-  description: string;
-  categoryId: string | null;
-  date: string;
-};
+export type { CsvImportRow, SaveTxPayload };
 
 export function useTransactionMutations(refetchCategories: () => void) {
   const { rates } = useDashboard();

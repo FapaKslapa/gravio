@@ -12,34 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CurrencySelect } from "@/components/ui/currency-select";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { cn, formatCurrency } from "@/lib/utils";
-
-const POPULAR_CURRENCIES = [
-  "EUR",
-  "USD",
-  "GBP",
-  "NOK",
-  "SEK",
-  "DKK",
-  "CHF",
-  "JPY",
-  "CAD",
-  "AUD",
-  "PLN",
-  "CZK",
-  "HUF",
-  "RON",
-  "TRY",
-  "BRL",
-  "MXN",
-  "SGD",
-  "HKD",
-  "KRW",
-  "INR",
-];
+import {
+  CurrencyConverterField,
+  POPULAR_CURRENCIES,
+} from "./currency-converter-field";
 
 export function CurrencyConverterCard({ className }: { className?: string }) {
   const { rates, displayCurrency, convertCurrency } = useDashboard();
@@ -130,48 +107,24 @@ export function CurrencyConverterCard({ className }: { className?: string }) {
 
       <CardContent className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="conv-from">Da</FieldLabel>
-            <div className="flex gap-2">
-              <Input
-                id="conv-from"
-                type="number"
-                inputMode="decimal"
-                value={fromAmount}
-                onChange={(e) => handleFromChange(e.target.value)}
-                className="tabular h-11 flex-1 text-base font-semibold"
-              />
-              <div className="w-24">
-                <CurrencySelect
-                  value={fromCurrency}
-                  onChange={setFromCurrency}
-                  triggerClassName="h-11 text-sm"
-                  currencies={currencyList}
-                />
-              </div>
-            </div>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="conv-to">A</FieldLabel>
-            <div className="flex gap-2">
-              <Input
-                id="conv-to"
-                type="number"
-                inputMode="decimal"
-                value={toAmount}
-                onChange={(e) => handleToChange(e.target.value)}
-                className="tabular h-11 flex-1 text-base font-semibold"
-              />
-              <div className="w-24">
-                <CurrencySelect
-                  value={toCurrency}
-                  onChange={setToCurrency}
-                  triggerClassName="h-11 text-sm"
-                  currencies={currencyList}
-                />
-              </div>
-            </div>
-          </Field>
+          <CurrencyConverterField
+            id="conv-from"
+            label="Da"
+            amount={fromAmount}
+            currency={fromCurrency}
+            currencies={currencyList}
+            onAmountChange={handleFromChange}
+            onCurrencyChange={setFromCurrency}
+          />
+          <CurrencyConverterField
+            id="conv-to"
+            label="A"
+            amount={toAmount}
+            currency={toCurrency}
+            currencies={currencyList}
+            onAmountChange={handleToChange}
+            onCurrencyChange={setToCurrency}
+          />
         </div>
 
         {fromAmount && toAmount && (

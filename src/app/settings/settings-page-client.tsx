@@ -1,27 +1,16 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnimatePresence, m } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { authClient } from "@/lib/auth-client";
-import { springs } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
-import { BudgetTab } from "./components/budget-tab";
-import { GeneralTab } from "./components/general-tab";
-import { NotificationsTab } from "./components/notifications-tab";
-import { ProfileTab } from "./components/profile-tab";
 import { SettingsHeader } from "./components/settings-header";
+import { SettingsTabContent } from "./components/settings-tab-content";
 import { SECTIONS, SettingsNav, type Tab } from "./components/settings-tabs";
+import { useSaveSettings } from "./use-save-settings";
+import { useSettingsForm } from "./use-settings-form";
 
 const handleLogout = async () => {
   await authClient.signOut({
@@ -35,60 +24,12 @@ const handleLogout = async () => {
 
 const VALID_TABS: Tab[] = ["general", "budget", "profile", "notifications"];
 
-type SettingsFormState = {
-  preferredCurrency: string;
-  targetBudget: string;
-  maxBudget: string;
-  notifyBudget80: boolean;
-  notifyRecurrentApplied: boolean;
-  notifyFriendActions: boolean;
-  profileName: string;
-  profileImage: string | null;
-  catBudgets: Record<string, string>;
-  isSaving: boolean;
-};
-
-type SettingsFormAction =
-  | { type: "SET_FIELD"; field: keyof SettingsFormState; value: unknown }
-  | { type: "SET_FIELDS"; fields: Partial<SettingsFormState> };
-
-function settingsFormReducer(
-  state: SettingsFormState,
-  action: SettingsFormAction,
-): SettingsFormState {
-  switch (action.type) {
-    case "SET_FIELD":
-      return { ...state, [action.field]: action.value };
-    case "SET_FIELDS":
-      return { ...state, ...action.fields };
-    default:
-      return state;
-  }
-}
-
 export function SettingsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawTab = searchParams.get("tab") as Tab | null;
-
-  const {
-    displayCurrency,
-    convertCurrency,
-    settings,
-    theme,
-    changeTheme,
-    accent,
-    changeAccent,
-    user,
-    saveSettings,
-    exchangeRate,
-    refetchSettings,
-  } = useDashboard();
-
-  const toDisplayCurrency = useCallback(
-    (nokVal: number): number => convertCurrency(nokVal, "NOK", displayCurrency),
-    [convertCurrency, displayCurrency],
-  );
+  const { user } = useDashboard();
+  const trpc = useTRPC();
 
   const [activeTab, setActiveTab] = useState<Tab>(
     rawTab && VALID_TABS.includes(rawTab) ? rawTab : "general",
@@ -97,237 +38,15 @@ export function SettingsPageClient() {
     Boolean(rawTab && VALID_TABS.includes(rawTab)),
   );
 
-  const [formState, dispatch] = useReducer(settingsFormReducer, null, () => ({
-    preferredCurrency: displayCurrency,
-    targetBudget: settings
-      ? toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2)
-      : "0.00",
-    maxBudget: settings
-      ? toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2)
-      : "0.00",
-    notifyBudget80: settings?.notifyBudget80 ?? true,
-    notifyRecurrentApplied: settings?.notifyRecurrentApplied ?? true,
-    notifyFriendActions: settings?.notifyFriendActions ?? true,
-    profileName: user.name || "",
-    profileImage: user.image || null,
-    catBudgets: {},
-    isSaving: false,
-  })) as [SettingsFormState, React.Dispatch<SettingsFormAction>];
-
-  const {
-    preferredCurrency,
-    targetBudget,
-    maxBudget,
-    notifyBudget80,
-    notifyRecurrentApplied,
-    notifyFriendActions,
-    profileName,
-    profileImage,
-    catBudgets,
-    isSaving,
-  } = formState;
-
-  const setPreferredCurrency = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "preferredCurrency", value: val });
-  const setIsSaving = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "isSaving", value: val });
-  const setNotifyBudget80 = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "notifyBudget80", value: val });
-  const setNotifyRecurrentApplied = (val: boolean) =>
-    dispatch({
-      type: "SET_FIELD",
-      field: "notifyRecurrentApplied",
-      value: val,
-    });
-  const setNotifyFriendActions = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "notifyFriendActions", value: val });
-  const setProfileName = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "profileName", value: val });
-  const setProfileImage = (val: string | null) =>
-    dispatch({ type: "SET_FIELD", field: "profileImage", value: val });
-  const setCatBudgets = (
-    val:
-      | Record<string, string>
-      | ((prev: Record<string, string>) => Record<string, string>),
-  ) => {
-    if (typeof val === "function") {
-      dispatch({
-        type: "SET_FIELD",
-        field: "catBudgets",
-        value: val(catBudgets),
-      });
-    } else {
-      dispatch({ type: "SET_FIELD", field: "catBudgets", value: val });
-    }
-  };
-  const setTargetBudget = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "targetBudget", value: val });
-  const setMaxBudget = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "maxBudget", value: val });
-
-  const hydrated = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
-  const [_permissionVersion, setPermissionVersion] = useState(0);
-  // Read Notification.permission on demand; permissionVersion bump triggers re-read
-  const pushNotificationPermission = useSyncExternalStore<
-    NotificationPermission | "unsupported" | "default"
-  >(
-    () => () => {},
-    () => {
-      // eslint-disable-next-line no-unused-expressions
-      _permissionVersion; // tracked so a state bump re-evaluates this
-      if (!("Notification" in window)) return "unsupported";
-      return Notification.permission;
-    },
-    () => "default",
-  );
-  const handlePermissionChange = useCallback(() => {
-    setPermissionVersion((v) => v + 1);
-  }, []);
-
-  const trpc = useTRPC();
-  const updateProfileMutation = useMutation(
-    trpc.settings.updateProfile.mutationOptions(),
-  );
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const size = 128;
-        canvas.width = size;
-        canvas.height = size;
-        const minSide = Math.min(img.width, img.height);
-        const sx = (img.width - minSide) / 2;
-        const sy = (img.height - minSide) / 2;
-        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
-        setProfileImage(canvas.toDataURL("image/jpeg", 0.5));
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
+  const { formState, setField, setCatBudgets } = useSettingsForm();
   const { data: categoriesData, isLoading: isCategoriesLoading } = useQuery(
     trpc.category.list.queryOptions(),
   );
-  const { data: categoryBudgetsData } = useQuery(
-    trpc.categoryBudget.list.queryOptions(),
+  const handleSave = useSaveSettings(
+    formState,
+    (val) => setField("isSaving", val),
+    categoriesData,
   );
-  const setCategoryBudgetMutation = useMutation(
-    trpc.categoryBudget.set.mutationOptions(),
-  );
-
-  const toNok = useCallback(
-    (displayVal: number): number =>
-      convertCurrency(displayVal, displayCurrency, "NOK"),
-    [convertCurrency, displayCurrency],
-  );
-
-  useEffect(() => {
-    if (categoryBudgetsData) {
-      const budgetMap: Record<string, string> = {};
-      for (const cb of categoryBudgetsData) {
-        budgetMap[cb.categoryId] = toDisplayCurrency(
-          parseFloat(cb.amount),
-        ).toFixed(2);
-      }
-      dispatch({ type: "SET_FIELD", field: "catBudgets", value: budgetMap });
-    }
-  }, [categoryBudgetsData, toDisplayCurrency]);
-
-  const [prevSettings, setPrevSettings] = useState<typeof settings | null>(
-    null,
-  );
-  if (settings !== prevSettings) {
-    setPrevSettings(settings);
-    if (settings) {
-      dispatch({
-        type: "SET_FIELDS",
-        fields: {
-          targetBudget: toDisplayCurrency(
-            parseFloat(settings.targetMonthlyBudget),
-          ).toFixed(2),
-          maxBudget: toDisplayCurrency(
-            parseFloat(settings.maxMonthlyBudget),
-          ).toFixed(2),
-          preferredCurrency: settings.preferredCurrency,
-          notifyBudget80: settings.notifyBudget80 ?? true,
-          notifyRecurrentApplied: settings.notifyRecurrentApplied ?? true,
-          notifyFriendActions: settings.notifyFriendActions ?? true,
-        },
-      });
-    }
-  }
-
-  const [prevUser, setPrevUser] = useState<typeof user | null>(null);
-  if (user !== prevUser) {
-    setPrevUser(user);
-    if (user) {
-      dispatch({
-        type: "SET_FIELDS",
-        fields: {
-          profileName: user.name || "",
-          profileImage: user.image || null,
-        },
-      });
-    }
-  }
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await saveSettings({
-        targetMonthlyBudget: toNok(parseFloat(targetBudget) || 0),
-        maxMonthlyBudget: toNok(parseFloat(maxBudget) || 0),
-        preferredCurrency,
-        themeMode: theme,
-        themeAccent: accent,
-        notifyBudget80,
-        notifyRecurrentApplied,
-        notifyFriendActions,
-      });
-
-      if (categoriesData) {
-        await Promise.all(
-          categoriesData.map((cat) =>
-            setCategoryBudgetMutation.mutateAsync({
-              categoryId: cat.id,
-              amount: toNok(parseFloat(catBudgets[cat.id] || "0") || 0),
-            }),
-          ),
-        );
-      }
-
-      if (profileName !== user.name || profileImage !== user.image) {
-        await updateProfileMutation.mutateAsync({
-          name: profileName,
-          image: profileImage,
-        });
-      }
-
-      refetchSettings();
-      toast.success("Impostazioni salvate");
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-      toast.error("Non è stato possibile salvare le impostazioni. Riprova.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleBack = () => {
     if (mobileOpen && window.matchMedia("(max-width: 767px)").matches) {
@@ -348,7 +67,7 @@ export function SettingsPageClient() {
         title={mobileOpen ? SECTIONS[activeTab].title : "Impostazioni"}
         onBack={handleBack}
         onSave={handleSave}
-        isSaving={isSaving}
+        isSaving={formState.isSaving}
       />
 
       <div className="grid gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start md:gap-8">
@@ -358,7 +77,7 @@ export function SettingsPageClient() {
             highlight
             onSelect={selectTab}
             user={user}
-            profileImage={profileImage}
+            profileImage={formState.profileImage}
             onLogout={handleLogout}
           />
         </div>
@@ -367,67 +86,15 @@ export function SettingsPageClient() {
           <h2 className="mb-4 hidden font-display text-xl font-bold tracking-tight md:block">
             {SECTIONS[activeTab].title}
           </h2>
-          <AnimatePresence mode="wait" initial={false}>
-            <m.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
-              transition={springs.smooth}
-            >
-              {activeTab === "general" && (
-                <GeneralTab
-                  preferredCurrency={preferredCurrency}
-                  setPreferredCurrency={setPreferredCurrency}
-                  theme={hydrated ? theme : undefined}
-                  changeTheme={changeTheme}
-                  accent={hydrated ? accent : undefined}
-                  changeAccent={changeAccent}
-                />
-              )}
-
-              {activeTab === "budget" && (
-                <BudgetTab
-                  targetBudget={targetBudget}
-                  setTargetBudget={setTargetBudget}
-                  maxBudget={maxBudget}
-                  setMaxBudget={setMaxBudget}
-                  displayCurrency={displayCurrency}
-                  exchangeRate={exchangeRate}
-                  categories={categoriesData ?? []}
-                  isCategoriesLoading={isCategoriesLoading}
-                  catBudgets={catBudgets}
-                  setCatBudgets={setCatBudgets}
-                />
-              )}
-
-              {activeTab === "profile" && (
-                <ProfileTab
-                  profileName={profileName}
-                  setProfileName={setProfileName}
-                  profileImage={profileImage}
-                  setProfileImage={setProfileImage}
-                  user={user}
-                  fileInputRef={fileInputRef}
-                  handleFileChange={handleFileChange}
-                  handleLogout={handleLogout}
-                />
-              )}
-
-              {activeTab === "notifications" && (
-                <NotificationsTab
-                  notifyBudget80={notifyBudget80}
-                  setNotifyBudget80={setNotifyBudget80}
-                  notifyRecurrentApplied={notifyRecurrentApplied}
-                  setNotifyRecurrentApplied={setNotifyRecurrentApplied}
-                  notifyFriendActions={notifyFriendActions}
-                  setNotifyFriendActions={setNotifyFriendActions}
-                  pushNotificationPermission={pushNotificationPermission}
-                  onPermissionChange={handlePermissionChange}
-                />
-              )}
-            </m.div>
-          </AnimatePresence>
+          <SettingsTabContent
+            activeTab={activeTab}
+            formState={formState}
+            setField={setField}
+            setCatBudgets={setCatBudgets}
+            categories={categoriesData ?? []}
+            isCategoriesLoading={isCategoriesLoading}
+            handleLogout={handleLogout}
+          />
         </div>
       </div>
     </div>

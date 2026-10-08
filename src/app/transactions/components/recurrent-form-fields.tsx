@@ -1,6 +1,5 @@
 "use client";
 
-import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import {
   Field,
   FieldError,
@@ -9,35 +8,12 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   TxAmountHero,
   TxCategoryChips,
-  TxCurrencySelect,
   TxTypeSegment,
 } from "@/components/ui/tx-form-parts";
-
-type CategoryOption = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
-
-type Frequency = "daily" | "weekly" | "monthly" | "yearly";
-
-const FREQUENCIES: { value: Frequency; label: string }[] = [
-  { value: "daily", label: "Giornaliero" },
-  { value: "weekly", label: "Settimanale" },
-  { value: "monthly", label: "Mensile" },
-  { value: "yearly", label: "Annuale" },
-];
+import { RecurrentScheduleFields } from "./recurrent/recurrent-schedule-fields";
+import type { CategoryOption, Frequency } from "./recurrent/recurrent-types";
 
 type RecurrentFormFieldsProps = {
   description: string;
@@ -71,14 +47,9 @@ export function RecurrentFormFields({
   setCategoryId,
   type,
   setType,
-  frequency,
-  setFrequency,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
   categories,
   showErrors = false,
+  ...schedule
 }: RecurrentFormFieldsProps) {
   const amountInvalid = showErrors && !(parseFloat(amount) > 0);
   const descInvalid = showErrors && !description.trim();
@@ -129,61 +100,11 @@ export function RecurrentFormFields({
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel htmlFor="rec-frequency">Frequenza</FieldLabel>
-            <Select
-              value={frequency}
-              onValueChange={(v) => setFrequency(v as Frequency)}
-            >
-              <SelectTrigger id="rec-frequency" className="h-11 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectGroup>
-                  {FREQUENCIES.map((f) => (
-                    <SelectItem key={f.value} value={f.value}>
-                      {f.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="rec-currency">Valuta</FieldLabel>
-            <TxCurrencySelect
-              id="rec-currency"
-              value={currency}
-              onChange={setCurrency}
-            />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel htmlFor="rec-start">Inizio</FieldLabel>
-            <CustomDatePicker
-              id="rec-start"
-              value={startDate}
-              onChange={setStartDate}
-              max={endDate || undefined}
-              clearable={false}
-              title="Data di inizio"
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="rec-end">Fine (opzionale)</FieldLabel>
-            <CustomDatePicker
-              id="rec-end"
-              value={endDate}
-              onChange={setEndDate}
-              min={startDate || undefined}
-              placeholder="Nessuna"
-              title="Data di fine"
-            />
-          </Field>
-        </div>
+        <RecurrentScheduleFields
+          currency={currency}
+          setCurrency={setCurrency}
+          {...schedule}
+        />
       </FieldGroup>
     </div>
   );

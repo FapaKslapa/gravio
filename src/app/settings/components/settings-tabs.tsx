@@ -9,7 +9,9 @@ import {
   User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SettingsGroup, SettingsRow, type Tone } from "./settings-ui";
+import type { Tone } from "./icon-tile";
+import { SettingsGroup } from "./settings-group";
+import { SettingsRow } from "./settings-row";
 
 export type Tab = "general" | "budget" | "profile" | "notifications";
 

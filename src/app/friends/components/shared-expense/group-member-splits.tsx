@@ -1,13 +1,11 @@
 "use client";
 
-import { CircleAlert, CircleCheck } from "lucide-react";
 import { useMemo } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { cn, formatCurrency } from "@/lib/utils";
-import { MemberAvatar } from "./member-avatar";
+import { formatCurrency } from "@/lib/utils";
+import { CustomSplitStatus } from "./custom-split-status";
+import { GroupMemberRow } from "./group-member-row";
 import type { Group } from "./types";
 
 type Props = {
@@ -51,6 +49,11 @@ export function GroupMemberSplits({
     [checkedMemberIds],
   );
 
+  const shareLabel = formatCurrency(
+    convertCurrency(groupShareNok, "NOK", displayCurrency),
+    displayCurrency,
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <Field>
@@ -89,67 +92,20 @@ export function GroupMemberSplits({
           </span>
         </div>
         <ul className="flex flex-col gap-2">
-          {selectedGroup?.members.map((member) => {
-            const checked = checkedSet.has(member.id);
-            const isMe = member.id === currentUserId;
-            const inputId = `split-${member.id}`;
-            return (
-              <li
-                key={member.id}
-                className={cn(
-                  "flex min-h-14 items-center gap-3 rounded-lg border px-3 py-2 transition-colors",
-                  checked ? "border-brand/40 bg-brand-soft" : "bg-card",
-                )}
-              >
-                <Checkbox
-                  id={`check-${member.id}`}
-                  checked={checked}
-                  onCheckedChange={() => onToggleMember(member.id)}
-                  aria-label={`Includi ${member.name}`}
-                />
-                <label
-                  htmlFor={`check-${member.id}`}
-                  className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-1"
-                >
-                  <MemberAvatar name={member.name} />
-                  <span className="truncate text-sm font-medium">
-                    {member.name}
-                    {isMe ? " (Tu)" : ""}
-                  </span>
-                </label>
-                {checked ? (
-                  groupSplitMode === "custom" ? (
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <Input
-                        id={inputId}
-                        type="number"
-                        inputMode="decimal"
-                        aria-label={`Importo di ${member.name}`}
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={customSplitsVal[member.id] || ""}
-                        onChange={(e) =>
-                          onChangeCustomSplit(member.id, e.target.value)
-                        }
-                        className="tabular h-11 w-24 text-right"
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {currency}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="tabular shrink-0 text-sm font-semibold">
-                      {formatCurrency(
-                        convertCurrency(groupShareNok, "NOK", displayCurrency),
-                        displayCurrency,
-                      )}
-                    </span>
-                  )
-                ) : null}
-              </li>
-            );
-          })}
+          {selectedGroup?.members.map((member) => (
+            <GroupMemberRow
+              key={member.id}
+              member={member}
+              checked={checkedSet.has(member.id)}
+              isMe={member.id === currentUserId}
+              groupSplitMode={groupSplitMode}
+              customValue={customSplitsVal[member.id]}
+              currency={currency}
+              shareLabel={shareLabel}
+              onToggle={() => onToggleMember(member.id)}
+              onChangeCustom={(val) => onChangeCustomSplit(member.id, val)}
+            />
+          ))}
         </ul>
         {checkedCount === 0 ? (
           <p role="alert" className="text-sm text-destructive">
@@ -159,31 +115,11 @@ export function GroupMemberSplits({
       </section>
 
       {amountNok > 0 && checkedCount > 0 && groupSplitMode === "custom" ? (
-        <p
-          role="status"
-          className={cn(
-            "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium",
-            customIsExact
-              ? "bg-income-soft text-income"
-              : "bg-expense-soft text-expense",
-          )}
-        >
-          {customIsExact ? (
-            <>
-              <CircleCheck className="size-4" aria-hidden="true" />
-              Importi assegnati correttamente
-            </>
-          ) : (
-            <>
-              <CircleAlert className="size-4" aria-hidden="true" />
-              <span className="tabular">
-                {customDifference > 0
-                  ? `Mancano ${formatCurrency(customDifference, currency)}`
-                  : `Eccedenza di ${formatCurrency(-customDifference, currency)}`}
-              </span>
-            </>
-          )}
-        </p>
+        <CustomSplitStatus
+          customIsExact={customIsExact}
+          customDifference={customDifference}
+          currency={currency}
+        />
       ) : null}
     </div>
   );

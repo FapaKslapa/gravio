@@ -7,10 +7,9 @@ import {
   OctagonAlert,
   Settings2,
 } from "lucide-react";
-import { animate, useReducedMotion } from "motion/react";
-import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { Counter } from "./counter";
 import { MonthStrip } from "./month-strip";
 import { StatsGrid } from "./stats-grid";
 
@@ -24,34 +23,6 @@ type BudgetProgressCardProps = {
   convertCurrency: (val: number, from: string, to: string) => number;
   onOpenSettings: () => void;
 };
-
-function Counter({ value, currency }: { value: number; currency: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const reduce = useReducedMotion();
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (reduce) {
-      el.textContent = formatCurrency(value, currency);
-      return;
-    }
-    const controls = animate(0, value, {
-      duration: 0.9,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => {
-        el.textContent = formatCurrency(v, currency);
-      },
-    });
-    return () => controls.stop();
-  }, [value, currency, reduce]);
-
-  return (
-    <span ref={ref} className="tabular font-bold">
-      {formatCurrency(value, currency)}
-    </span>
-  );
-}
 
 export function BudgetProgressCard({
   totalIncome,

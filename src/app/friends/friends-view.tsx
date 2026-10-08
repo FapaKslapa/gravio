@@ -1,240 +1,62 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useReducer, useSyncExternalStore } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useUrlActions } from "@/hooks/use-url-actions";
-import { useTRPC } from "@/lib/trpc/client";
-
-import { AddFriendCard } from "./components/add-friend-card";
+import { computeBalanceTotals } from "./balance-totals";
 import { BalanceSummarySection } from "./components/balance-summary-section";
 import { FriendsHeader } from "./components/friends-header";
 import { FriendsLeftColumn } from "./components/friends-left-column";
-import { FriendsModals } from "./components/friends-modals";
 import { FriendsRightColumn } from "./components/friends-right-column";
-import type { SharedExpensePayload } from "./components/shared-expense-dialog";
-
-type FriendItem = {
-  friendshipId: string;
-  user: { id: string; name: string; email: string; image: string | null };
-  createdAt: Date | null;
-};
-
-type GroupItem = {
-  id: string;
-  name: string;
-  creatorId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  members: { id: string; name: string; email: string }[];
-};
-
-type UIState = {
-  activeMobileTab: "friends" | "groups";
-  isAddFriendOpen: boolean;
-  isSharedExpenseOpen: boolean;
-  isCreateGroupOpen: boolean;
-  selectedFriend: FriendItem | null;
-  selectedGroup: GroupItem | null;
-  friendToDelete: FriendItem | null;
-  settleConfirmFriend: FriendItem | null;
-  groupToDelete: GroupItem | null;
-};
-
-type UIAction =
-  | { type: "SET_FIELD"; field: keyof UIState; value: unknown }
-  | { type: "SET_FIELDS"; fields: Partial<UIState> };
-
-function uiReducer(state: UIState, action: UIAction): UIState {
-  switch (action.type) {
-    case "SET_FIELD":
-      return { ...state, [action.field]: action.value };
-    case "SET_FIELDS":
-      return { ...state, ...action.fields };
-    default:
-      return state;
-  }
-}
+import { FriendsOverlays } from "./friends-overlays";
+import type { FriendItem } from "./friends-ui-state";
+import { useFriendsData } from "./use-friends-data";
+import { useFriendsMutations } from "./use-friends-mutations";
+import { useFriendsUi } from "./use-friends-ui";
 
 export default function FriendsView() {
   const {
     displayCurrency,
     convertCurrency,
-    rates,
     user: currentUser,
   } = useDashboard();
-  const currentUserId = currentUser.id;
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const ui = useFriendsUi();
+  const { activeMobileTab, selectedFriend, selectedGroup } = ui.uiState;
 
-  // ── Queries ──────────────────────────────────────────────────────────────
-  const { data: friendsData, isLoading: isFriendsLoading } = useQuery(
-    trpc.friend.listFriends.queryOptions(),
-  );
-  const { data: pendingData, isLoading: isPendingLoading } = useQuery(
-    trpc.friend.listPendingRequests.queryOptions(),
-  );
-  const { data: balanceSummaryData, isLoading: isBalanceSummaryLoading } =
-    useQuery(trpc.friend.getBalanceSummary.queryOptions());
-  const { data: groupsData, isLoading: isGroupsLoading } = useQuery(
-    trpc.group.list.queryOptions(),
-  );
-  const { data: transactionsData, isLoading: isTransactionsLoading } = useQuery(
-    trpc.transaction.list.queryOptions(),
-  );
-
-  // ── State ─────────────────────────────────────────────────────────────────
-  const [uiState, dispatch] = useReducer(uiReducer, {
-    activeMobileTab: "friends",
-    isAddFriendOpen: false,
-    isSharedExpenseOpen: false,
-    isCreateGroupOpen: false,
-    selectedFriend: null,
-    selectedGroup: null,
-    friendToDelete: null,
-    settleConfirmFriend: null,
-    groupToDelete: null,
+  const data = useFriendsData(selectedGroup?.id);
+  const { friendsData, groupsData } = data;
+  const mutations = useFriendsMutations({
+    hasSelectedFriend: !!selectedFriend,
+    clearSelectedFriend: () => ui.setSelectedFriend(null),
+    clearSelectedGroup: () => ui.setSelectedGroup(null),
   });
 
-  const {
-    activeMobileTab,
-    isAddFriendOpen,
-    isSharedExpenseOpen,
-    isCreateGroupOpen,
-    selectedFriend,
-    selectedGroup,
-    friendToDelete,
-    settleConfirmFriend,
-    groupToDelete,
-  } = uiState;
-
-  const isXl = useSyncExternalStore(
-    (cb) => {
-      const mq = window.matchMedia("(min-width: 1280px)");
-      mq.addEventListener("change", cb);
-      return () => mq.removeEventListener("change", cb);
-    },
-    () => window.matchMedia("(min-width: 1280px)").matches,
-    () => false,
-  );
   const autoFriend =
-    isXl && !selectedFriend && !selectedGroup && activeMobileTab === "friends"
+    ui.isXl &&
+    !selectedFriend &&
+    !selectedGroup &&
+    activeMobileTab === "friends"
       ? ((friendsData?.[0] as FriendItem | undefined) ?? null)
       : null;
   const shownFriend = selectedFriend ?? autoFriend;
-
-  const setActiveMobileTab = (val: "friends" | "groups") =>
-    dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
-  const setIsAddFriendOpen = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "isAddFriendOpen", value: val });
-  const setIsSharedExpenseOpen = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "isSharedExpenseOpen", value: val });
-  const setIsCreateGroupOpen = (val: boolean) =>
-    dispatch({ type: "SET_FIELD", field: "isCreateGroupOpen", value: val });
-  const setSelectedFriend = (val: FriendItem | null) =>
-    dispatch({ type: "SET_FIELD", field: "selectedFriend", value: val });
-  const setSelectedGroup = (val: GroupItem | null) =>
-    dispatch({ type: "SET_FIELD", field: "selectedGroup", value: val });
-  const setFriendToDelete = (val: FriendItem | null) =>
-    dispatch({ type: "SET_FIELD", field: "friendToDelete", value: val });
-  const setSettleConfirmFriend = (val: FriendItem | null) =>
-    dispatch({ type: "SET_FIELD", field: "settleConfirmFriend", value: val });
-  const setGroupToDelete = (val: GroupItem | null) =>
-    dispatch({ type: "SET_FIELD", field: "groupToDelete", value: val });
-
-  const { data: proposalsData, isLoading: isProposalsLoading } = useQuery(
-    trpc.friend.getGroupSettlementProposals.queryOptions(
-      { groupId: selectedGroup?.id || null },
-      { enabled: !!selectedGroup?.id },
-    ),
-  );
 
   useUrlActions(
     {
       friend: (id) => {
         const found = friendsData?.find((f) => f.user.id === id);
-        if (found) setSelectedFriend(found as FriendItem);
+        if (found) ui.setSelectedFriend(found as FriendItem);
       },
     },
     !!friendsData,
   );
 
-  // ── Mutations ─────────────────────────────────────────────────────────────
-  const settleDebtMutation = useMutation(
-    trpc.friend.settleDebt.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.friend.getBalanceSummary.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.transaction.list.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.friend.getGroupSettlementProposals.queryKey(),
-        });
-      },
-    }),
-  );
-
-  const deleteFriendMutation = useMutation(
-    trpc.friend.deleteFriend.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.friend.listFriends.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.friend.getBalanceSummary.queryKey(),
-        });
-        if (selectedFriend) setSelectedFriend(null);
-      },
-    }),
-  );
-
-  const deleteGroupMutation = useMutation(
-    trpc.group.delete.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.group.list.queryKey() });
-        setSelectedGroup(null);
-      },
-    }),
-  );
-
-  const createTransactionMutation = useMutation(
-    trpc.transaction.create.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.friend.getBalanceSummary.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.transaction.list.queryKey(),
-        });
-      },
-    }),
-  );
-
-  // ── Loading guard ─────────────────────────────────────────────────────────
-  if (
-    isFriendsLoading ||
-    isPendingLoading ||
-    isBalanceSummaryLoading ||
-    isGroupsLoading ||
-    isTransactionsLoading
-  ) {
+  if (data.isLoading) {
     return <LoadingState />;
   }
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const balances = balanceSummaryData || [];
-  const totalYouAreOwedNok = balances
-    .filter((b) => b.balanceNok > 0)
-    .reduce((s, b) => s + b.balanceNok, 0);
-  const totalYouOweNok = Math.abs(
-    balances
-      .filter((b) => b.balanceNok < 0)
-      .reduce((s, b) => s + b.balanceNok, 0),
-  );
-  const netBalanceNok = totalYouAreOwedNok - totalYouOweNok;
+  const balances = data.balanceSummaryData || [];
+  const { totalYouAreOwedNok, totalYouOweNok, netBalanceNok } =
+    computeBalanceTotals(balances);
 
   const convertNokAmount = (val: number | string): number =>
     convertCurrency(
@@ -243,67 +65,11 @@ export default function FriendsView() {
       displayCurrency,
     );
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleRespondSuccess = () => {
-    queryClient.invalidateQueries({
-      queryKey: trpc.friend.listPendingRequests.queryKey(),
-    });
-    queryClient.invalidateQueries({
-      queryKey: trpc.friend.listFriends.queryKey(),
-    });
-    queryClient.invalidateQueries({
-      queryKey: trpc.friend.getBalanceSummary.queryKey(),
-    });
-  };
-
-  const handleSettle = async (friendId: string) => {
-    await settleDebtMutation.mutateAsync({ friendId });
-  };
-
-  const handleSharedExpense = async (payload: SharedExpensePayload) => {
-    await createTransactionMutation.mutateAsync({
-      description: payload.description,
-      type: "expense",
-      amount: payload.amount,
-      currency: payload.currency,
-      exchangeRate: rates[payload.currency] ?? 1,
-      exchangeRateNok: rates.NOK ?? 11.85,
-      categoryId: null,
-      date: payload.date,
-      sharedWithUserId: payload.sharedWithUserId,
-      splitMode: payload.splitMode,
-      splitValue: payload.splitValue,
-    });
-  };
-
-  const handleGroupExpense = async (payload: {
-    description: string;
-    amount: number;
-    currency: string;
-    date: string;
-    groupId: string;
-    groupSplits: Array<{ userId: string; amountNok: number }>;
-  }) => {
-    await createTransactionMutation.mutateAsync({
-      description: payload.description,
-      type: "expense",
-      amount: payload.amount,
-      currency: payload.currency,
-      exchangeRate: rates[payload.currency] ?? 1,
-      exchangeRateNok: rates.NOK ?? 11.85,
-      categoryId: null,
-      date: payload.date,
-      groupId: payload.groupId,
-      groupSplits: payload.groupSplits,
-    });
-  };
-
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex w-full flex-col gap-5 text-foreground">
       <FriendsHeader
         hasFriends={!!friendsData && friendsData.length > 0}
-        onAddExpense={() => setIsSharedExpenseOpen(true)}
+        onAddExpense={() => ui.setIsSharedExpenseOpen(true)}
       />
 
       <BalanceSummarySection
@@ -317,10 +83,10 @@ export default function FriendsView() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:items-start">
         <FriendsLeftColumn
           activeTab={activeMobileTab}
-          onTabChange={setActiveMobileTab}
+          onTabChange={ui.setActiveMobileTab}
           isSelecting={!!(selectedFriend || selectedGroup)}
-          pendingIncoming={pendingData?.incoming ?? []}
-          pendingOutgoing={pendingData?.outgoing ?? []}
+          pendingIncoming={data.pendingData?.incoming ?? []}
+          pendingOutgoing={data.pendingData?.outgoing ?? []}
           friends={friendsData ?? []}
           balances={balances}
           groups={groupsData ?? []}
@@ -328,89 +94,47 @@ export default function FriendsView() {
           selectedGroupId={selectedGroup?.id}
           displayCurrency={displayCurrency}
           convertNokAmount={convertNokAmount}
-          onAddFriend={() => setIsAddFriendOpen(true)}
-          onPendingActionSuccess={handleRespondSuccess}
+          onAddFriend={() => ui.setIsAddFriendOpen(true)}
+          onPendingActionSuccess={mutations.handleRespondSuccess}
           onSelectFriend={(friend) => {
-            setSelectedFriend(friend);
-            setSelectedGroup(null);
+            ui.setSelectedFriend(friend);
+            ui.setSelectedGroup(null);
           }}
           onSelectGroup={(group) => {
-            setSelectedGroup(group);
-            setSelectedFriend(null);
+            ui.setSelectedGroup(group);
+            ui.setSelectedFriend(null);
           }}
-          onClearFriend={() => setSelectedFriend(null)}
-          onOpenCreateGroup={() => setIsCreateGroupOpen(true)}
+          onClearFriend={() => ui.setSelectedFriend(null)}
+          onOpenCreateGroup={() => ui.setIsCreateGroupOpen(true)}
         />
 
         <FriendsRightColumn
           selectedFriend={shownFriend}
           selectedGroup={selectedGroup}
           balances={balances}
-          transactions={transactionsData ?? []}
-          proposals={proposalsData ?? []}
-          isProposalsLoading={isProposalsLoading}
-          currentUserId={currentUserId}
+          transactions={data.transactionsData ?? []}
+          proposals={data.proposalsData ?? []}
+          isProposalsLoading={data.isProposalsLoading}
+          currentUserId={currentUser.id}
           displayCurrency={displayCurrency}
           convertNokAmount={convertNokAmount}
           convertCurrency={convertCurrency}
-          onClearFriend={() => setSelectedFriend(null)}
-          onClearGroup={() => setSelectedGroup(null)}
-          onOpenSharedExpense={() => setIsSharedExpenseOpen(true)}
-          onOpenSettleDebt={setSettleConfirmFriend}
-          onOpenDeleteFriend={setFriendToDelete}
-          onOpenDeleteGroup={setGroupToDelete}
-          onSettle={handleSettle}
+          onClearFriend={() => ui.setSelectedFriend(null)}
+          onClearGroup={() => ui.setSelectedGroup(null)}
+          onOpenSharedExpense={() => ui.setIsSharedExpenseOpen(true)}
+          onOpenSettleDebt={ui.setSettleConfirmFriend}
+          onOpenDeleteFriend={ui.setFriendToDelete}
+          onOpenDeleteGroup={ui.setGroupToDelete}
+          onSettle={mutations.handleSettle}
         />
       </div>
 
-      <AddFriendCard
-        open={isAddFriendOpen}
-        onOpenChange={setIsAddFriendOpen}
-        onSuccess={() =>
-          queryClient.invalidateQueries({
-            queryKey: trpc.friend.listPendingRequests.queryKey(),
-          })
-        }
-      />
-
-      <FriendsModals
-        isSharedExpenseOpen={isSharedExpenseOpen}
-        onCloseSharedExpense={() => setIsSharedExpenseOpen(false)}
+      <FriendsOverlays
+        ui={ui}
+        mutations={mutations}
         friends={friendsData ?? []}
         groups={groupsData ?? []}
-        selectedGroup={selectedGroup}
-        selectedFriend={shownFriend}
-        onSaveSharedExpense={handleSharedExpense}
-        onSaveGroupExpense={handleGroupExpense}
-        isCreateGroupOpen={isCreateGroupOpen}
-        onCloseCreateGroup={() => setIsCreateGroupOpen(false)}
-        onCreateGroupSuccess={() =>
-          queryClient.invalidateQueries({
-            queryKey: trpc.group.list.queryKey(),
-          })
-        }
-        friendToDelete={friendToDelete}
-        onCloseFriendDelete={() => setFriendToDelete(null)}
-        onConfirmFriendDelete={async () => {
-          if (friendToDelete)
-            await deleteFriendMutation.mutateAsync({
-              friendId: friendToDelete.user.id,
-            });
-        }}
-        settleConfirmFriend={settleConfirmFriend}
-        onCloseSettle={() => setSettleConfirmFriend(null)}
-        onConfirmSettle={async () => {
-          if (settleConfirmFriend)
-            await handleSettle(settleConfirmFriend.user.id);
-        }}
-        groupToDelete={groupToDelete}
-        onCloseGroupDelete={() => setGroupToDelete(null)}
-        onConfirmGroupDelete={async () => {
-          if (groupToDelete)
-            await deleteGroupMutation.mutateAsync({
-              groupId: groupToDelete.id,
-            });
-        }}
+        shownFriend={shownFriend}
       />
     </div>
   );

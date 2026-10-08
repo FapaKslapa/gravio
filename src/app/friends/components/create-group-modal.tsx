@@ -1,10 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { Loader2, UserPlus } from "lucide-react";
-import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import {
   Field,
@@ -17,9 +14,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useTRPC } from "@/lib/trpc/client";
-import { cn } from "@/lib/utils";
-import { MemberAvatar } from "./shared-expense/member-avatar";
+import { CreateGroupMemberList } from "./create-group-member-list";
+import { useCreateGroupForm } from "./use-create-group-form";
 
 type FriendUser = {
   id: string;
@@ -46,47 +42,17 @@ export function CreateGroupModal({
   friends,
   onSuccess,
 }: CreateGroupModalProps) {
-  const [name, setName] = useState("");
-  const [attempted, setAttempted] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-
-  const trpc = useTRPC();
-  const createGroupMutation = useMutation(
-    trpc.group.create.mutationOptions({
-      onSuccess: () => {
-        onSuccess();
-        reset();
-        onClose();
-      },
-    }),
-  );
-
-  const reset = () => {
-    setName("");
-    setSelectedIds([]);
-    setAttempted(false);
-  };
-
-  const toggle = (friendId: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(friendId)
-        ? prev.filter((id) => id !== friendId)
-        : [...prev, friendId],
-    );
-  };
-
-  const nameInvalid = !name.trim();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAttempted(true);
-    if (nameInvalid) return;
-    createGroupMutation.mutate({
-      name: name.trim(),
-      memberUserIds: selectedIds,
-    });
-  };
+  const {
+    name,
+    setName,
+    attempted,
+    selectedIds,
+    selectedSet,
+    toggle,
+    nameInvalid,
+    handleSubmit,
+    isPending,
+  } = useCreateGroupForm(onSuccess, onClose);
 
   return (
     <ResponsiveSheet
@@ -136,44 +102,11 @@ export function CreateGroupModal({
                 </EmptyDescription>
               </Empty>
             ) : (
-              <ul className="flex max-h-72 flex-col gap-2 overflow-y-auto">
-                {friends.map((friend) => {
-                  const checked = selectedSet.has(friend.user.id);
-                  const id = `member-${friend.user.id}`;
-                  return (
-                    <li
-                      key={friend.user.id}
-                      className={cn(
-                        "flex min-h-14 items-center gap-3 rounded-lg border px-3 py-2 transition-colors",
-                        checked ? "border-brand/40 bg-brand-soft" : "bg-card",
-                      )}
-                    >
-                      <Checkbox
-                        id={id}
-                        checked={checked}
-                        onCheckedChange={() => toggle(friend.user.id)}
-                      />
-                      <label
-                        htmlFor={id}
-                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-1"
-                      >
-                        <MemberAvatar
-                          name={friend.user.name}
-                          image={friend.user.image}
-                        />
-                        <span className="flex min-w-0 flex-col">
-                          <span className="truncate text-sm font-medium">
-                            {friend.user.name}
-                          </span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {friend.user.email}
-                          </span>
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
+              <CreateGroupMemberList
+                friends={friends}
+                selectedSet={selectedSet}
+                onToggle={toggle}
+              />
             )}
           </FieldSet>
         </FieldGroup>
@@ -187,15 +120,11 @@ export function CreateGroupModal({
           >
             Annulla
           </Button>
-          <Button
-            type="submit"
-            disabled={createGroupMutation.isPending}
-            className="h-12 flex-[2]"
-          >
-            {createGroupMutation.isPending ? (
+          <Button type="submit" disabled={isPending} className="h-12 flex-[2]">
+            {isPending ? (
               <Loader2 data-icon="inline-start" className="animate-spin" />
             ) : null}
-            {createGroupMutation.isPending ? "Creazione..." : "Crea gruppo"}
+            {isPending ? "Creazione..." : "Crea gruppo"}
           </Button>
         </div>
       </form>

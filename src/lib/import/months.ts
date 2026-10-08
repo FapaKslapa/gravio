@@ -1,0 +1,27 @@
+export const MONTHS: Record<string, number> = {
+  gen: 1,
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  mag: 5,
+  may: 5,
+  mai: 5,
+  giu: 6,
+  jun: 6,
+  lug: 7,
+  jul: 7,
+  ago: 8,
+  aug: 8,
+  set: 9,
+  sep: 9,
+  ott: 10,
+  okt: 10,
+  oct: 10,
+  nov: 11,
+  dic: 12,
+  dec: 12,
+  des: 12,
+};
+
+export const MONTH_ALT = Object.keys(MONTHS).join("|");

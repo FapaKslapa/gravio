@@ -1,73 +1,14 @@
 "use client";
 
-import { Ban, Check, Plus, Search } from "lucide-react";
-import { m } from "motion/react";
+import { Plus, Search } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
-import { CategoryIcon } from "@/components/icon-helper";
 import { Input } from "@/components/ui/input";
-import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-
-export type PickerCategory = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
+import type { PickerCategory } from "./category-picker-utils";
+import { CategoryTile } from "./category-tile";
 
 const SEARCH_THRESHOLD = 12;
-
-function channel(v: number) {
-  const s = v / 255;
-  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-}
-
-export function readableInk(hex: string): "#ffffff" | "#111113" {
-  let h = hex.trim().replace("#", "");
-  if (h.length === 3) {
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  }
-  if (!/^[0-9a-fA-F]{6}$/.test(h)) return "#ffffff";
-  const r = channel(Number.parseInt(h.slice(0, 2), 16));
-  const g = channel(Number.parseInt(h.slice(2, 4), 16));
-  const b = channel(Number.parseInt(h.slice(4, 6), 16));
-  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  const whiteContrast = 1.05 / (lum + 0.05);
-  const darkContrast = (lum + 0.05) / (0.007 + 0.05);
-  return whiteContrast >= darkContrast ? "#ffffff" : "#111113";
-}
-
-export function CategoryBadge({
-  cat,
-  size = 36,
-  className,
-}: {
-  cat: PickerCategory;
-  size?: number;
-  className?: string;
-}) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full",
-        className,
-      )}
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: cat.color,
-        color: readableInk(cat.color),
-      }}
-    >
-      <CategoryIcon name={cat.icon} size={Math.round(size * 0.5)} />
-    </span>
-  );
-}
 
 type CategoryPickerProps = {
   categories: PickerCategory[];
@@ -168,49 +109,16 @@ export function CategoryPicker({
         >
           {tiles.map((cat) => {
             const id = cat?.id ?? "";
-            const active = id === value;
             return (
-              // biome-ignore lint/a11y/useSemanticElements: tile button acts as radio
-              <button
+              <CategoryTile
                 key={id || "__none__"}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                data-cat-id={id}
-                tabIndex={id === tabStop ? 0 : -1}
-                onClick={() => onChange(id)}
-                onKeyDown={(e) => move(e, id)}
-                className={cn(
-                  "relative flex min-h-[4.5rem] min-w-0 cursor-pointer flex-col items-center justify-start gap-1.5 rounded-md border px-1.5 py-2.5 text-center outline-none transition-[transform,background-color] active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-ring/50",
-                  active
-                    ? "border-transparent bg-brand-soft ring-2 ring-brand"
-                    : "bg-card hover:bg-muted/60",
-                )}
-              >
-                {cat ? (
-                  <CategoryBadge cat={cat} />
-                ) : (
-                  <span
-                    aria-hidden
-                    className="flex size-9 items-center justify-center rounded-full border border-dashed bg-muted text-muted-foreground"
-                  >
-                    <Ban className="size-[18px]" />
-                  </span>
-                )}
-                <span className="w-full text-balance text-[13px] font-medium leading-tight text-foreground [hyphens:none] [overflow-wrap:normal]">
-                  {cat ? cat.name : noneLabel}
-                </span>
-                {active && (
-                  <m.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={springs.snappy}
-                    className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-brand text-brand-foreground"
-                  >
-                    <Check className="size-3" aria-hidden />
-                  </m.span>
-                )}
-              </button>
+                cat={cat}
+                active={id === value}
+                tabStop={id === tabStop}
+                noneLabel={noneLabel}
+                onSelect={onChange}
+                onKeyDown={move}
+              />
             );
           })}
         </div>
@@ -233,3 +141,7 @@ export function CategoryPicker({
     </div>
   );
 }
+
+export { CategoryBadge } from "./category-badge";
+export type { PickerCategory } from "./category-picker-utils";
+export { readableInk } from "./category-picker-utils";

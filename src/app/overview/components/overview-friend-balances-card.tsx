@@ -1,9 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowUpRight, Check } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useDashboard } from "@/components/dashboard-layout";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -12,16 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 import { cn, formatCurrency } from "@/lib/utils";
+import { FriendBalanceList } from "./friend-balance-list";
 
 export function OverviewFriendBalancesCard({
   className,
@@ -103,57 +96,10 @@ export function OverviewFriendBalancesCard({
           </div>
         </dl>
 
-        {convertedItems.length === 0 ? (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Check />
-              </EmptyMedia>
-              <EmptyTitle>Tutto in pari</EmptyTitle>
-              <EmptyDescription>
-                Non hai debiti o crediti in sospeso con i tuoi amici.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <ul className="flex max-h-60 flex-col overflow-y-auto">
-            {convertedItems.map((item) => {
-              const isCredit = item.balance > 0;
-              const initials = item.user.name ? item.user.name[0] : "?";
-              return (
-                <li
-                  key={item.user.id}
-                  className="flex min-h-14 items-center justify-between gap-3 border-b py-2 last:border-b-0"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar className="size-9">
-                      <AvatarFallback className="bg-brand-soft font-semibold text-brand uppercase">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate text-sm font-semibold">
-                        {item.user.name || "Amico"}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {isCredit ? "Ti deve" : "Gli devi"}
-                      </span>
-                    </div>
-                  </div>
-                  <span
-                    className={cn(
-                      "num-display tabular shrink-0 text-sm font-bold",
-                      isCredit ? "text-income" : "text-expense",
-                    )}
-                  >
-                    {isCredit ? "+" : "−"}
-                    {formatCurrency(Math.abs(item.balance), displayCurrency)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <FriendBalanceList
+          items={convertedItems}
+          displayCurrency={displayCurrency}
+        />
       </CardContent>
 
       <CardFooter className="justify-between border-t bg-transparent text-sm">

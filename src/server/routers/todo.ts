@@ -1,5 +1,5 @@
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
-import { todo, todoList, transaction } from "@/db/schema";
+import { and, asc, desc, eq } from "drizzle-orm";
+import { todo, todoList } from "@/db/schema";
 import {
   convertToTransactionBulkSchema,
   convertToTransactionSchema,
@@ -11,66 +11,13 @@ import {
   toggleTodoSchema,
 } from "@/lib/schemas/todo";
 import { protectedProcedure, router } from "@/server/trpc";
-
-function convertAmounts(
-  amount: number,
-  currency: string,
-  exchangeRate: number,
-) {
-  if (currency === "EUR") {
-    return { amountEur: amount, amountNok: amount * exchangeRate };
-  }
-  return { amountNok: amount, amountEur: amount / exchangeRate };
-}
+import { convertToTransaction, convertToTransactionBulk } from "./todo/convert";
+import { listTodoLists } from "./todo/lists";
 
 export const todoRouter = router({
-  listLists: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-
-    let lists = await ctx.db
-      .select()
-      .from(todoList)
-      .where(eq(todoList.userId, userId));
-
-    if (lists.length === 0) {
-      const defaultList = {
-        id: crypto.randomUUID(),
-        userId,
-        name: "Spesa",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await ctx.db.insert(todoList).values(defaultList);
-
-      await ctx.db
-        .update(todo)
-        .set({ todoListId: defaultList.id })
-        .where(and(eq(todo.userId, userId), isNull(todo.todoListId)));
-
-      lists = [defaultList];
-    }
-
-    const activeTodos = await ctx.db
-      .select({ id: todo.id, todoListId: todo.todoListId })
-      .from(todo)
-      .where(and(eq(todo.userId, userId), eq(todo.completed, false)));
-
-    const countMap = activeTodos.reduce(
-      (acc, t) => {
-        if (t.todoListId) {
-          acc[t.todoListId] = (acc[t.todoListId] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return lists.map((l) => ({
-      ...l,
-      activeCount: countMap[l.id] || 0,
-    }));
-  }),
+  listLists: protectedProcedure.query(({ ctx }) =>
+    listTodoLists(ctx.db, ctx.session.user.id),
+  ),
 
   createList: protectedProcedure
     .input(createTodoListSchema)
@@ -169,122 +116,13 @@ export const todoRouter = router({
 
   convertToTransaction: protectedProcedure
     .input(convertToTransactionSchema)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-
-      const existingTodo = await ctx.db
-        .select()
-        .from(todo)
-        .where(and(eq(todo.id, input.todoId), eq(todo.userId, userId)))
-        .limit(1);
-
-      if (existingTodo.length === 0) {
-        throw new Error("Elemento to-do non trovato o non autorizzato");
-      }
-
-      const item = existingTodo[0];
-      const { amountEur, amountNok } = convertAmounts(
-        input.amount,
-        input.currency,
-        input.exchangeRate,
-      );
-
-      const newTransactionId = crypto.randomUUID();
-
-      const newTransaction = {
-        id: newTransactionId,
-        userId,
-        categoryId: item.categoryId,
-        type: "expense",
-        amount: input.amount.toFixed(2),
-        currency: input.currency,
-        amountEur: amountEur.toFixed(2),
-        amountNok: amountNok.toFixed(2),
-        exchangeRate: input.exchangeRate.toFixed(4),
-        description: item.title,
-        date: new Date(input.date),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await ctx.db.insert(transaction).values(newTransaction);
-
-      await ctx.db
-        .update(todo)
-        .set({
-          completed: true,
-          convertedToTransactionId: newTransactionId,
-          updatedAt: new Date(),
-        })
-        .where(eq(todo.id, input.todoId));
-
-      return {
-        transaction: newTransaction,
-        todoId: input.todoId,
-        completed: true,
-      };
-    }),
+    .mutation(({ ctx, input }) =>
+      convertToTransaction(ctx.db, ctx.session.user.id, input),
+    ),
 
   convertToTransactionBulk: protectedProcedure
     .input(convertToTransactionBulkSchema)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-
-      if (input.todoIds.length === 0) {
-        throw new Error("Nessun articolo selezionato per la conversione");
-      }
-
-      // Check that all selected items belong to the user
-      const existingTodos = await ctx.db
-        .select()
-        .from(todo)
-        .where(and(inArray(todo.id, input.todoIds), eq(todo.userId, userId)));
-
-      if (existingTodos.length !== input.todoIds.length) {
-        throw new Error(
-          "Alcuni articoli non sono stati trovati o non sei autorizzato",
-        );
-      }
-
-      const { amountEur, amountNok } = convertAmounts(
-        input.amount,
-        input.currency,
-        input.exchangeRate,
-      );
-
-      const newTransactionId = crypto.randomUUID();
-
-      const newTransaction = {
-        id: newTransactionId,
-        userId,
-        categoryId: input.categoryId || null,
-        type: "expense",
-        amount: input.amount.toFixed(2),
-        currency: input.currency,
-        amountEur: amountEur.toFixed(2),
-        amountNok: amountNok.toFixed(2),
-        exchangeRate: input.exchangeRate.toFixed(4),
-        description: input.description,
-        date: new Date(input.date),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await ctx.db.insert(transaction).values(newTransaction);
-
-      await ctx.db
-        .update(todo)
-        .set({
-          completed: true,
-          convertedToTransactionId: newTransactionId,
-          updatedAt: new Date(),
-        })
-        .where(inArray(todo.id, input.todoIds));
-
-      return {
-        transaction: newTransaction,
-        todoIds: input.todoIds,
-        completed: true,
-      };
-    }),
+    .mutation(({ ctx, input }) =>
+      convertToTransactionBulk(ctx.db, ctx.session.user.id, input),
+    ),
 });

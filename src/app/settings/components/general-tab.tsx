@@ -4,7 +4,9 @@ import { Check, Coins, Moon, Palette, Sun, SunMoon } from "lucide-react";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { ACCENT_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { Segmented, SettingsGroup, SettingsRow } from "./settings-ui";
+import { Segmented } from "./segmented";
+import { SettingsGroup } from "./settings-group";
+import { SettingsRow } from "./settings-row";
 
 type GeneralTabProps = {
   preferredCurrency: string;

@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
-import { Button } from "@/components/ui/button";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { DialogFooter } from "./shared-expense/dialog-footer";
 import { SharedExpenseFormStep } from "./shared-expense/form-step";
 import { SharedExpenseSplitStep } from "./shared-expense/split-step";
+import { STEP_DESCRIPTION } from "./shared-expense/step-description";
 import { StepHeader } from "./shared-expense/step-header";
+import type { GroupExpensePayload } from "./shared-expense/submit-shared-expense";
 import { SharedExpenseSummaryStep } from "./shared-expense/summary-step";
 import type {
   Friend,
@@ -23,23 +24,10 @@ type Props = {
   friends: Friend[];
   groups: Group[];
   onSave: (payload: SharedExpensePayload) => Promise<void>;
-  onSaveGroupExpense: (payload: {
-    description: string;
-    amount: number;
-    currency: string;
-    date: string;
-    groupId: string;
-    groupSplits: Array<{ userId: string; amountNok: number }>;
-  }) => Promise<void>;
+  onSaveGroupExpense: (payload: GroupExpensePayload) => Promise<void>;
   defaultGroupId?: string;
   defaultFriendId?: string;
 };
-
-const STEP_DESCRIPTION = {
-  form: "Importo, chi ha pagato e con chi dividere.",
-  split: "Scegli come ripartire la spesa.",
-  summary: "Controlla le quote prima di salvare.",
-} as const;
 
 export function SharedExpenseDialog({
   isOpen,
@@ -73,41 +61,16 @@ export function SharedExpenseDialog({
     (form.checkedCount === 0 ||
       (state.groupSplitMode === "custom" && !form.customIsExact));
 
-  const footer =
-    state.step === "form" ? (
-      <Button
-        type="submit"
-        form="shared-expense-form"
-        className="h-12 w-full text-base"
-      >
-        Continua
-        <ArrowRight data-icon="inline-end" />
-      </Button>
-    ) : state.step === "split" ? (
-      <Button
-        type="button"
-        disabled={splitBlocked}
-        onClick={() => set({ step: "summary" })}
-        className="h-12 w-full text-base"
-      >
-        Vai al riepilogo
-        <ArrowRight data-icon="inline-end" />
-      </Button>
-    ) : (
-      <Button
-        type="button"
-        disabled={!form.canSave || form.isSaving}
-        onClick={form.handleSave}
-        className="h-12 w-full text-base"
-      >
-        {form.isSaving ? (
-          <Loader2 data-icon="inline-start" className="animate-spin" />
-        ) : (
-          <Check data-icon="inline-start" />
-        )}
-        {form.isSaving ? "Salvataggio..." : "Aggiungi spesa"}
-      </Button>
-    );
+  const footer = (
+    <DialogFooter
+      step={state.step}
+      splitBlocked={splitBlocked}
+      canSave={form.canSave}
+      isSaving={form.isSaving}
+      onGoToSummary={() => set({ step: "summary" })}
+      onSave={form.handleSave}
+    />
+  );
 
   return (
     <ResponsiveSheet

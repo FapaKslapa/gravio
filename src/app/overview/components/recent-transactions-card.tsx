@@ -1,10 +1,7 @@
 "use client";
 
-import dayjs from "dayjs";
 import { ArrowRight, Receipt } from "lucide-react";
 import Link from "next/link";
-import { CategoryIcon } from "@/components/icon-helper";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
@@ -19,43 +16,16 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { cn, formatCurrency } from "@/lib/utils";
-
-type TransactionType = {
-  id: string;
-  type: string;
-  amount: string;
-  currency: string;
-  amountEur: string;
-  amountNok: string;
-  exchangeRate: string;
-  description: string | null;
-  date: Date;
-  payerName?: string | null;
-  sharedInfo?: {
-    id: string;
-    payerId: string;
-    borrowerId: string;
-    borrowerName: string;
-    borrowerEmail: string;
-    splitAmountNok: string;
-    settled: boolean;
-    isBorrowed: boolean;
-    isPaidByMe: boolean;
-  } | null;
-  categoryId: string | null;
-};
-
-type CategoryType = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
+import { cn } from "@/lib/utils";
+import {
+  type RecentCategory,
+  type RecentTransaction,
+  RecentTransactionRow,
+} from "./recent-transaction-row";
 
 type RecentTransactionsCardProps = {
-  transactions: TransactionType[];
-  categories: CategoryType[];
+  transactions: RecentTransaction[];
+  categories: RecentCategory[];
   displayCurrency: string;
   convertCurrency: (amount: number, from: string, to: string) => number;
   className?: string;
@@ -103,88 +73,16 @@ export function RecentTransactionsCard({
           </Empty>
         ) : (
           <ul className="flex flex-col xl:flex-1 xl:overflow-y-auto">
-            {expenses.map((tx, index) => {
-              const cat = categories.find((c) => c.id === tx.categoryId);
-              const color = cat?.color ?? "var(--muted-foreground)";
-
-              const displayAmount = tx.sharedInfo
-                ? tx.sharedInfo.isBorrowed
-                  ? convertCurrency(
-                      parseFloat(tx.sharedInfo.splitAmountNok),
-                      "NOK",
-                      displayCurrency,
-                    )
-                  : convertCurrency(
-                      parseFloat(tx.amountNok),
-                      "NOK",
-                      displayCurrency,
-                    ) -
-                    convertCurrency(
-                      parseFloat(tx.sharedInfo.splitAmountNok),
-                      "NOK",
-                      displayCurrency,
-                    )
-                : convertCurrency(
-                    parseFloat(tx.amountEur),
-                    "EUR",
-                    displayCurrency,
-                  );
-
-              return (
-                <li
-                  key={tx.id}
-                  className={cn(
-                    "flex min-h-16 items-center gap-3 border-b py-2.5 last:border-b-0",
-                    index >= 8 && "max-xl:hidden",
-                  )}
-                >
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-md"
-                    style={{
-                      backgroundColor: `color-mix(in oklch, ${color} 15%, transparent)`,
-                      color,
-                    }}
-                  >
-                    <CategoryIcon
-                      name={cat ? cat.icon : "Sparkles"}
-                      size={18}
-                    />
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex items-start gap-1.5">
-                      <span className="line-clamp-2 min-w-0 text-sm leading-snug font-semibold">
-                        {tx.description || "Transazione"}
-                      </span>
-                      {tx.sharedInfo && (
-                        <Badge
-                          className="shrink-0"
-                          variant={
-                            tx.sharedInfo.isBorrowed
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          Split
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-xs leading-snug text-muted-foreground">
-                      {cat?.name ?? "Senza categoria"} ·{" "}
-                      {dayjs(tx.date).format("D MMM")}
-                      {tx.sharedInfo &&
-                        ` · ${
-                          tx.sharedInfo.isBorrowed
-                            ? `quota da ${tx.payerName || "amico"}`
-                            : `quota con ${tx.sharedInfo.borrowerName}`
-                        }`}
-                    </span>
-                  </div>
-                  <span className="num-display tabular shrink-0 text-sm font-bold">
-                    −{formatCurrency(displayAmount, displayCurrency)}
-                  </span>
-                </li>
-              );
-            })}
+            {expenses.map((tx, index) => (
+              <RecentTransactionRow
+                key={tx.id}
+                tx={tx}
+                index={index}
+                category={categories.find((c) => c.id === tx.categoryId)}
+                displayCurrency={displayCurrency}
+                convertCurrency={convertCurrency}
+              />
+            ))}
           </ul>
         )}
       </CardContent>

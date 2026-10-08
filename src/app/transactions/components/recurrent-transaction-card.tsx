@@ -3,13 +3,15 @@
 import dayjs from "dayjs";
 import { cn, formatCurrency } from "@/lib/utils";
 import {
-  type CategoryOption,
-  FREQUENCY_LABELS,
   RecurrentActionsMenu,
   RecurrentStatusBadge,
-  type RecurrentTx,
   RecurrentTypeBadge,
-} from "./recurrent-transaction-row";
+} from "./recurrent/recurrent-row-parts";
+import {
+  type CategoryOption,
+  FREQUENCY_LABELS,
+  type RecurrentTx,
+} from "./recurrent/recurrent-types";
 import { CategoryTile } from "./transaction-list-timeline";
 
 type RecurrentTransactionCardProps = {

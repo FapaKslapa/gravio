@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fadeUp } from "@/lib/motion";
 import { formatCurrency } from "@/lib/utils";
-import { SavingsInsightsSheet, tipIcon } from "./savings-insights-sheet";
+import { SavingsInsightsSheet } from "./savings-insights-sheet";
+import { tipIcon } from "./tip-icon";
 import { useSavingsInsights } from "./use-savings-insights";
 
 export function SavingsInsightsCard() {

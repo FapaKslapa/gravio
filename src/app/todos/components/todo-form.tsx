@@ -1,24 +1,20 @@
 "use client";
 
 import { Plus, SlidersHorizontal } from "lucide-react";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import type React from "react";
 import { useReducer, useRef } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { CategorySelect } from "@/components/ui/category-select";
-import { CurrencySelect } from "@/components/ui/currency-select";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/ui/money-input";
-import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-
-type Category = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
+import { TodoFormDetails } from "./todo-form-details";
+import {
+  createInitialFormState,
+  type FormState,
+  formReducer,
+} from "./todo-form-state";
+import type { Category } from "./todo-types";
 
 type TodoFormProps = {
   activeListId: string;
@@ -33,30 +29,6 @@ type TodoFormProps = {
   }) => Promise<void>;
 };
 
-type FormState = {
-  todoTitle: string;
-  todoCategoryId: string;
-  todoEstAmount: string;
-  todoEstCurrency: string;
-  isSubmitting: boolean;
-  showDetails: boolean;
-};
-
-type FormAction =
-  | { type: "SET_FIELD"; field: keyof FormState; value: unknown }
-  | { type: "RESET"; payload: Partial<FormState> };
-
-function formReducer(state: FormState, action: FormAction): FormState {
-  switch (action.type) {
-    case "SET_FIELD":
-      return { ...state, [action.field]: action.value };
-    case "RESET":
-      return { ...state, ...action.payload };
-    default:
-      return state;
-  }
-}
-
 export function TodoForm({
   activeListId,
   listName,
@@ -65,14 +37,11 @@ export function TodoForm({
 }: TodoFormProps) {
   const { displayCurrency } = useDashboard();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, dispatch] = useReducer(formReducer, null, () => ({
-    todoTitle: "",
-    todoCategoryId: "",
-    todoEstAmount: "",
-    todoEstCurrency: displayCurrency,
-    isSubmitting: false,
-    showDetails: false,
-  }));
+  const [state, dispatch] = useReducer(
+    formReducer,
+    displayCurrency,
+    createInitialFormState,
+  );
 
   const {
     todoTitle,
@@ -164,42 +133,13 @@ export function TodoForm({
 
       <AnimatePresence initial={false}>
         {showDetails && (
-          <m.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={springs.smooth}
-            className="overflow-hidden"
-          >
-            <div className="flex flex-col gap-2 px-1 pt-1 pb-1 sm:flex-row">
-              <div className="sm:w-48">
-                <CategorySelect
-                  value={todoCategoryId}
-                  onChange={(v) => setField("todoCategoryId", v)}
-                  categories={categories}
-                  triggerClassName="h-11 w-full text-sm"
-                />
-              </div>
-              <div className="flex flex-1 items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <MoneyInput
-                    value={todoEstAmount}
-                    onChange={(v) => setField("todoEstAmount", v)}
-                    currency={todoEstCurrency}
-                    placeholder="Prezzo stimato"
-                    inputClassName="tabular text-sm font-semibold"
-                  />
-                </div>
-                <div className="w-20 shrink-0">
-                  <CurrencySelect
-                    value={todoEstCurrency}
-                    onChange={(v) => setField("todoEstCurrency", v)}
-                    triggerClassName="h-11 w-full text-sm font-semibold"
-                  />
-                </div>
-              </div>
-            </div>
-          </m.div>
+          <TodoFormDetails
+            categories={categories}
+            categoryId={todoCategoryId}
+            amount={todoEstAmount}
+            currency={todoEstCurrency}
+            onField={setField}
+          />
         )}
       </AnimatePresence>
     </form>

@@ -1,14 +1,13 @@
 "use client";
 
-import { Check, Receipt, Trash2 } from "lucide-react";
 import { m } from "motion/react";
 import { useState } from "react";
-import { CategoryIcon } from "@/components/icon-helper";
-import { Button } from "@/components/ui/button";
 import { springs } from "@/lib/motion";
 import { cn, formatCurrency } from "@/lib/utils";
 import { TodoCheckMark } from "./todo-check";
-import type { Category, TodoItem } from "./todo-items";
+import { TodoMeta } from "./todo-meta";
+import { TodoRowAction } from "./todo-row-action";
+import type { Category, TodoItem } from "./todo-types";
 
 type TodoItemRowProps = {
   todoItem: TodoItem;
@@ -20,47 +19,6 @@ type TodoItemRowProps = {
   onToggleSelectTodo?: (id: string) => void;
   onImportTodo?: (todo: TodoItem) => void;
 };
-
-function TodoMeta({
-  todoItem,
-  category,
-  completed,
-}: {
-  todoItem: TodoItem;
-  category: Category | undefined;
-  completed: boolean;
-}) {
-  return (
-    <div className="min-w-0 flex-1 py-2">
-      <span
-        className={cn(
-          "line-clamp-2 text-[15px] font-medium leading-snug break-words",
-          completed && "text-muted-foreground line-through",
-        )}
-      >
-        {todoItem.title}
-      </span>
-      {todoItem.notes && (
-        <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {todoItem.notes}
-        </p>
-      )}
-      {category && !completed && (
-        <span
-          className="mt-1.5 inline-flex items-center gap-1 rounded-full py-0.5 pr-2 pl-1.5 text-[11px] font-semibold"
-          style={{
-            backgroundColor: `color-mix(in oklab, ${category.color} 14%, transparent)`,
-          }}
-        >
-          <span style={{ color: category.color }} className="flex">
-            <CategoryIcon name={category.icon} size={12} />
-          </span>
-          {category.name}
-        </span>
-      )}
-    </div>
-  );
-}
 
 export function TodoItemRow({
   todoItem,
@@ -165,38 +123,11 @@ export function TodoItemRow({
       <TodoMeta todoItem={todoItem} category={category} completed={checked} />
       {amountNode}
 
-      {completed ? (
-        todoItem.convertedToTransactionId ? (
-          <span className="mr-3 inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full bg-income-soft px-2.5 text-xs font-semibold text-income">
-            <Check className="size-3.5" strokeWidth={3} />
-            Importato
-          </span>
-        ) : (
-          <div className="basis-full pr-3 pb-2 pl-11">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onImportTodo?.(todoItem)}
-              className="h-11 w-full rounded-full px-3.5 text-sm font-semibold sm:w-auto"
-            >
-              <Receipt />
-              Importa spesa
-            </Button>
-          </div>
-        )
-      ) : (
-        onDeleteTodo && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onDeleteTodo(todoItem.id)}
-            aria-label={`Elimina ${todoItem.title}`}
-            className="size-11 shrink-0 rounded-full text-muted-foreground hover:text-destructive md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100"
-          >
-            <Trash2 />
-          </Button>
-        )
-      )}
+      <TodoRowAction
+        todoItem={todoItem}
+        onDeleteTodo={onDeleteTodo}
+        onImportTodo={onImportTodo}
+      />
     </m.li>
   );
 }

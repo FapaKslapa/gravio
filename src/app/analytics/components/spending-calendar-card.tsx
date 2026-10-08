@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { LEVELS, levelFor, WEEKDAYS } from "./calendar-levels";
 import { MONTH_NAMES } from "./months";
 
 type SpendingCalendarCardProps = {
@@ -13,24 +14,6 @@ type SpendingCalendarCardProps = {
   setSelectedDay: (day: number | null) => void;
   displayCurrency: string;
 };
-
-const WEEKDAYS = ["L", "M", "M", "G", "V", "S", "D"];
-
-const LEVELS = [
-  "color-mix(in oklab, var(--brand) 14%, transparent)",
-  "color-mix(in oklab, var(--brand) 30%, transparent)",
-  "color-mix(in oklab, var(--brand) 55%, transparent)",
-  "var(--brand)",
-];
-
-function levelFor(amount: number, max: number): number {
-  if (amount <= 0) return -1;
-  const ratio = amount / max;
-  if (ratio > 0.75) return 3;
-  if (ratio > 0.5) return 2;
-  if (ratio > 0.25) return 1;
-  return 0;
-}
 
 export function SpendingCalendarCard({
   currentMonth,
@@ -60,14 +43,13 @@ export function SpendingCalendarCard({
       </div>
 
       <div className="grid grid-cols-7 gap-1.5 text-center">
-        {WEEKDAYS.map((d, i) => (
+        {WEEKDAYS.map((d) => (
           <span
-            // biome-ignore lint/suspicious/noArrayIndexKey: static weekday labels
-            key={i}
+            key={d.key}
             className="py-1 text-xs font-medium text-muted-foreground"
             aria-hidden
           >
-            {d}
+            {d.label}
           </span>
         ))}
 

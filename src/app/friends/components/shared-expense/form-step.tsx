@@ -1,6 +1,5 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { m } from "motion/react";
 import { useState } from "react";
 import { CustomDatePicker } from "@/components/ui/custom-datepicker";
@@ -11,29 +10,12 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { fadeUp } from "@/lib/motion";
-import { cn, formatCurrency } from "@/lib/utils";
-import { SHARED_CURRENCIES } from "./currencies";
-import { MemberAvatar } from "./member-avatar";
+import { AmountField } from "./form-step-amount-field";
+import { TargetField } from "./form-step-target-field";
+import { PayerField } from "./payer-field";
 import { ShareTypeToggle } from "./share-type-toggle";
 import type { FormState, Friend, Group } from "./types";
-
-function sanitizeAmount(raw: string) {
-  let v = raw.replace(",", ".").replace(/[^0-9.]/g, "");
-  const parts = v.split(".");
-  if (parts.length > 2) v = `${parts[0]}.${parts.slice(1).join("")}`;
-  const dec = v.split(".")[1];
-  if (dec && dec.length > 2) v = `${v.split(".")[0]}.${dec.slice(0, 2)}`;
-  return v;
-}
 
 type Props = {
   state: FormState;
@@ -72,10 +54,6 @@ export function SharedExpenseFormStep({
     ? convertCurrency(parsedAmount, state.currency, displayCurrency)
     : null;
 
-  const currencies = SHARED_CURRENCIES.includes(state.currency)
-    ? SHARED_CURRENCIES
-    : [state.currency, ...SHARED_CURRENCIES];
-
   const handleNext = () => {
     setAttempted(true);
     if (amountInvalid || descInvalid || targetInvalid) return;
@@ -97,57 +75,14 @@ export function SharedExpenseFormStep({
       className="flex flex-col gap-6"
     >
       <FieldGroup>
-        <Field data-invalid={attempted && amountInvalid}>
-          <FieldLabel htmlFor="shared-amount">Importo totale</FieldLabel>
-          <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
-            <input
-              id="shared-amount"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="0.00"
-              value={state.amount}
-              aria-invalid={attempted && amountInvalid}
-              onChange={(e) => set({ amount: sanitizeAmount(e.target.value) })}
-              onBlur={() => {
-                const n = parseFloat(state.amount);
-                if (!Number.isNaN(n)) set({ amount: n.toFixed(2) });
-              }}
-              className={cn(
-                "num-display min-w-0 flex-1 bg-transparent font-display font-bold tracking-tight outline-none placeholder:text-muted-foreground/50",
-                "text-[clamp(2rem,11vw,3.25rem)] leading-none",
-              )}
-            />
-            <Select
-              value={state.currency}
-              onValueChange={(v) => set({ currency: v })}
-            >
-              <SelectTrigger
-                aria-label="Valuta"
-                className="h-11 w-24 shrink-0 font-semibold"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {currencies.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          {converted !== null ? (
-            <p className="tabular text-xs text-muted-foreground">
-              Circa {formatCurrency(converted, displayCurrency)}
-            </p>
-          ) : null}
-          {attempted && amountInvalid ? (
-            <FieldError>Inserisci un importo maggiore di zero.</FieldError>
-          ) : null}
-        </Field>
+        <AmountField
+          state={state}
+          set={set}
+          attempted={attempted}
+          amountInvalid={amountInvalid}
+          converted={converted}
+          displayCurrency={displayCurrency}
+        />
 
         <Field data-invalid={attempted && descInvalid}>
           <FieldLabel htmlFor="shared-desc">Descrizione</FieldLabel>
@@ -169,20 +104,7 @@ export function SharedExpenseFormStep({
           ) : null}
         </Field>
 
-        <Field>
-          <FieldLabel>Chi ha pagato</FieldLabel>
-          <div className="flex min-h-11 items-center gap-3 rounded-lg border px-3">
-            <MemberAvatar name={payerName} image={payerImage} />
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-semibold">
-                {payerName} (Tu)
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Anticipi tu, gli altri ti devono la loro quota
-              </span>
-            </div>
-          </div>
-        </Field>
+        <PayerField name={payerName} image={payerImage} />
 
         <Field>
           <FieldLabel>Dividi con</FieldLabel>
@@ -193,71 +115,14 @@ export function SharedExpenseFormStep({
           />
         </Field>
 
-        <Field data-invalid={attempted && targetInvalid}>
-          <FieldLabel htmlFor="shared-target">
-            {state.shareType === "friend" ? "Amico" : "Gruppo"}
-          </FieldLabel>
-          {state.shareType === "friend" ? (
-            <Select
-              value={state.friendId}
-              onValueChange={(v) => set({ friendId: v })}
-            >
-              <SelectTrigger
-                id="shared-target"
-                aria-invalid={attempted && targetInvalid}
-                className="h-11 w-full"
-              >
-                <SelectValue placeholder="Seleziona un amico" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {friends.map((f) => (
-                    <SelectItem key={f.user.id} value={f.user.id}>
-                      {f.user.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select
-              value={state.groupId}
-              onValueChange={(v) => set({ groupId: v })}
-            >
-              <SelectTrigger
-                id="shared-target"
-                aria-invalid={attempted && targetInvalid}
-                className="h-11 w-full"
-              >
-                <SelectValue placeholder="Seleziona un gruppo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {groups.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>
-                      {g.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          )}
-          {attempted && targetInvalid ? (
-            <FieldError>
-              {state.shareType === "friend"
-                ? "Scegli con quale amico dividere."
-                : "Scegli il gruppo con cui dividere."}
-            </FieldError>
-          ) : null}
-          {(state.shareType === "friend" ? friends : groups).length === 0 ? (
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Info className="size-3.5" aria-hidden="true" />
-              {state.shareType === "friend"
-                ? "Aggiungi prima un amico."
-                : "Crea prima un gruppo."}
-            </p>
-          ) : null}
-        </Field>
+        <TargetField
+          state={state}
+          set={set}
+          friends={friends}
+          groups={groups}
+          attempted={attempted}
+          targetInvalid={targetInvalid}
+        />
 
         <Field>
           <FieldLabel htmlFor="shared-date">Data</FieldLabel>

@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { SettingsGroup, SettingsRow } from "./settings-ui";
+import { SettingsGroup } from "./settings-group";
+import { SettingsRow } from "./settings-row";
 
 type NotificationsTabProps = {
   notifyBudget80: boolean;

@@ -1,6 +1,5 @@
 "use client";
 
-import { m } from "motion/react";
 import { useState } from "react";
 import {
   Bar,
@@ -14,67 +13,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { springs } from "@/lib/motion";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { formatCompact } from "./months";
-
-export type MonthTrend = {
-  label: string;
-  income: number;
-  expense: number;
-  savings: number;
-};
-
-type Metric = "savings" | "expense" | "income";
-
-const METRICS: { id: Metric; label: string; title: string }[] = [
-  { id: "savings", label: "Risparmio", title: "Risparmio mensile" },
-  { id: "expense", label: "Spese", title: "Spese mensili" },
-  { id: "income", label: "Entrate", title: "Entrate mensili" },
-];
+import { METRICS, type Metric, TrendMetricTabs } from "./trend-metric-tabs";
+import { type MonthTrend, TrendTooltip } from "./trend-tooltip";
 
 type TrendCardProps = {
   trendData: MonthTrend[];
   displayCurrency: string;
 };
-
-type TooltipProps = {
-  active?: boolean;
-  payload?: { payload: MonthTrend }[];
-  displayCurrency: string;
-};
-
-function TrendTooltip({ active, payload, displayCurrency }: TooltipProps) {
-  const d = payload?.[0]?.payload;
-  if (!active || !d) return null;
-  const rows = [
-    { label: "Entrate", value: d.income, dot: "bg-income" },
-    { label: "Uscite", value: d.expense, dot: "bg-expense" },
-    { label: "Risparmio", value: d.savings, dot: "bg-brand" },
-  ];
-  return (
-    <div
-      role="status"
-      className="elevation-2 flex min-w-40 flex-col gap-1.5 rounded-md bg-popover p-3 text-popover-foreground"
-    >
-      <span className="text-xs font-semibold">{d.label}</span>
-      {rows.map((r) => (
-        <div
-          key={r.label}
-          className="flex items-center justify-between gap-4 text-xs"
-        >
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className={cn("size-2 rounded-full", r.dot)} aria-hidden />
-            {r.label}
-          </span>
-          <span className="font-semibold tabular">
-            {formatCurrency(r.value, displayCurrency)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
   const [metric, setMetric] = useState<Metric>("savings");
@@ -107,39 +54,7 @@ export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
           </p>
         </div>
 
-        <div
-          role="tablist"
-          aria-label="Metrica del trend"
-          className="flex w-full rounded-full bg-muted p-1 sm:w-fit"
-        >
-          {METRICS.map((x) => {
-            const selected = x.id === metric;
-            return (
-              <button
-                key={x.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setMetric(x.id)}
-                className={cn(
-                  "relative h-11 flex-1 rounded-full px-4 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:flex-none",
-                  selected
-                    ? "text-brand-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {selected && (
-                  <m.span
-                    layoutId="trend-metric-pill"
-                    transition={springs.snappy}
-                    className="absolute inset-0 rounded-full bg-brand"
-                  />
-                )}
-                <span className="relative">{x.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <TrendMetricTabs metric={metric} onChange={setMetric} />
       </div>
 
       <div className="h-60 w-full md:h-72">

@@ -12,61 +12,14 @@ import {
 import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { FriendDetailCard } from "./friend-detail-card";
+import type {
+  BalanceInfo,
+  FriendItem,
+  GroupItem,
+  GroupSettlementProposal,
+  TransactionInfo,
+} from "./friends-right-column-types";
 import { GroupDetailCard } from "./group-detail-card";
-
-type FriendUser = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-};
-
-type FriendItem = {
-  friendshipId: string;
-  user: FriendUser;
-  createdAt: Date | null;
-};
-
-type GroupMember = { id: string; name: string; email: string };
-
-type GroupItem = {
-  id: string;
-  name: string;
-  creatorId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  members: GroupMember[];
-};
-
-type BalanceInfo = {
-  user: { id: string; name: string; email: string };
-  balanceNok: number;
-};
-
-type TransactionInfo = {
-  id: string;
-  userId: string;
-  payerName?: string | null;
-  amountEur: string;
-  amountNok: string;
-  description: string | null;
-  date: Date;
-  groupId?: string | null;
-  sharedInfo?: {
-    id: string;
-    payerId: string;
-    borrowerId: string;
-    splitAmountNok: string;
-    settled: boolean;
-    isBorrowed: boolean;
-  } | null;
-};
-
-type GroupSettlementProposal = {
-  fromUser: { id: string; name: string; email: string; image: string | null };
-  toUser: { id: string; name: string; email: string; image: string | null };
-  amountNok: number;
-};
 
 interface FriendsRightColumnProps {
   selectedFriend: FriendItem | null;

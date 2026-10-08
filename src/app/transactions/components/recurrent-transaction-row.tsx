@@ -1,126 +1,15 @@
 "use client";
 
 import dayjs from "dayjs";
-import { EllipsisVertical, Pause, Pencil, Play, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn, formatCurrency } from "@/lib/utils";
+import {
+  RecurrentActionsMenu,
+  RecurrentStatusBadge,
+  type RecurrentTransactionRowProps,
+  RecurrentTypeBadge,
+} from "./recurrent/recurrent-row-parts";
+import { FREQUENCY_LABELS } from "./recurrent/recurrent-types";
 import { CategoryTile } from "./transaction-list-timeline";
-
-export type CategoryOption = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
-
-export type RecurrentTx = {
-  id: string;
-  description: string;
-  amount: string;
-  currency: string;
-  categoryId: string | null;
-  type: string;
-  frequency: string;
-  startDate: Date | string;
-  endDate: Date | string | null;
-  status: string;
-  nextOccurrence?: Date | string | null;
-};
-
-export const FREQUENCY_LABELS: Record<string, string> = {
-  daily: "Giornaliero",
-  weekly: "Settimanale",
-  monthly: "Mensile",
-  yearly: "Annuale",
-};
-
-type RecurrentTransactionRowProps = {
-  rt: RecurrentTx;
-  category?: CategoryOption;
-  onToggleStatus: (id: string, currentStatus: string) => void;
-  onEdit: (rt: RecurrentTx) => void;
-  onDelete: (id: string) => void;
-  isDeletePending: boolean;
-};
-
-export function RecurrentActionsMenu({
-  rt,
-  onToggleStatus,
-  onEdit,
-  onDelete,
-  isDeletePending,
-}: Omit<RecurrentTransactionRowProps, "category">) {
-  const isPaused = rt.status === "paused";
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11 rounded-full text-muted-foreground md:size-9"
-          aria-label={`Azioni per ${rt.description}`}
-        >
-          <EllipsisVertical />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-44">
-        <DropdownMenuItem onSelect={() => onToggleStatus(rt.id, rt.status)}>
-          {isPaused ? <Play /> : <Pause />}
-          {isPaused ? "Attiva" : "Sospendi"}
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onEdit(rt)}>
-          <Pencil /> Modifica
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={isDeletePending}
-          onSelect={() => onDelete(rt.id)}
-        >
-          <Trash2 /> Elimina
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-export function RecurrentTypeBadge({ type }: { type: string }) {
-  return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        type === "income"
-          ? "bg-income-soft text-income"
-          : "bg-expense-soft text-expense",
-      )}
-    >
-      {type === "income" ? "Entrata" : "Spesa"}
-    </Badge>
-  );
-}
-
-export function RecurrentStatusBadge({ paused }: { paused: boolean }) {
-  return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        paused
-          ? "bg-muted text-muted-foreground"
-          : "bg-brand-soft text-foreground",
-      )}
-    >
-      {paused ? "Sospeso" : "Attivo"}
-    </Badge>
-  );
-}
 
 export function RecurrentTransactionRow({
   rt,
