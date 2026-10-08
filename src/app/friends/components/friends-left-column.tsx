@@ -28,12 +28,22 @@ interface FriendsLeftColumnProps {
   isSelecting: boolean;
   pendingIncoming: Array<{
     id: string;
-    user: { id: string; name: string; email: string; image: string | null } | null;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image: string | null;
+    } | null;
     createdAt: Date | null;
   }>;
   pendingOutgoing: Array<{
     id: string;
-    user: { id: string; name: string; email: string; image: string | null } | null;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image: string | null;
+    } | null;
     createdAt: Date | null;
   }>;
   groups: GroupItem[];
@@ -44,7 +54,6 @@ interface FriendsLeftColumnProps {
   onClearFriend: () => void;
   onOpenCreateGroup: () => void;
 }
-
 
 export function FriendsLeftColumn({
   activeMobileTab,
@@ -83,10 +92,12 @@ export function FriendsLeftColumn({
       >
         <PendingRequestsCard
           incomingRequests={pendingIncoming.filter(
-            (r): r is typeof r & { user: NonNullable<typeof r.user> } => r.user !== null,
+            (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
+              r.user !== null,
           )}
           outgoingRequests={pendingOutgoing.filter(
-            (r): r is typeof r & { user: NonNullable<typeof r.user> } => r.user !== null,
+            (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
+              r.user !== null,
           )}
           onActionSuccess={onPendingActionSuccess}
         />

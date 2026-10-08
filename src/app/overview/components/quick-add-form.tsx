@@ -234,17 +234,29 @@ export function QuickAddForm({
 
             <QuickAddFields
               type={type}
-              setType={(val) => dispatch({ type: "SET_FIELD", field: "type", value: val })}
+              setType={(val) =>
+                dispatch({ type: "SET_FIELD", field: "type", value: val })
+              }
               desc={desc}
-              setDesc={(val) => dispatch({ type: "SET_FIELD", field: "desc", value: val })}
+              setDesc={(val) =>
+                dispatch({ type: "SET_FIELD", field: "desc", value: val })
+              }
               amount={amount}
-              setAmount={(val) => dispatch({ type: "SET_FIELD", field: "amount", value: val })}
+              setAmount={(val) =>
+                dispatch({ type: "SET_FIELD", field: "amount", value: val })
+              }
               currency={currency}
-              setCurrency={(val) => dispatch({ type: "SET_FIELD", field: "currency", value: val })}
+              setCurrency={(val) =>
+                dispatch({ type: "SET_FIELD", field: "currency", value: val })
+              }
               categoryId={categoryId}
-              setCategoryId={(val) => dispatch({ type: "SET_FIELD", field: "categoryId", value: val })}
+              setCategoryId={(val) =>
+                dispatch({ type: "SET_FIELD", field: "categoryId", value: val })
+              }
               date={date}
-              setDate={(val) => dispatch({ type: "SET_FIELD", field: "date", value: val })}
+              setDate={(val) =>
+                dispatch({ type: "SET_FIELD", field: "date", value: val })
+              }
               categories={categories}
               convertedAmount={convertedAmount}
               targetCurrency={targetCurrency}

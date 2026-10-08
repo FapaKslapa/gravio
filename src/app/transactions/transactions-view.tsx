@@ -12,7 +12,11 @@ import { TransactionModal } from "./components/transaction-modal";
 import { TransactionsContentGrid } from "./components/transactions-content-grid";
 import { TransactionsMobileTabs } from "./components/transactions-mobile-tabs";
 import { TransactionsPageHeader } from "./components/transactions-page-header";
-import { type NormalizedTransaction, type SortField, type ViewMode } from "./components/transactions-utils";
+import type {
+  NormalizedTransaction,
+  SortField,
+  ViewMode,
+} from "./components/transactions-utils";
 import { TransactionsViewModeSwitcher } from "./components/transactions-view-mode-switcher";
 import { useTransactionFilters } from "./components/use-transaction-filters";
 import { useTransactionMutations } from "./components/use-transaction-mutations";
@@ -78,27 +82,46 @@ export default function TransactionsView() {
 
   const setCurrentPage = (val: number | ((prev: number) => number)) => {
     if (typeof val === "function") {
-      dispatch({ type: "SET_FIELD", field: "currentPage", value: val(currentPage) });
+      dispatch({
+        type: "SET_FIELD",
+        field: "currentPage",
+        value: val(currentPage),
+      });
     } else {
       dispatch({ type: "SET_FIELD", field: "currentPage", value: val });
     }
   };
-  const setViewMode = (val: ViewMode) => dispatch({ type: "SET_FIELD", field: "viewMode", value: val });
-  const setSortField = (val: SortField) => dispatch({ type: "SET_FIELD", field: "sortField", value: val });
-  const setSortDirection = (val: "asc" | "desc" | ((prev: "asc" | "desc") => "asc" | "desc")) => {
+  const setViewMode = (val: ViewMode) =>
+    dispatch({ type: "SET_FIELD", field: "viewMode", value: val });
+  const setSortField = (val: SortField) =>
+    dispatch({ type: "SET_FIELD", field: "sortField", value: val });
+  const setSortDirection = (
+    val: "asc" | "desc" | ((prev: "asc" | "desc") => "asc" | "desc"),
+  ) => {
     if (typeof val === "function") {
-      dispatch({ type: "SET_FIELD", field: "sortDirection", value: val(sortDirection) });
+      dispatch({
+        type: "SET_FIELD",
+        field: "sortDirection",
+        value: val(sortDirection),
+      });
     } else {
       dispatch({ type: "SET_FIELD", field: "sortDirection", value: val });
     }
   };
-  const setActiveMobileTab = (val: "list" | "summary" | "filters") => dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
-  const setIsTxModalOpen = (val: boolean) => dispatch({ type: "SET_FIELD", field: "isTxModalOpen", value: val });
-  const setIsCatManageOpen = (val: boolean) => dispatch({ type: "SET_FIELD", field: "isCatManageOpen", value: val });
-  const setIsCsvModalOpen = (val: boolean) => dispatch({ type: "SET_FIELD", field: "isCsvModalOpen", value: val });
-  const setTxToDelete = (val: string | null) => dispatch({ type: "SET_FIELD", field: "txToDelete", value: val });
-  const setCatToDelete = (val: string | null) => dispatch({ type: "SET_FIELD", field: "catToDelete", value: val });
-  const setEditingTx = (val: NormalizedTransaction | null) => dispatch({ type: "SET_FIELD", field: "editingTx", value: val });
+  const setActiveMobileTab = (val: "list" | "summary" | "filters") =>
+    dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
+  const setIsTxModalOpen = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isTxModalOpen", value: val });
+  const setIsCatManageOpen = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isCatManageOpen", value: val });
+  const setIsCsvModalOpen = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isCsvModalOpen", value: val });
+  const setTxToDelete = (val: string | null) =>
+    dispatch({ type: "SET_FIELD", field: "txToDelete", value: val });
+  const setCatToDelete = (val: string | null) =>
+    dispatch({ type: "SET_FIELD", field: "catToDelete", value: val });
+  const setEditingTx = (val: NormalizedTransaction | null) =>
+    dispatch({ type: "SET_FIELD", field: "editingTx", value: val });
 
   const resetPage = () => setCurrentPage(1);
 
@@ -243,7 +266,9 @@ export default function TransactionsView() {
       <ConfirmationDialog
         isOpen={txToDelete !== null}
         onClose={() => setTxToDelete(null)}
-        onConfirm={() => handleDeleteTransaction(txToDelete!, () => setTxToDelete(null))}
+        onConfirm={() =>
+          handleDeleteTransaction(txToDelete!, () => setTxToDelete(null))
+        }
         title="Elimina Transazione"
         message="Sei sicuro di voler eliminare questa transazione? L'operazione non può essere annullata."
         confirmLabel="Elimina"
@@ -253,7 +278,9 @@ export default function TransactionsView() {
       <ConfirmationDialog
         isOpen={catToDelete !== null}
         onClose={() => setCatToDelete(null)}
-        onConfirm={() => handleDeleteCategory(catToDelete!, () => setCatToDelete(null))}
+        onConfirm={() =>
+          handleDeleteCategory(catToDelete!, () => setCatToDelete(null))
+        }
         title="Elimina Categoria"
         message="Sei sicuro di voler eliminare questa categoria? Le transazioni collegate rimarranno ma diventeranno senza categoria."
         confirmLabel="Elimina"

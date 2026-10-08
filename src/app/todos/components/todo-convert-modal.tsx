@@ -124,9 +124,7 @@ function TodoConvertForm({
             <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider">
               Articolo da completare
             </span>
-            <span className="font-bold text-foreground">
-              {todoItem.title}
-            </span>
+            <span className="font-bold text-foreground">{todoItem.title}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2">

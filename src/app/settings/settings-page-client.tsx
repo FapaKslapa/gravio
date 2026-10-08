@@ -50,7 +50,10 @@ type SettingsFormAction =
   | { type: "SET_FIELD"; field: keyof SettingsFormState; value: any }
   | { type: "SET_FIELDS"; fields: Partial<SettingsFormState> };
 
-function settingsFormReducer(state: SettingsFormState, action: SettingsFormAction): SettingsFormState {
+function settingsFormReducer(
+  state: SettingsFormState,
+  action: SettingsFormAction,
+): SettingsFormState {
   switch (action.type) {
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
@@ -94,8 +97,12 @@ export function SettingsPageClient() {
     null as any,
     () => ({
       preferredCurrency: displayCurrency,
-      targetBudget: settings ? toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2) : "0.00",
-      maxBudget: settings ? toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2) : "0.00",
+      targetBudget: settings
+        ? toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2)
+        : "0.00",
+      maxBudget: settings
+        ? toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2)
+        : "0.00",
       notifyBudget80: settings?.notifyBudget80 ?? true,
       notifyRecurrentApplied: settings?.notifyRecurrentApplied ?? true,
       notifyFriendActions: settings?.notifyFriendActions ?? true,
@@ -103,7 +110,7 @@ export function SettingsPageClient() {
       profileImage: user.image || null,
       catBudgets: {},
       isSaving: false,
-    })
+    }),
   ) as [SettingsFormState, React.Dispatch<SettingsFormAction>];
 
   const {
@@ -119,22 +126,43 @@ export function SettingsPageClient() {
     isSaving,
   } = formState;
 
-  const setPreferredCurrency = (val: string) => dispatch({ type: "SET_FIELD", field: "preferredCurrency", value: val });
-  const setIsSaving = (val: boolean) => dispatch({ type: "SET_FIELD", field: "isSaving", value: val });
-  const setNotifyBudget80 = (val: boolean) => dispatch({ type: "SET_FIELD", field: "notifyBudget80", value: val });
-  const setNotifyRecurrentApplied = (val: boolean) => dispatch({ type: "SET_FIELD", field: "notifyRecurrentApplied", value: val });
-  const setNotifyFriendActions = (val: boolean) => dispatch({ type: "SET_FIELD", field: "notifyFriendActions", value: val });
-  const setProfileName = (val: string) => dispatch({ type: "SET_FIELD", field: "profileName", value: val });
-  const setProfileImage = (val: string | null) => dispatch({ type: "SET_FIELD", field: "profileImage", value: val });
-  const setCatBudgets = (val: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+  const setPreferredCurrency = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "preferredCurrency", value: val });
+  const setIsSaving = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isSaving", value: val });
+  const setNotifyBudget80 = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "notifyBudget80", value: val });
+  const setNotifyRecurrentApplied = (val: boolean) =>
+    dispatch({
+      type: "SET_FIELD",
+      field: "notifyRecurrentApplied",
+      value: val,
+    });
+  const setNotifyFriendActions = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "notifyFriendActions", value: val });
+  const setProfileName = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "profileName", value: val });
+  const setProfileImage = (val: string | null) =>
+    dispatch({ type: "SET_FIELD", field: "profileImage", value: val });
+  const setCatBudgets = (
+    val:
+      | Record<string, string>
+      | ((prev: Record<string, string>) => Record<string, string>),
+  ) => {
     if (typeof val === "function") {
-      dispatch({ type: "SET_FIELD", field: "catBudgets", value: val(catBudgets) });
+      dispatch({
+        type: "SET_FIELD",
+        field: "catBudgets",
+        value: val(catBudgets),
+      });
     } else {
       dispatch({ type: "SET_FIELD", field: "catBudgets", value: val });
     }
   };
-  const setTargetBudget = (val: string) => dispatch({ type: "SET_FIELD", field: "targetBudget", value: val });
-  const setMaxBudget = (val: string) => dispatch({ type: "SET_FIELD", field: "maxBudget", value: val });
+  const setTargetBudget = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "targetBudget", value: val });
+  const setMaxBudget = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "maxBudget", value: val });
 
   const [_permissionVersion, setPermissionVersion] = useState(0);
   // Read Notification.permission on demand; permissionVersion bump triggers re-read
@@ -220,8 +248,12 @@ export function SettingsPageClient() {
       dispatch({
         type: "SET_FIELDS",
         fields: {
-          targetBudget: toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2),
-          maxBudget: toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2),
+          targetBudget: toDisplayCurrency(
+            parseFloat(settings.targetMonthlyBudget),
+          ).toFixed(2),
+          maxBudget: toDisplayCurrency(
+            parseFloat(settings.maxMonthlyBudget),
+          ).toFixed(2),
           preferredCurrency: settings.preferredCurrency,
           notifyBudget80: settings.notifyBudget80 ?? true,
           notifyRecurrentApplied: settings.notifyRecurrentApplied ?? true,

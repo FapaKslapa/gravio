@@ -68,7 +68,7 @@ export function ProfileTab({
               <span>Cambia</span>
             </div>
           </button>
-            <input
+          <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}

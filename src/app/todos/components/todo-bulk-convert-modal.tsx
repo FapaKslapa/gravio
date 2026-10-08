@@ -93,7 +93,8 @@ function TodoBulkConvertForm({
     }
 
     const titles = selectedTodos.map((t) => t.title).join(", ");
-    const firstCatId = selectedTodos.find((t) => t.categoryId)?.categoryId || "";
+    const firstCatId =
+      selectedTodos.find((t) => t.categoryId)?.categoryId || "";
 
     return {
       txAmount: estTotal > 0 ? estTotal.toFixed(2) : "",
@@ -146,9 +147,7 @@ function TodoBulkConvertForm({
       >
         <div className="flex justify-between items-center pb-4 border-b border-(--card-border) mb-4">
           <div className="flex flex-col">
-            <h3 className="font-extrabold text-base">
-              Importazione di Massa
-            </h3>
+            <h3 className="font-extrabold text-base">Importazione di Massa</h3>
             <span className="text-[10px] text-(--text-muted) font-semibold mt-0.5">
               Importa {selectedTodos.length} articoli come un'unica spesa
             </span>
@@ -189,7 +188,13 @@ function TodoBulkConvertForm({
               type="text"
               aria-label="Descrizione transazione"
               value={txDescription}
-              onChange={(e) => dispatch({ type: "SET_FIELD", field: "txDescription", value: e.target.value })}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "txDescription",
+                  value: e.target.value,
+                })
+              }
               placeholder="Es. Spesa settimanale al supermercato"
               required
               className="text-xs text-foreground bg-neutral-500/5 dark:bg-zinc-800/30 border border-(--card-border) focus:border-blue-500/50 h-10 px-3.5 rounded-xl outline-none font-semibold transition-all"
@@ -203,7 +208,9 @@ function TodoBulkConvertForm({
               </span>
               <MoneyInput
                 value={txAmount}
-                onChange={(val) => dispatch({ type: "SET_FIELD", field: "txAmount", value: val })}
+                onChange={(val) =>
+                  dispatch({ type: "SET_FIELD", field: "txAmount", value: val })
+                }
                 currency={txCurrency}
                 required
               />
@@ -215,7 +222,13 @@ function TodoBulkConvertForm({
               </span>
               <CurrencySelect
                 value={txCurrency}
-                onChange={(val) => dispatch({ type: "SET_FIELD", field: "txCurrency", value: val })}
+                onChange={(val) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "txCurrency",
+                    value: val,
+                  })
+                }
               />
             </div>
           </div>
@@ -243,7 +256,13 @@ function TodoBulkConvertForm({
               </span>
               <CategorySelect
                 value={txCategoryId}
-                onChange={(val) => dispatch({ type: "SET_FIELD", field: "txCategoryId", value: val })}
+                onChange={(val) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "txCategoryId",
+                    value: val,
+                  })
+                }
                 categories={categories}
                 triggerClassName="h-10 text-xs"
               />
@@ -255,7 +274,9 @@ function TodoBulkConvertForm({
               </span>
               <CustomDatePicker
                 value={txDate}
-                onChange={(val) => dispatch({ type: "SET_FIELD", field: "txDate", value: val })}
+                onChange={(val) =>
+                  dispatch({ type: "SET_FIELD", field: "txDate", value: val })
+                }
               />
             </div>
           </div>

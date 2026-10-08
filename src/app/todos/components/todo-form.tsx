@@ -66,13 +66,23 @@ export function TodoForm({
     isSubmitting: false,
   }));
 
-  const { todoTitle, todoCategoryId, todoEstAmount, todoEstCurrency, isSubmitting } = state;
+  const {
+    todoTitle,
+    todoCategoryId,
+    todoEstAmount,
+    todoEstCurrency,
+    isSubmitting,
+  } = state;
   const todoNotes = "";
 
-  const setTodoTitle = (val: string) => dispatch({ type: "SET_FIELD", field: "todoTitle", value: val });
-  const setTodoCategoryId = (val: string) => dispatch({ type: "SET_FIELD", field: "todoCategoryId", value: val });
-  const setTodoEstAmount = (val: string) => dispatch({ type: "SET_FIELD", field: "todoEstAmount", value: val });
-  const setTodoEstCurrency = (val: string) => dispatch({ type: "SET_FIELD", field: "todoEstCurrency", value: val });
+  const setTodoTitle = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "todoTitle", value: val });
+  const setTodoCategoryId = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "todoCategoryId", value: val });
+  const setTodoEstAmount = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "todoEstAmount", value: val });
+  const setTodoEstCurrency = (val: string) =>
+    dispatch({ type: "SET_FIELD", field: "todoEstCurrency", value: val });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

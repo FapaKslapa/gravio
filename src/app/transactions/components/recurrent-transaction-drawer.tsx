@@ -90,9 +90,15 @@ function RecurrentTransactionForm({
         currency: editingTx.currency,
         categoryId: editingTx.categoryId || "",
         type: editingTx.type as "expense" | "income",
-        frequency: editingTx.frequency as "daily" | "weekly" | "monthly" | "yearly",
+        frequency: editingTx.frequency as
+          | "daily"
+          | "weekly"
+          | "monthly"
+          | "yearly",
         startDate: dayjs(editingTx.startDate).format("YYYY-MM-DD"),
-        endDate: editingTx.endDate ? dayjs(editingTx.endDate).format("YYYY-MM-DD") : "",
+        endDate: editingTx.endDate
+          ? dayjs(editingTx.endDate).format("YYYY-MM-DD")
+          : "",
         validationError: "",
         isSubmitting: false,
       };
@@ -132,7 +138,11 @@ function RecurrentTransactionForm({
         onClose();
       },
       onError: (err) => {
-        dispatch({ type: "SET_FIELD", field: "validationError", value: err.message || "Errore nella creazione." });
+        dispatch({
+          type: "SET_FIELD",
+          field: "validationError",
+          value: err.message || "Errore nella creazione.",
+        });
         dispatch({ type: "SET_FIELD", field: "isSubmitting", value: false });
       },
     }),
@@ -145,7 +155,11 @@ function RecurrentTransactionForm({
         onClose();
       },
       onError: (err) => {
-        dispatch({ type: "SET_FIELD", field: "validationError", value: err.message || "Errore nell'aggiornamento." });
+        dispatch({
+          type: "SET_FIELD",
+          field: "validationError",
+          value: err.message || "Errore nell'aggiornamento.",
+        });
         dispatch({ type: "SET_FIELD", field: "isSubmitting", value: false });
       },
     }),
@@ -157,7 +171,11 @@ function RecurrentTransactionForm({
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      dispatch({ type: "SET_FIELD", field: "validationError", value: "Inserisci un importo valido e maggiore di zero." });
+      dispatch({
+        type: "SET_FIELD",
+        field: "validationError",
+        value: "Inserisci un importo valido e maggiore di zero.",
+      });
       return;
     }
 
@@ -178,7 +196,11 @@ function RecurrentTransactionForm({
     if (!validation.success) {
       const firstError =
         validation.error.issues[0]?.message || "Input non valido.";
-      dispatch({ type: "SET_FIELD", field: "validationError", value: firstError });
+      dispatch({
+        type: "SET_FIELD",
+        field: "validationError",
+        value: firstError,
+      });
       return;
     }
 
@@ -202,9 +224,7 @@ function RecurrentTransactionForm({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center md:p-4">
       <m.div
-        initial={
-          isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }
-        }
+        initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }}
         animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
         exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }}
         transition={
@@ -269,21 +289,37 @@ function RecurrentTransactionForm({
         >
           <RecurrentFormFields
             description={description}
-            setDescription={(val) => dispatch({ type: "SET_FIELD", field: "description", value: val })}
+            setDescription={(val) =>
+              dispatch({ type: "SET_FIELD", field: "description", value: val })
+            }
             amount={amount}
-            setAmount={(val) => dispatch({ type: "SET_FIELD", field: "amount", value: val })}
+            setAmount={(val) =>
+              dispatch({ type: "SET_FIELD", field: "amount", value: val })
+            }
             currency={currency}
-            setCurrency={(val) => dispatch({ type: "SET_FIELD", field: "currency", value: val })}
+            setCurrency={(val) =>
+              dispatch({ type: "SET_FIELD", field: "currency", value: val })
+            }
             categoryId={categoryId}
-            setCategoryId={(val) => dispatch({ type: "SET_FIELD", field: "categoryId", value: val })}
+            setCategoryId={(val) =>
+              dispatch({ type: "SET_FIELD", field: "categoryId", value: val })
+            }
             type={type}
-            setType={(val) => dispatch({ type: "SET_FIELD", field: "type", value: val })}
+            setType={(val) =>
+              dispatch({ type: "SET_FIELD", field: "type", value: val })
+            }
             frequency={frequency}
-            setFrequency={(val) => dispatch({ type: "SET_FIELD", field: "frequency", value: val })}
+            setFrequency={(val) =>
+              dispatch({ type: "SET_FIELD", field: "frequency", value: val })
+            }
             startDate={startDate}
-            setStartDate={(val) => dispatch({ type: "SET_FIELD", field: "startDate", value: val })}
+            setStartDate={(val) =>
+              dispatch({ type: "SET_FIELD", field: "startDate", value: val })
+            }
             endDate={endDate}
-            setEndDate={(val) => dispatch({ type: "SET_FIELD", field: "endDate", value: val })}
+            setEndDate={(val) =>
+              dispatch({ type: "SET_FIELD", field: "endDate", value: val })
+            }
             categories={categories}
           />
 

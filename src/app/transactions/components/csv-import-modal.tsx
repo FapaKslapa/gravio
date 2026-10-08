@@ -74,7 +74,10 @@ type CsvImportAction =
   | { type: "SET_FIELD"; field: keyof CsvImportState; value: any }
   | { type: "RESET" };
 
-function csvImportReducer(state: CsvImportState, action: CsvImportAction): CsvImportState {
+function csvImportReducer(
+  state: CsvImportState,
+  action: CsvImportAction,
+): CsvImportState {
   switch (action.type) {
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
@@ -121,17 +124,29 @@ export function CsvImportModal({
 
   const { csvFile, csvHeaders, csvRows, csvMapping, isImporting } = state;
 
-  const setCsvFile = (val: File | null) => dispatch({ type: "SET_FIELD", field: "csvFile", value: val });
-  const setCsvHeaders = (val: string[]) => dispatch({ type: "SET_FIELD", field: "csvHeaders", value: val });
-  const setCsvRows = (val: Record<string, string>[]) => dispatch({ type: "SET_FIELD", field: "csvRows", value: val });
-  const setCsvMapping = (val: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+  const setCsvFile = (val: File | null) =>
+    dispatch({ type: "SET_FIELD", field: "csvFile", value: val });
+  const setCsvHeaders = (val: string[]) =>
+    dispatch({ type: "SET_FIELD", field: "csvHeaders", value: val });
+  const setCsvRows = (val: Record<string, string>[]) =>
+    dispatch({ type: "SET_FIELD", field: "csvRows", value: val });
+  const setCsvMapping = (
+    val:
+      | Record<string, string>
+      | ((prev: Record<string, string>) => Record<string, string>),
+  ) => {
     if (typeof val === "function") {
-      dispatch({ type: "SET_FIELD", field: "csvMapping", value: val(csvMapping) });
+      dispatch({
+        type: "SET_FIELD",
+        field: "csvMapping",
+        value: val(csvMapping),
+      });
     } else {
       dispatch({ type: "SET_FIELD", field: "csvMapping", value: val });
     }
   };
-  const setIsImporting = (val: boolean) => dispatch({ type: "SET_FIELD", field: "isImporting", value: val });
+  const setIsImporting = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isImporting", value: val });
 
   const handleCsvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

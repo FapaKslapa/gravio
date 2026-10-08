@@ -5,10 +5,10 @@ import {
   computeCategoryTotals,
   groupByDate,
   normalizeTransaction,
-  type ViewMode,
   type SortField,
+  type ViewMode,
 } from "./transactions-utils";
-import { type FilterInput } from "./use-transaction-filters";
+import type { FilterInput } from "./use-transaction-filters";
 
 export function useTransactionQueries({
   filterInput,
@@ -60,7 +60,9 @@ export function useTransactionQueries({
   const transactions = (transactionsData ?? []).map(normalizeTransaction);
   const groupedTx = groupByDate(transactions);
   const categoryTotals = computeCategoryTotals(transactions, categories);
-  const paginatedTxList = (paginatedData?.items ?? []).map(normalizeTransaction);
+  const paginatedTxList = (paginatedData?.items ?? []).map(
+    normalizeTransaction,
+  );
   const totalItems = paginatedData?.totalCount ?? 0;
 
   return {

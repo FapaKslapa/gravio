@@ -86,7 +86,9 @@ export function FriendsModals({
       <SharedExpenseDialog
         isOpen={isSharedExpenseOpen}
         onClose={onCloseSharedExpense}
-        friends={friends.map((f) => ({ user: { id: f.user.id, name: f.user.name } }))}
+        friends={friends.map((f) => ({
+          user: { id: f.user.id, name: f.user.name },
+        }))}
         groups={groups}
         onSave={onSaveSharedExpense}
         onSaveGroupExpense={onSaveGroupExpense}

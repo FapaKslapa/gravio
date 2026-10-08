@@ -8,11 +8,7 @@ import { cn } from "@/lib/utils";
 import { CategoriesModalHeader } from "./categories-modal-header";
 import { CategoryFormPanel } from "./category-form-panel";
 import { CategoryListPanel } from "./category-list-panel";
-import {
-  formReducer,
-  initialFormState,
-  type Category,
-} from "./category-types";
+import { type Category, formReducer, initialFormState } from "./category-types";
 
 type CategoriesModalProps = {
   isOpen: boolean;
@@ -83,9 +79,7 @@ export function CategoriesModal({
               isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }
             }
             animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={
-              isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }
-            }
+            exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }}
             transition={
               isMobile
                 ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }

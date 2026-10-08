@@ -9,7 +9,10 @@ interface FriendsHeaderProps {
   onAddExpense: () => void;
 }
 
-export function FriendsHeader({ hasFriends, onAddExpense }: FriendsHeaderProps) {
+export function FriendsHeader({
+  hasFriends,
+  onAddExpense,
+}: FriendsHeaderProps) {
   return (
     <m.div
       initial={{ opacity: 0, y: -10 }}

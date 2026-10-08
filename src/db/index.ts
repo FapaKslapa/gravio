@@ -19,7 +19,7 @@ const getD1 = () => {
   return new Proxy({} as any, {
     get() {
       throw new Error(
-        "D1 Database binding (DB) is not available. Ensure you are running in a Cloudflare worker environment with the binding configured."
+        "D1 Database binding (DB) is not available. Ensure you are running in a Cloudflare worker environment with the binding configured.",
       );
     },
   });

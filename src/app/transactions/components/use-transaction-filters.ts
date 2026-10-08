@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type FilterType } from "./transactions-utils";
+import type { FilterType } from "./transactions-utils";
 
 export type FilterInput = {
   search?: string;

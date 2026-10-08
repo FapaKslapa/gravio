@@ -63,7 +63,7 @@ export default function AnalyticsView() {
     convertCurrency(
       typeof nokVal === "string" ? parseFloat(nokVal) || 0 : nokVal,
       "NOK",
-      displayCurrency
+      displayCurrency,
     );
 
   const monthTransactions = transactions.filter((t) => {

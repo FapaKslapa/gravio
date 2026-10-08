@@ -1,14 +1,14 @@
 "use client";
 
-import { useReducer, useRef, useMemo } from "react";
+import { useMemo, useReducer, useRef } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
-import {
-  type FormState,
-  type Friend,
-  type Group,
-  type SharedExpensePayload,
-  type FormAction,
-  type SplitMode,
+import type {
+  FormAction,
+  FormState,
+  Friend,
+  Group,
+  SharedExpensePayload,
+  SplitMode,
 } from "./types";
 
 const initialFormState: FormState = {

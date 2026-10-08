@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { getRequestContext } from "@cloudflare/next-on-pages";
+import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
@@ -50,7 +50,10 @@ export const env = new Proxy({} as EnvType, {
     if (fieldSchema) {
       const parsed = fieldSchema.safeParse(value);
       if (!parsed.success) {
-        console.error(`[ENV] Validation error for key "${prop}":`, parsed.error.issues);
+        console.error(
+          `[ENV] Validation error for key "${prop}":`,
+          parsed.error.issues,
+        );
         // Fallback or return raw value to prevent crashing unless strictly required
         return value;
       }

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/lib/trpc/client";
 import { useDashboard } from "@/components/dashboard-layout";
-import { type NormalizedTransaction } from "./transactions-utils";
+import { useTRPC } from "@/lib/trpc/client";
+import type { NormalizedTransaction } from "./transactions-utils";
 
 export type SaveTxPayload = {
   id?: string;
@@ -74,10 +74,7 @@ export function useTransactionMutations(refetchCategories: () => void) {
     }),
   );
 
-  const handleSaveTx = async (
-    tx: SaveTxPayload,
-    onDone: () => void,
-  ) => {
+  const handleSaveTx = async (tx: SaveTxPayload, onDone: () => void) => {
     if (tx.id) {
       await updateTransactionMutation.mutateAsync({
         id: tx.id,
@@ -139,18 +136,12 @@ export function useTransactionMutations(refetchCategories: () => void) {
     );
   };
 
-  const handleDeleteTransaction = async (
-    id: string,
-    onDone: () => void,
-  ) => {
+  const handleDeleteTransaction = async (id: string, onDone: () => void) => {
     await deleteTransactionMutation.mutateAsync({ id });
     onDone();
   };
 
-  const handleDeleteCategory = async (
-    id: string,
-    onDone: () => void,
-  ) => {
+  const handleDeleteCategory = async (id: string, onDone: () => void) => {
     await deleteCategoryMutation.mutateAsync({ id });
     onDone();
   };

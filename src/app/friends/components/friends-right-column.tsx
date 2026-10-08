@@ -6,7 +6,12 @@ import { FriendDetailCard } from "./friend-detail-card";
 import { FriendListPanel } from "./friend-list-panel";
 import { GroupDetailCard } from "./group-detail-card";
 
-type FriendUser = { id: string; name: string; email: string; image: string | null };
+type FriendUser = {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+};
 
 type FriendItem = {
   friendshipId: string;

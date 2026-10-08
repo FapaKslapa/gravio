@@ -1,9 +1,4 @@
-import {
-  integer,
-  numeric,
-  sqliteTable,
-  text,
-} from "drizzle-orm/sqlite-core";
+import { integer, numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -38,8 +33,12 @@ export const account = sqliteTable("account", {
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
-  accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp" }),
-  refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp" }),
+  accessTokenExpiresAt: integer("access_token_expires_at", {
+    mode: "timestamp",
+  }),
+  refreshTokenExpiresAt: integer("refresh_token_expires_at", {
+    mode: "timestamp",
+  }),
   scope: text("scope"),
   password: text("password"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -70,9 +69,17 @@ export const userSettings = sqliteTable("user_settings", {
   geminiApiKey: text("gemini_api_key"),
   ollamaUrl: text("ollama_url").notNull().default("http://localhost:11434"),
   ollamaModel: text("ollama_model").notNull().default("llama3.2:1b"),
-  notifyBudget80: integer("notify_budget_80", { mode: "boolean" }).notNull().default(true),
-  notifyRecurrentApplied: integer("notify_recurrent_applied", { mode: "boolean" }).notNull().default(true),
-  notifyFriendActions: integer("notify_friend_actions", { mode: "boolean" }).notNull().default(true),
+  notifyBudget80: integer("notify_budget_80", { mode: "boolean" })
+    .notNull()
+    .default(true),
+  notifyRecurrentApplied: integer("notify_recurrent_applied", {
+    mode: "boolean",
+  })
+    .notNull()
+    .default(true),
+  notifyFriendActions: integer("notify_friend_actions", { mode: "boolean" })
+    .notNull()
+    .default(true),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -115,10 +122,9 @@ export const transaction = sqliteTable("transaction", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  categoryId: text("category_id").references(
-    () => category.id,
-    { onDelete: "set null" },
-  ),
+  categoryId: text("category_id").references(() => category.id, {
+    onDelete: "set null",
+  }),
   type: text("type").notNull(),
   amount: numeric("amount").notNull(),
   currency: text("currency").notNull(),
@@ -127,10 +133,9 @@ export const transaction = sqliteTable("transaction", {
   exchangeRate: numeric("exchange_rate").notNull(),
   description: text("description"),
   date: integer("date", { mode: "timestamp" }).notNull(),
-  groupId: text("group_id").references(
-    () => friendGroup.id,
-    { onDelete: "set null" },
-  ),
+  groupId: text("group_id").references(() => friendGroup.id, {
+    onDelete: "set null",
+  }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -150,20 +155,21 @@ export const todo = sqliteTable("todo", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  todoListId: text("todo_list_id").references(
-    () => todoList.id,
-    { onDelete: "cascade" },
-  ),
-  categoryId: text("category_id").references(
-    () => category.id,
-    { onDelete: "set null" },
-  ),
+  todoListId: text("todo_list_id").references(() => todoList.id, {
+    onDelete: "cascade",
+  }),
+  categoryId: text("category_id").references(() => category.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   notes: text("notes"),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   estimatedAmount: numeric("estimated_amount"),
   estimatedCurrency: text("estimated_currency"),
-  convertedToTransactionId: text("converted_to_transaction_id").references(() => transaction.id, { onDelete: "set null" }),
+  convertedToTransactionId: text("converted_to_transaction_id").references(
+    () => transaction.id,
+    { onDelete: "set null" },
+  ),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -198,10 +204,9 @@ export const sharedExpense = sqliteTable("shared_expense", {
   amountNok: numeric("amount_nok").notNull(),
   splitAmountNok: numeric("split_amount_nok").notNull(),
   settled: integer("settled", { mode: "boolean" }).notNull().default(false),
-  groupId: text("group_id").references(
-    () => friendGroup.id,
-    { onDelete: "set null" },
-  ),
+  groupId: text("group_id").references(() => friendGroup.id, {
+    onDelete: "set null",
+  }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -237,10 +242,9 @@ export const recurrentTransaction = sqliteTable("recurrent_transaction", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  categoryId: text("category_id").references(
-    () => category.id,
-    { onDelete: "set null" },
-  ),
+  categoryId: text("category_id").references(() => category.id, {
+    onDelete: "set null",
+  }),
   type: text("type").notNull(),
   amount: numeric("amount").notNull(),
   currency: text("currency").notNull().default("EUR"),
