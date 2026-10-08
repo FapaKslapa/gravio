@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.2.1
+
+### Patch Changes
+
+- Fix the income/expense toggle height and animation in the transaction sheet, give the category colour bar in transaction rows proper spacing from the rounded edges, and make the month selector in Statistics fill the full width on mobile.
+
 ## 1.2.0
 
 ### Minor Changes
