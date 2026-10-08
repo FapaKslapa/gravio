@@ -4,8 +4,8 @@
   "description": "Gestione finanziaria multivaluta in tempo reale",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#007aff",
+  "background_color": "#6d4aff",
+  "theme_color": "#6d4aff",
   "orientation": "portrait-primary",
   "icons": [
     {
