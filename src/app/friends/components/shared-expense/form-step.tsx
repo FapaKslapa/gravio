@@ -4,6 +4,7 @@ import { ArrowRight, Info } from "lucide-react";
 import { m } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import {
   Field,
   FieldError,
@@ -260,12 +261,11 @@ export function SharedExpenseFormStep({
 
         <Field>
           <FieldLabel htmlFor="shared-date">Data</FieldLabel>
-          <Input
+          <CustomDatePicker
             id="shared-date"
-            type="date"
             value={state.date}
-            onChange={(e) => set({ date: e.target.value })}
-            className="h-11"
+            onChange={(date) => set({ date })}
+            clearable={false}
           />
         </Field>
       </FieldGroup>

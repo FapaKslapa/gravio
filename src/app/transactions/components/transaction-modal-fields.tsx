@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
-import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { Button } from "@/components/ui/button";
+import { CategoryPicker } from "@/components/ui/category-picker";
+import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import {
   Field,
   FieldDescription,
@@ -13,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   TxAmountHero,
-  TxCategoryChips,
   TxCurrencySelect,
   TxTypeSegment,
 } from "@/components/ui/tx-form-parts";
@@ -123,13 +123,11 @@ export function DateField({
 }) {
   return (
     <Field>
-      <FieldLabel htmlFor="tx-date">Data</FieldLabel>
-      <Input
-        id="tx-date"
-        type="date"
-        className="h-11"
+      <FieldLabel>Data</FieldLabel>
+      <CustomDatePicker
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        triggerClassName="h-11 text-sm"
       />
     </Field>
   );
@@ -198,15 +196,16 @@ export function CategorySection({
     <Field>
       <div className="flex items-center justify-between">
         <FieldLabel>Categoria</FieldLabel>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-11 px-3 text-brand"
-          onClick={onToggleInlineCat}
-        >
-          {!isInlineCatOpen && <Plus data-icon="inline-start" />}
-          {isInlineCatOpen ? "Indietro" : "Nuova"}
-        </Button>
+        {isInlineCatOpen && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-11 px-3 text-brand"
+            onClick={onToggleInlineCat}
+          >
+            Indietro
+          </Button>
+        )}
       </div>
       <AnimatePresence mode="wait" initial={false}>
         {isInlineCatOpen ? (
@@ -250,26 +249,21 @@ export function CategorySection({
           </m.div>
         ) : (
           <m.div
-            key="chips"
+            key="picker"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <TxCategoryChips
+            <CategoryPicker
               categories={categories}
               value={categoryId}
               onChange={onCategoryChange}
+              suggestedId={suggestedCategoryId}
+              onCreateNew={onToggleInlineCat}
             />
           </m.div>
         )}
       </AnimatePresence>
-      {!isInlineCatOpen && (
-        <CategorySuggestionChip
-          categoryId={suggestedCategoryId}
-          categories={categories}
-          onUse={onCategoryChange}
-        />
-      )}
     </Field>
   );
 }

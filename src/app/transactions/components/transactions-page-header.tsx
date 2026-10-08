@@ -1,6 +1,7 @@
 "use client";
 
 import { EllipsisVertical, FileSpreadsheet, Plus, Tags } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,12 +14,14 @@ interface TransactionsPageHeaderProps {
   onNewTransaction: () => void;
   onImportCsv: () => void;
   onManageCategories: () => void;
+  extraActions?: ReactNode;
 }
 
 export function TransactionsPageHeader({
   onNewTransaction,
   onImportCsv,
   onManageCategories,
+  extraActions,
 }: TransactionsPageHeaderProps) {
   return (
     <header className="flex w-full items-center justify-between gap-3">
@@ -32,6 +35,7 @@ export function TransactionsPageHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        {extraActions}
         <Button
           onClick={onNewTransaction}
           className="h-11 gap-1.5 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90 active:scale-[0.97]"

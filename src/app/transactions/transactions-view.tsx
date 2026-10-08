@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUrlActions } from "@/hooks/use-url-actions";
 import { CategoriesModal } from "./components/categories-modal";
 import { CsvImportModal } from "./components/csv-import-modal";
+import { ReceiptScanButton } from "./components/receipt-scan-button";
 import { TransactionFilters } from "./components/transaction-filters";
 import { TransactionModal } from "./components/transaction-modal";
 import { TransactionsContentGrid } from "./components/transactions-content-grid";
@@ -199,6 +200,15 @@ export default function TransactionsView() {
         onNewTransaction={() => setIsTxModalOpen(true)}
         onImportCsv={() => setIsCsvModalOpen(true)}
         onManageCategories={() => setIsCatManageOpen(true)}
+        extraActions={
+          <ReceiptScanButton
+            label="Scontrino"
+            className="rounded-full px-4"
+            categories={categories}
+            onSave={(tx) => handleSaveTx(tx, () => setEditingTx(null))}
+            onCreateCategory={handleCreateCategory}
+          />
+        }
       />
 
       <TransactionsViewModeSwitcher

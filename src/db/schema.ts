@@ -1,4 +1,10 @@
-import { integer, numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  numeric,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -285,3 +291,32 @@ export const savingsContribution = sqliteTable("savings_contribution", {
   date: text("date").notNull(),
   note: text("note"),
 });
+
+export const aiUsage = sqliteTable(
+  "ai_usage",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: text("day").notNull(),
+    kind: text("kind").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [uniqueIndex("ai_usage_user_day_kind").on(t.userId, t.day, t.kind)],
+);
+
+export const aiInsight = sqliteTable(
+  "ai_insight",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    periodKey: text("period_key").notNull(),
+    payload: text("payload").notNull(),
+    source: text("source").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [uniqueIndex("ai_insight_user_period").on(t.userId, t.periodKey)],
+);

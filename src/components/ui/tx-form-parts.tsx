@@ -1,9 +1,12 @@
 "use client";
 
-import { Check, TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { m } from "motion/react";
 import { useId } from "react";
-import { CategoryIcon } from "@/components/icon-helper";
+import {
+  CategoryPicker,
+  type PickerCategory,
+} from "@/components/ui/category-picker";
 import {
   Select,
   SelectContent,
@@ -193,71 +196,32 @@ export function TxCurrencySelect({
   );
 }
 
-type ChipCategory = { id: string; name: string; icon: string; color: string };
-
 export function TxCategoryChips({
   categories,
   value,
   onChange,
-  generalLabel = "Generale",
+  generalLabel = "Nessuna categoria",
   label = "Categoria",
+  suggestedId,
+  onCreateNew,
 }: {
-  categories: ChipCategory[];
+  categories: PickerCategory[];
   value: string;
   onChange: (id: string) => void;
   generalLabel?: string;
   label?: string;
+  suggestedId?: string | null;
+  onCreateNew?: () => void;
 }) {
-  const all: ChipCategory[] = [
-    { id: "", name: generalLabel, icon: "Sparkles", color: "#8E8E93" },
-    ...categories,
-  ];
   return (
-    <fieldset
-      aria-label={label}
-      className="m-0 grid min-w-0 border-0 grid-cols-3 gap-2 sm:grid-cols-4"
-    >
-      {all.map((cat) => {
-        const active = cat.id === value;
-        return (
-          <button
-            key={cat.id || "__general__"}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(cat.id)}
-            className={cn(
-              "relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-md border px-1.5 py-2 text-center outline-none transition-[transform,background-color] active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-ring/50",
-              active ? "border-transparent" : "border-border bg-card",
-            )}
-            style={
-              active
-                ? {
-                    backgroundColor: `${cat.color}1f`,
-                    boxShadow: `inset 0 0 0 2px ${cat.color}`,
-                  }
-                : undefined
-            }
-          >
-            <span
-              className="flex size-8 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${cat.color}26`, color: cat.color }}
-            >
-              <CategoryIcon name={cat.icon} size={16} />
-            </span>
-            <span className="w-full truncate text-xs font-medium text-foreground">
-              {cat.name}
-            </span>
-            {active && (
-              <span
-                className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full text-white"
-                style={{ backgroundColor: cat.color }}
-              >
-                <Check className="size-3" aria-hidden />
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </fieldset>
+    <CategoryPicker
+      categories={categories}
+      value={value}
+      onChange={onChange}
+      noneLabel={generalLabel}
+      label={label}
+      suggestedId={suggestedId}
+      onCreateNew={onCreateNew}
+    />
   );
 }

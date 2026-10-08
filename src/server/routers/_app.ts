@@ -5,6 +5,7 @@ import { categoryRouter } from "./category";
 import { categoryBudgetRouter } from "./category-budget";
 import { friendRouter } from "./friend";
 import { groupRouter } from "./group";
+import { insightRouter } from "./insight";
 import { notificationRouter } from "./notification";
 import { recurrentTransactionRouter } from "./recurrent-transaction";
 import { savingsGoalRouter } from "./savings-goal";
@@ -45,6 +46,7 @@ export const appRouter = router({
   notification: notificationRouter,
   recurrentTransaction: recurrentTransactionRouter,
   savingsGoal: savingsGoalRouter,
+  insight: insightRouter,
 });
 
 export type AppRouter = typeof appRouter;

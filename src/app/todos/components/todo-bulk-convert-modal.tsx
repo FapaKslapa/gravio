@@ -3,10 +3,9 @@
 import { Check } from "lucide-react";
 import type React from "react";
 import { useMemo, useReducer } from "react";
-import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { useDashboard } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { CategorySelect } from "@/components/ui/category-select";
+import { CategoryPicker } from "@/components/ui/category-picker";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -237,19 +236,14 @@ function TodoBulkConvertForm({
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5">
           <Field>
             <FieldLabel>Categoria</FieldLabel>
-            <CategorySelect
+            <CategoryPicker
+              categories={categories}
               value={txCategoryId}
               onChange={(val) => setField("txCategoryId", val)}
-              categories={categories}
-              triggerClassName="h-11 text-sm"
-            />
-            <CategorySuggestionChip
-              categoryId={suggestedCategoryId}
-              categories={categories}
-              onUse={(id) => setField("txCategoryId", id)}
+              suggestedId={suggestedCategoryId}
             />
           </Field>
           <Field>

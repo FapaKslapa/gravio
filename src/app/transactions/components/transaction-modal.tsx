@@ -163,11 +163,7 @@ export function TransactionModal({
       }
       className="md:max-w-md"
     >
-      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <TransactionTypeToggle
-          value={form.txType}
-          onChange={(v) => set({ txType: v })}
-        />
+      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <AmountField
             amount={form.txAmount}
@@ -185,7 +181,11 @@ export function TransactionModal({
             />
           )}
         </div>
-        <FieldGroup>
+        <TransactionTypeToggle
+          value={form.txType}
+          onChange={(v) => set({ txType: v })}
+        />
+        <FieldGroup className="gap-6">
           <CategorySection
             categoryId={form.txCategoryId}
             suggestedCategoryId={suggestedCategoryId}

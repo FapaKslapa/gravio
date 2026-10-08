@@ -21,6 +21,7 @@ import { OverviewHeader } from "./overview/components/overview-header";
 import { QuickAddForm } from "./overview/components/quick-add-form";
 import { RecentTodoCard } from "./overview/components/recent-todo-card";
 import { RecentTransactionsCard } from "./overview/components/recent-transactions-card";
+import { SavingsInsightsCard } from "./overview/components/savings-insights-card";
 
 export default function OverviewClient() {
   const router = useRouter();
@@ -203,6 +204,11 @@ export default function OverviewClient() {
       key: "converter",
       className: "md:col-span-2 xl:col-span-12",
       node: <CurrencyConverterCard />,
+    },
+    {
+      key: "insights",
+      className: "md:col-span-2 xl:col-span-8",
+      node: <SavingsInsightsCard />,
     },
     {
       key: "goals",

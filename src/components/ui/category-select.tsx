@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CategoryIcon } from "@/components/icon-helper";
+import { CategoryBadge } from "@/components/ui/category-picker";
 import {
   PickerChevron,
   PickerList,
@@ -28,28 +28,14 @@ type CategorySelectProps = {
 };
 
 function Tile({ cat, size }: { cat: CategoryOption; size: "sm" | "md" }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex shrink-0 items-center justify-center",
-        size === "sm" ? "size-6 rounded-sm" : "size-8 rounded-md",
-      )}
-      style={{
-        backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)`,
-        color: cat.color,
-      }}
-    >
-      <CategoryIcon name={cat.icon} size={size === "sm" ? 13 : 16} />
-    </span>
-  );
+  return <CategoryBadge cat={cat} size={size === "sm" ? 24 : 32} />;
 }
 
 export function CategorySelect({
   value,
   onChange,
   categories,
-  generalLabel = "Generale",
+  generalLabel = "Nessuna categoria",
   placeholder,
   className,
   triggerClassName,

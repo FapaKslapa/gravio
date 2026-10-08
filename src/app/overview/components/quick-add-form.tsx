@@ -9,10 +9,11 @@ import {
   Repeat,
 } from "lucide-react";
 import { useMemo, useReducer } from "react";
-import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { useDashboard } from "@/components/dashboard-layout";
 import { CategoryIcon } from "@/components/icon-helper";
 import { Button } from "@/components/ui/button";
+import { CategoryPicker } from "@/components/ui/category-picker";
+import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
@@ -366,43 +367,14 @@ export function QuickAddForm({
           {categories.length > 0 && (
             <Field>
               <FieldLabel>Categoria</FieldLabel>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => {
-                  const selected = categoryId === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => set("categoryId", selected ? "" : cat.id)}
-                      className={cn(
-                        "inline-flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors active:scale-[0.97]",
-                        selected ? "font-semibold" : "bg-card",
-                      )}
-                      style={
-                        selected
-                          ? {
-                              backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
-                              borderColor: cat.color,
-                            }
-                          : undefined
-                      }
-                    >
-                      <span style={{ color: cat.color }}>
-                        <CategoryIcon name={cat.icon} size={16} />
-                      </span>
-                      {cat.name}
-                    </button>
-                  );
-                })}
-              </div>
+              <CategoryPicker
+                categories={categories}
+                value={categoryId}
+                onChange={(id) => set("categoryId", id)}
+                suggestedId={suggestedId}
+              />
             </Field>
           )}
-          <CategorySuggestionChip
-            categoryId={suggestedId}
-            categories={categories}
-            onUse={(id) => set("categoryId", id)}
-          />
 
           <Field>
             <FieldLabel>Data</FieldLabel>
@@ -425,13 +397,12 @@ export function QuickAddForm({
               >
                 Ieri
               </Button>
-              <Input
-                type="date"
-                aria-label="Altra data"
+              <CustomDatePicker
                 value={effectiveDate}
-                max={today}
-                onChange={(e) => set("date", e.target.value)}
-                className="tabular h-11 w-auto min-w-40 flex-1"
+                max={dayjs().format("YYYY-MM-DD")}
+                onChange={(v) => set("date", v)}
+                className="min-w-40 flex-1"
+                triggerClassName="h-11 text-sm"
               />
             </div>
           </Field>

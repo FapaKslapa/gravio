@@ -4,6 +4,10 @@ import dayjs from "dayjs";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  CustomDateRangePicker,
+  type DateRangePreset,
+} from "@/components/ui/custom-datepicker";
 import { Input } from "@/components/ui/input";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { cn } from "@/lib/utils";
@@ -31,6 +35,34 @@ type TransactionFiltersProps = {
   setFilterEndDate: (v: string) => void;
   categories: Category[];
 };
+
+function periodPresets(): DateRangePreset[] {
+  const now = dayjs();
+  const fmt = (d: dayjs.Dayjs) => d.format("YYYY-MM-DD");
+  const last = now.subtract(1, "month");
+  return [
+    {
+      label: "Questo mese",
+      from: fmt(now.startOf("month")),
+      to: fmt(now.endOf("month")),
+    },
+    {
+      label: "Mese scorso",
+      from: fmt(last.startOf("month")),
+      to: fmt(last.endOf("month")),
+    },
+    {
+      label: "Ultimi 3 mesi",
+      from: fmt(now.subtract(2, "month").startOf("month")),
+      to: fmt(now.endOf("month")),
+    },
+    {
+      label: "Quest'anno",
+      from: fmt(now.startOf("year")),
+      to: fmt(now.endOf("year")),
+    },
+  ];
+}
 
 const TYPE_OPTIONS: { value: FilterTypeValue; label: string }[] = [
   { value: "", label: "Tutte" },
@@ -257,30 +289,17 @@ export function TransactionFilters({
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-sm font-semibold">Periodo</legend>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                <label htmlFor="filter-start-date">Dal</label>
-                <Input
-                  id="filter-start-date"
-                  type="date"
-                  value={filterStartDate}
-                  max={filterEndDate || undefined}
-                  onChange={(e) => setFilterStartDate(e.target.value)}
-                  className="tabular h-11 text-foreground"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                <label htmlFor="filter-end-date">Al</label>
-                <Input
-                  id="filter-end-date"
-                  type="date"
-                  value={filterEndDate}
-                  min={filterStartDate || undefined}
-                  onChange={(e) => setFilterEndDate(e.target.value)}
-                  className="tabular h-11 text-foreground"
-                />
-              </div>
-            </div>
+            <CustomDateRangePicker
+              aria-label="Periodo"
+              placeholder="Qualsiasi periodo"
+              title="Periodo"
+              presets={periodPresets()}
+              value={{ from: filterStartDate, to: filterEndDate }}
+              onChange={({ from, to }) => {
+                setFilterStartDate(from);
+                setFilterEndDate(to);
+              }}
+            />
           </fieldset>
 
           <div className="flex gap-2">

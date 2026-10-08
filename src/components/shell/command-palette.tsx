@@ -12,6 +12,7 @@ import {
   Home,
   ListPlus,
   type LucideIcon,
+  ScanLine,
   Search,
   SearchX,
   Settings,
@@ -150,6 +151,13 @@ const ACTIONS: Entry[] = [
     href: "/transactions?new=income",
     icon: ArrowDownLeft,
     keywords: "aggiungi registra guadagno stipendio",
+  },
+  {
+    id: "scan-receipt",
+    label: "Scansiona scontrino",
+    href: "/transactions?scan=1",
+    icon: ScanLine,
+    keywords: "foto ricevuta fotocamera ocr",
   },
   {
     id: "import",

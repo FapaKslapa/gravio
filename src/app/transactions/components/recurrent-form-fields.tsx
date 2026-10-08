@@ -1,5 +1,6 @@
 "use client";
 
+import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import {
   Field,
   FieldError,
@@ -162,23 +163,24 @@ export function RecurrentFormFields({
         <div className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel htmlFor="rec-start">Inizio</FieldLabel>
-            <Input
+            <CustomDatePicker
               id="rec-start"
-              type="date"
-              className="h-11"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={setStartDate}
+              max={endDate || undefined}
+              clearable={false}
+              title="Data di inizio"
             />
           </Field>
           <Field>
             <FieldLabel htmlFor="rec-end">Fine (opzionale)</FieldLabel>
-            <Input
+            <CustomDatePicker
               id="rec-end"
-              type="date"
-              className="h-11"
               value={endDate}
-              min={startDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
+              min={startDate || undefined}
+              placeholder="Nessuna"
+              title="Data di fine"
             />
           </Field>
         </div>

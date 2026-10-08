@@ -15,6 +15,20 @@
       "when": 1791472833386,
       "tag": "0001_kind_triton",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791474185460,
+      "tag": "0002_wild_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791474420066,
+      "tag": "0003_bright_elektra",
+      "breakpoints": true
     }
   ]
 }
