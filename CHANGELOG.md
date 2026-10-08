@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.1.3
+
+### Patch Changes
+
+- New overview hero with the month strip, mobile layout fixes across every page, statement import now reads sign columns (D/A) and can invert income and expenses, paginated transaction timeline, fix for duplicated transactions with multi-debtor splits, and hydration fixes for theme and number formatting.
+
 ## 1.1.2
 
 ### Patch Changes
