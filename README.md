@@ -66,10 +66,6 @@ src/db/             schema Drizzle e migration di D1
 
 Sul piano gratuito di Cloudflare i limiti da tenere d'occhio sono 10 ms di CPU per richiesta, 100.000 richieste al giorno e 10.000 neuron al giorno di Workers AI per l'intero account. Per questo scontrini e consigli hanno una quota per utente (20 scansioni al giorno).
 
-## Cosa manca
-
-La lettura dei PDF funziona solo per quelli con testo: una scansione dà un avviso e basta. I file Excel vecchi (`.xls`) non sono supportati. Le righe di uno scontrino vengono mostrate in conferma ma non salvate con la transazione. Il consumo reale di neuron per foto e per consiglio non è ancora misurato.
-
 ## Come lavoro
 
 Si lavora e si fa commit solo su `development`. Le release si fanno solo su `main`, con il commit `chore: release vX.Y.Z`. Il workflow `.github/workflows/deploy.yml` parte sui tag `v*` e fa il deploy sul vecchio server via SSH: prima di creare un tag conviene controllare se serve ancora.
