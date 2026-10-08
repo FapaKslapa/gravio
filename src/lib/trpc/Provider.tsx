@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import { domAnimation, LazyMotion } from "framer-motion";
+import { domMax, LazyMotion } from "framer-motion";
 import { useState } from "react";
 import superjson from "superjson";
 import type { AppRouter } from "@/server/routers/_app";
@@ -40,7 +40,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCContextProvider trpcClient={trpcClient} queryClient={queryClient}>
-        <LazyMotion features={domAnimation} strict>
+        <LazyMotion features={domMax} strict>
           {children}
         </LazyMotion>
       </TRPCContextProvider>

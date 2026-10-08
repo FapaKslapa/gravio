@@ -1,17 +1,6 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  BarChart3,
-  CheckSquare,
-  CreditCard,
-  Home,
-  Settings,
-  Users,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import {
   createContext,
@@ -24,8 +13,9 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useTRPC } from "@/lib/trpc/client";
-import { cn } from "@/lib/utils";
-import { NotificationBell } from "./notifications/notification-bell";
+import { BottomNav } from "./shell/bottom-nav";
+import { MobileHeader } from "./shell/mobile-header";
+import { Sidebar } from "./shell/sidebar";
 import { useTheme } from "./theme-provider";
 
 export type UserSettingsType = {
@@ -317,137 +307,19 @@ export function DashboardLayout({ children, user }: DashboardProviderProps) {
   );
 }
 
-const NAV_LINKS = [
-  { label: "Overview", href: "/", icon: Home },
-  { label: "Transazioni", href: "/transactions", icon: CreditCard },
-  { label: "Liste Spesa", href: "/todos", icon: CheckSquare },
-  { label: "Statistiche", href: "/analytics", icon: BarChart3 },
-  { label: "Amici", href: "/friends", icon: Users },
-];
-
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { displayCurrency } = useDashboard();
+  const { displayCurrency, user } = useDashboard();
 
   return (
-    <div className="relative min-h-screen bg-transparent text-foreground flex flex-col transition-colors duration-500">
-      <header className="hidden md:block fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-7xl bg-(--card) backdrop-blur-md border border-(--card-border) rounded-full shadow-lg h-14 z-50 transition-colors duration-300">
-        <div className="w-full px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-2 shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Gravio"
-              width={28}
-              height={28}
-              className="rounded-xl"
-            />
-            <span className="font-bold text-sm tracking-tight">Gravio</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all hover:bg-neutral-500/10",
-                    isActive
-                      ? "bg-foreground text-background shadow-sm hover:bg-foreground hover:opacity-90"
-                      : "text-(--text-muted) hover:text-foreground",
-                  )}
-                >
-                  <Icon size={13} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 select-none">
-              Valuta: {displayCurrency}
-            </div>
-            <NotificationBell />
-            <Link
-              href="/settings"
-              className={cn(
-                "text-foreground border border-(--card-border) hover:bg-neutral-500/10 rounded-full h-9 w-9 flex items-center justify-center transition-all",
-                pathname === "/settings" && "bg-foreground text-background",
-              )}
-            >
-              <Settings size={15} />
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 border-b border-(--card-border) bg-(--card) backdrop-blur-md flex items-center justify-between px-4 z-40 transition-colors duration-300">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="Gravio"
-            width={24}
-            height={24}
-            className="rounded-lg"
-          />
-          <span className="font-bold text-xs">Gravio</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <div className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 mr-1 select-none">
-            {displayCurrency}
-          </div>
-          <NotificationBell />
-          <Link
-            href="/settings"
-            className={cn(
-              "text-foreground border border-(--card-border) hover:bg-neutral-500/10 rounded-full h-8 w-8 flex items-center justify-center transition-all",
-              pathname === "/settings" && "bg-foreground text-background",
-            )}
-          >
-            <Settings size={14} />
-          </Link>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col md:pt-24 pt-14 pb-24 md:pb-8">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6 flex-1 flex flex-col">
+    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
+      <Sidebar currency={displayCurrency} userName={user.name} />
+      <MobileHeader currency={displayCurrency} />
+      <main className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] pb-28 md:pt-0 md:pb-8 md:pl-[72px] xl:pl-64">
+        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-4 md:px-8 md:py-8">
           {children}
         </div>
-      </div>
-
-      <div className="md:hidden fixed bottom-4 left-4 right-4 z-40 rounded-full border border-(--card-border) bg-(--card-solid)/90 backdrop-blur-md shadow-2xl transition-all duration-300">
-        <div className="flex justify-around items-center h-14 px-1.5">
-          {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href;
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "flex flex-col items-center justify-center flex-1 h-11 rounded-full gap-0.5 text-[9px] font-bold transition-all",
-                  isActive
-                    ? "text-blue-500"
-                    : "text-(--text-muted) hover:text-foreground",
-                )}
-              >
-                <Icon
-                  size={15}
-                  className={cn(
-                    "transition-transform",
-                    isActive && "scale-105",
-                  )}
-                />
-                <span className="text-[8px] tracking-tight">{link.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      </main>
+      <BottomNav />
     </div>
   );
 }
