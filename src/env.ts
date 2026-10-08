@@ -1,4 +1,4 @@
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { z } from "zod";
 
 const envSchema = z.object({
@@ -20,7 +20,7 @@ type EnvType = z.infer<typeof envSchema>;
 function getEnvValue<K extends keyof EnvType>(key: K): any {
   let ctxEnv: any = {};
   try {
-    const ctx = getRequestContext() as any;
+    const ctx = getCloudflareContext() as any;
     if (ctx?.env) {
       ctxEnv = ctx.env;
     }

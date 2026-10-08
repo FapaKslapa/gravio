@@ -44,3 +44,8 @@ next-env.d.ts
 .turbo/
 
 # PWA generated files (none with manual SW approach)
+
+# opennext
+.open-next
+.wrangler
+.dev.vars

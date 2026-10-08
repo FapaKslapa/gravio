@@ -1,14 +1,12 @@
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
-
-export const runtime = "edge";
 
 type D1Client = Parameters<typeof drizzle<typeof schema>>[0];
 
 const getD1 = () => {
   try {
-    const env = getRequestContext()?.env as { DB?: D1Client } | undefined;
+    const env = getCloudflareContext()?.env as { DB?: D1Client } | undefined;
     if (env?.DB) {
       return drizzle(env.DB, { schema });
     }

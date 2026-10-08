@@ -1,16 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "gravio",
-  "compatibility_date": "2024-05-02",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "pages_build_output_dir": ".vercel/output/static",
+  "name": "gravio-dev",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "gravio",
-      "database_id": "2888ba27-d6f9-4cff-8c61-c5363c8fc8f7"
+      "database_id": "2888ba27-d6f9-4cff-8c61-c5363c8fc8f7",
+      "migrations_dir": "src/db/migrations"
     }
   ]
 }

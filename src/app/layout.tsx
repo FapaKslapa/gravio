@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Onest } from "next/font/google";
 import "./globals.css";
 
-export const runtime = "edge";
-
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider, ThemeScript } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
