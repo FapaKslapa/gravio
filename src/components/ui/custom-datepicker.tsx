@@ -11,7 +11,9 @@ import { CalendarHeader } from "./datepicker-header";
 import {
   CELL_SIZE,
   type CommonProps,
+  disabledDays,
   ISO,
+  isDayAllowed,
   parse,
   triggerProps,
 } from "./datepicker-shared";
@@ -41,9 +43,7 @@ export function CustomDatePicker(props: SingleProps) {
     ? dayjs(selected).format("D MMMM YYYY")
     : placeholder || "Seleziona data";
   const today = new Date();
-  const todayAllowed =
-    (!minDate || !dayjs(today).isBefore(minDate, "day")) &&
-    (!maxDate || !dayjs(today).isAfter(maxDate, "day"));
+  const todayAllowed = isDayAllowed(today, minDate, maxDate);
 
   const pick = (date: Date) => {
     onChange(dayjs(date).format(ISO));
@@ -86,10 +86,7 @@ export function CustomDatePicker(props: SingleProps) {
             onMonthChange={setMonth}
             startMonth={minDate}
             endMonth={maxDate}
-            disabled={[
-              ...(minDate ? [{ before: minDate }] : []),
-              ...(maxDate ? [{ after: maxDate }] : []),
-            ]}
+            disabled={disabledDays(minDate, maxDate)}
             onSelect={(date) => {
               if (date) pick(date);
             }}

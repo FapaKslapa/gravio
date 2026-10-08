@@ -7,8 +7,9 @@ import { useDashboard } from "@/components/dashboard-layout";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/lib/trpc/client";
 import { SettingsHeader } from "./components/settings-header";
+import { SECTIONS, type Tab } from "./components/settings-sections";
 import { SettingsTabContent } from "./components/settings-tab-content";
-import { SECTIONS, SettingsNav, type Tab } from "./components/settings-tabs";
+import { SettingsNav } from "./components/settings-tabs";
 import { useSaveSettings } from "./use-save-settings";
 import { useSettingsForm } from "./use-settings-form";
 

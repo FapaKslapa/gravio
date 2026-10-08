@@ -93,3 +93,12 @@ export function getGoalProgress(goal: Goal) {
 
   return { remaining, achieved, status, monthly, daysLeft };
 }
+
+export function resolveActiveId(
+  goals: Goal[],
+  selectedId: string | null,
+  isXl: boolean,
+): string | null {
+  if (selectedId && goals.some((g) => g.id === selectedId)) return selectedId;
+  return isXl ? (goals[0]?.id ?? null) : null;
+}

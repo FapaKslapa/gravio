@@ -5,12 +5,17 @@ type UrlActions = Record<string, (value: string) => void>;
 export function useUrlActions(actions: UrlActions, ready = true) {
   const handled = useRef(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: actions run once per page load
+  const actionsRef = useRef(actions);
+
+  useEffect(() => {
+    actionsRef.current = actions;
+  });
+
   useEffect(() => {
     if (!ready || handled.current) return;
     const params = new URLSearchParams(window.location.search);
     let found = false;
-    for (const [key, run] of Object.entries(actions)) {
+    for (const [key, run] of Object.entries(actionsRef.current)) {
       const value = params.get(key);
       if (value !== null) {
         found = true;

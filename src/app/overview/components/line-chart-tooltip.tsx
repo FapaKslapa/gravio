@@ -15,6 +15,7 @@ export function LineChartTooltip({
   pos: { x: number; y: number };
   displayCurrency: string;
 }) {
+  if (typeof document === "undefined") return null;
   return createPortal(
     <div
       className="elevation-2 pointer-events-none fixed z-[9999] flex min-w-44 flex-col gap-1.5 rounded-md bg-popover px-3 py-2.5 text-xs text-popover-foreground"

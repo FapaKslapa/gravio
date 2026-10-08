@@ -9,7 +9,7 @@ import {
   RecurrentTypeBadge,
 } from "./recurrent/recurrent-row-parts";
 import { FREQUENCY_LABELS } from "./recurrent/recurrent-types";
-import { CategoryTile } from "./transaction-list-timeline";
+import { CategoryTile } from "./transaction-list-parts";
 
 export function RecurrentTransactionRow({
   rt,

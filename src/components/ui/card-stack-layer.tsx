@@ -2,8 +2,8 @@ import { m } from "motion/react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BareLayerBody, SurfaceLayerBody } from "./card-stack-bodies";
-import { INSTANT, SPRING } from "./card-stack-constants";
 import { useLayerDrag } from "./card-stack-drag";
+import { layerAnimate, layerTransition } from "./card-stack-geometry";
 import type { CardStackItem, CardStackVariant } from "./card-stack-types";
 
 type StackLayerProps = {
@@ -58,7 +58,6 @@ export function StackLayer({
   });
   const isFan = variant === "fan";
   const collapsed = hideLayers && depth > 0;
-  const geometryDepth = collapsed ? 0 : depth;
   const Body = item.bare ? BareLayerBody : SurfaceLayerBody;
 
   return (
@@ -75,37 +74,17 @@ export function StackLayer({
       variants={exitVariants}
       custom={exitDirection}
       exit="exit"
-      animate={
-        isFan
-          ? {
-              x: geometryDepth * offset,
-              y: geometryDepth * -offset,
-              rotate: -Math.min(geometryDepth, visibleLayers) * fanAngle,
-              scale: 1 - geometryDepth * scaleFactor,
-              zIndex: count - depth,
-              opacity: depth < visibleLayers && !collapsed ? 1 : 0,
-            }
-          : {
-              top: geometryDepth * -offset,
-              scale: 1 - geometryDepth * scaleFactor,
-              zIndex: count - depth,
-              opacity:
-                depth < visibleLayers && !collapsed
-                  ? 1 - Math.min(depth, 3) * 0.12
-                  : 0,
-            }
-      }
-      transition={
-        reduceMotion
-          ? INSTANT
-          : {
-              ...SPRING,
-              opacity: {
-                duration: collapsed ? 0.1 : 0.3,
-                delay: collapsed ? 0.05 : 0,
-              },
-            }
-      }
+      animate={layerAnimate({
+        isFan,
+        depth,
+        count,
+        offset,
+        scaleFactor,
+        visibleLayers,
+        fanAngle,
+        collapsed,
+      })}
+      transition={layerTransition(reduceMotion, collapsed)}
     >
       <Body
         depth={depth}

@@ -1,22 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { formatCurrency } from "@/lib/utils";
-import { formatCompact } from "./months";
-import { METRICS, type Metric, TrendMetricTabs } from "./trend-metric-tabs";
-import { type MonthTrend, TrendTooltip } from "./trend-tooltip";
+import { TrendMetricTabs } from "./trend-metric-tabs";
+import { METRICS, type Metric } from "./trend-metrics";
+import type { MonthTrend } from "./trend-tooltip";
+
+const TrendChart = dynamic(() => import("./trend-chart"), {
+  ssr: false,
+});
 
 type TrendCardProps = {
   trendData: MonthTrend[];
@@ -26,14 +19,6 @@ type TrendCardProps = {
 export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
   const [metric, setMetric] = useState<Metric>("savings");
   const active = METRICS.find((x) => x.id === metric) ?? METRICS[0];
-  const lastIndex = trendData.length - 1;
-
-  const barClass =
-    metric === "income"
-      ? "fill-income"
-      : metric === "expense"
-        ? "fill-expense"
-        : "fill-brand";
 
   const values = trendData.map((d) => d[metric]);
   const total = values.reduce((s, v) => s + v, 0);
@@ -58,71 +43,11 @@ export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
       </div>
 
       <div className="h-60 w-full md:h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={trendData}
-            margin={{ top: 22, right: 4, left: 4, bottom: 0 }}
-            barCategoryGap="22%"
-          >
-            <CartesianGrid
-              vertical={false}
-              strokeDasharray="3 4"
-              className="stroke-border"
-            />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={8}
-              tick={{ className: "fill-muted-foreground", fontSize: 12 }}
-            />
-            <YAxis
-              width={44}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v: number) => formatCompact(v)}
-              tick={{ className: "fill-muted-foreground", fontSize: 11 }}
-            />
-            {metric === "savings" && (
-              <ReferenceLine
-                y={0}
-                className="stroke-border"
-                strokeWidth={1.5}
-              />
-            )}
-            <Tooltip
-              cursor={{ className: "fill-muted", fillOpacity: 0.6 }}
-              content={<TrendTooltip displayCurrency={displayCurrency} />}
-            />
-            <Bar
-              dataKey={metric}
-              radius={[8, 8, 8, 8]}
-              maxBarSize={44}
-              isAnimationActive={false}
-            >
-              {trendData.map((d, i) => (
-                <Cell
-                  key={d.label}
-                  className={
-                    metric === "savings" && d.savings < 0
-                      ? "fill-expense"
-                      : barClass
-                  }
-                  fillOpacity={i === lastIndex ? 1 : 0.5}
-                />
-              ))}
-              <LabelList
-                dataKey={metric}
-                position="top"
-                offset={6}
-                formatter={(v: unknown) => formatCompact(Number(v))}
-                className="fill-foreground tabular"
-                fontSize={11}
-                fontWeight={600}
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <TrendChart
+          trendData={trendData}
+          metric={metric}
+          displayCurrency={displayCurrency}
+        />
       </div>
 
       <table className="sr-only">

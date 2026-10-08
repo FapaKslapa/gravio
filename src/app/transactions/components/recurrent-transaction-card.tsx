@@ -12,7 +12,7 @@ import {
   FREQUENCY_LABELS,
   type RecurrentTx,
 } from "./recurrent/recurrent-types";
-import { CategoryTile } from "./transaction-list-timeline";
+import { CategoryTile } from "./transaction-list-parts";
 
 type RecurrentTransactionCardProps = {
   rt: RecurrentTx;

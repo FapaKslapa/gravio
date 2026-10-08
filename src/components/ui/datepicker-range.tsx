@@ -1,17 +1,15 @@
 "use client";
 
-import { it } from "date-fns/locale";
 import dayjs from "dayjs";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { CalendarHeader } from "./datepicker-header";
-import { DatePresets } from "./datepicker-presets";
+import { RangeBody } from "./datepicker-range-body";
 import {
-  CELL_SIZE,
   type CommonProps,
+  formatRange,
   ISO,
+  orderDates,
   parse,
   triggerProps,
 } from "./datepicker-shared";
@@ -27,14 +25,6 @@ type RangeProps = CommonProps & {
   presets?: DateRangePreset[];
   clearable?: boolean;
 };
-
-function formatRange(from?: Date, to?: Date) {
-  if (!from) return "";
-  if (!to) return `${dayjs(from).format("D MMM YYYY")} –`;
-  if (dayjs(from).isSame(to, "day")) return dayjs(from).format("D MMM YYYY");
-  const sameYear = dayjs(from).isSame(to, "year");
-  return `${dayjs(from).format(sameYear ? "D MMM" : "D MMM YYYY")} – ${dayjs(to).format("D MMM YYYY")}`;
-}
 
 export function CustomDateRangePicker(props: RangeProps) {
   const { value, onChange, className, placeholder, presets } = props;
@@ -61,9 +51,7 @@ export function CustomDateRangePicker(props: RangeProps) {
       setDraftFrom(date);
       return;
     }
-    const [a, b] = dayjs(date).isBefore(draftFrom, "day")
-      ? [date, draftFrom]
-      : [draftFrom, date];
+    const [a, b] = orderDates(date, draftFrom);
     onChange({ from: dayjs(a).format(ISO), to: dayjs(b).format(ISO) });
     handleOpenChange(false);
   };
@@ -90,48 +78,22 @@ export function CustomDateRangePicker(props: RangeProps) {
         trigger={trigger}
         popoverClassName={props.popoverClassName}
       >
-        <div className={cn("flex flex-col gap-2", CELL_SIZE)}>
-          {presets && presets.length > 0 && (
-            <DatePresets
-              presets={presets}
-              value={value}
-              onSelect={(p) => {
-                onChange({ from: p.from, to: p.to });
-                handleOpenChange(false);
-              }}
-            />
-          )}
-          <CalendarHeader
-            month={month}
-            onMonthChange={setMonth}
-            min={minDate}
-            max={maxDate}
-          />
-          <Calendar
-            mode="range"
-            locale={it}
-            weekStartsOn={1}
-            hideNavigation
-            selected={shownFrom ? { from: shownFrom, to: shownTo } : undefined}
-            onDayClick={onDayClick}
-            month={month}
-            onMonthChange={setMonth}
-            startMonth={minDate}
-            endMonth={maxDate}
-            disabled={[
-              ...(minDate ? [{ before: minDate }] : []),
-              ...(maxDate ? [{ after: maxDate }] : []),
-            ]}
-            classNames={{ month_caption: "hidden" }}
-            className={cn("mx-auto", CELL_SIZE)}
-          />
-          <p
-            aria-live="polite"
-            className="mx-auto min-h-5 text-center text-xs text-muted-foreground"
-          >
-            {draftFrom ? "Scegli la data finale" : "Scegli la data iniziale"}
-          </p>
-        </div>
+        <RangeBody
+          presets={presets}
+          value={value}
+          onPreset={(p) => {
+            onChange({ from: p.from, to: p.to });
+            handleOpenChange(false);
+          }}
+          month={month}
+          onMonthChange={setMonth}
+          minDate={minDate}
+          maxDate={maxDate}
+          shownFrom={shownFrom}
+          shownTo={shownTo}
+          drafting={!!draftFrom}
+          onDayClick={onDayClick}
+        />
       </PickerSurface>
       {clearable && hasValue && !props.disabled && (
         <ClearButton

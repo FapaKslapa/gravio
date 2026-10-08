@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { ColumnMapping } from "@/lib/import";
-import { isMappingValid } from "./csv-mapping-preview";
+import { isMappingValid } from "./csv-mapping-valid";
 import type { Step } from "./use-csv-import";
 
 type Props = {

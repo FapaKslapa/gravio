@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TxCurrencySelect } from "@/components/ui/tx-form-parts";
 import { springs } from "@/lib/motion";
-import type { ReceiptData } from "@/lib/schemas/receipt";
-import type { ReceiptCategory } from "./receipt-types";
+import type { ReceiptCategory, ReceiptLine } from "./receipt-types";
 
 type Props = {
   categories: ReceiptCategory[];
@@ -23,7 +22,7 @@ type Props = {
   categoryId: string;
   setCategoryId: (v: string) => void;
   suggestedId: string | null;
-  items: ReceiptData["items"];
+  items: ReceiptLine[];
   submitted: boolean;
   validAmount: boolean;
   saving: boolean;
@@ -114,17 +113,16 @@ export function ReceiptConfirmForm(p: Props) {
   );
 }
 
-function ReceiptItems({ items }: { items: ReceiptData["items"] }) {
+function ReceiptItems({ items }: { items: ReceiptLine[] }) {
   return (
     <details className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
       <summary className="min-h-11 cursor-pointer content-center font-medium">
         {items.length} righe lette
       </summary>
       <ul className="flex flex-col gap-1 pb-2">
-        {items.map((it, i) => (
+        {items.map((it) => (
           <li
-            // biome-ignore lint/suspicious/noArrayIndexKey: static list
-            key={i}
+            key={it.id}
             className="tabular flex justify-between gap-3 text-muted-foreground"
           >
             <span className="truncate">{it.description}</span>

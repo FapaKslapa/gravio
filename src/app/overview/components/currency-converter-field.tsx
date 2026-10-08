@@ -2,30 +2,6 @@ import { CurrencySelect } from "@/components/ui/currency-select";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-export const POPULAR_CURRENCIES = [
-  "EUR",
-  "USD",
-  "GBP",
-  "NOK",
-  "SEK",
-  "DKK",
-  "CHF",
-  "JPY",
-  "CAD",
-  "AUD",
-  "PLN",
-  "CZK",
-  "HUF",
-  "RON",
-  "TRY",
-  "BRL",
-  "MXN",
-  "SGD",
-  "HKD",
-  "KRW",
-  "INR",
-];
-
 export function CurrencyConverterField({
   id,
   label,

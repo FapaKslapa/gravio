@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import type { ColumnMapping, StatementTable } from "@/lib/import";
 import type { MappingField } from "./csv-import-types";
+import { isMappingValid } from "./csv-mapping-valid";
 
 const FIELDS: { key: MappingField; label: string; hint?: string }[] = [
   { key: "date", label: "Data" },
@@ -31,13 +32,6 @@ type CsvMappingStepProps = {
   warnings: string[];
   onMappingChange: (field: MappingField, index: number | null) => void;
 };
-
-export function isMappingValid(m: ColumnMapping): boolean {
-  return (
-    m.date !== null &&
-    (m.amount !== null || m.debit !== null || m.credit !== null)
-  );
-}
 
 export function CsvMappingStep({
   table,

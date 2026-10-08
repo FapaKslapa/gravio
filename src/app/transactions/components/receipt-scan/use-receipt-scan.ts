@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useCategorySuggestion } from "@/hooks/use-category-suggestion";
-import type { ReceiptData } from "@/lib/schemas/receipt";
 import { readReceipt } from "./read-receipt";
 import {
   matchHint,
   type ReceiptCategory,
+  type ReceiptLine,
   type ReceiptPhase,
   today,
 } from "./receipt-types";
+import { useObjectUrl } from "./use-object-url";
 
 type SavePayload = {
   description: string;
@@ -33,14 +34,14 @@ export function useReceiptScan({
 }: Args) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<ReceiptPhase>({ name: "idle" });
-  const [preview, setPreview] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => today());
   const [currency, setCurrency] = useState("EUR");
   const [categoryId, setCategoryId] = useState("");
   const [hint, setHint] = useState("");
-  const [items, setItems] = useState<ReceiptData["items"]>([]);
+  const [items, setItems] = useState<ReceiptLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -48,15 +49,11 @@ export function useReceiptScan({
   const suggestedId =
     categoryId === "" ? (suggest(desc) ?? matchHint(hint, categories)) : null;
 
-  useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
+  const preview = useObjectUrl(photo);
 
   const reset = () => {
     setPhase({ name: "idle" });
-    setPreview(null);
+    setPhoto(null);
     setDesc("");
     setAmount("");
     setDate(today());
@@ -74,7 +71,7 @@ export function useReceiptScan({
   };
 
   const handleFile = async (file: File) => {
-    setPreview(URL.createObjectURL(file));
+    setPhoto(file);
     setPhase({ name: "reading" });
     const result = await readReceipt(file);
     if ("error" in result) {
@@ -87,7 +84,7 @@ export function useReceiptScan({
     setDate(r.date ?? today());
     setCurrency(r.currency);
     setHint(r.categoryHint);
-    setItems(r.items);
+    setItems(r.items.map((it) => ({ ...it, id: crypto.randomUUID() })));
     setPhase({ name: "confirm" });
   };
 
@@ -117,7 +114,7 @@ export function useReceiptScan({
 
   const retry = () => {
     setPhase({ name: "idle" });
-    setPreview(null);
+    setPhoto(null);
   };
 
   return {

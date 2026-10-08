@@ -1,7 +1,7 @@
 import { ArrowRight, LinkIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 type VerifyPageProps = {

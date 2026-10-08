@@ -11,7 +11,7 @@ import { BudgetTab } from "./budget-tab";
 import { GeneralTab } from "./general-tab";
 import { NotificationsTab } from "./notifications-tab";
 import { ProfileTab } from "./profile-tab";
-import type { Tab } from "./settings-tabs";
+import type { Tab } from "./settings-sections";
 
 type SettingsTabContentProps = {
   activeTab: Tab;

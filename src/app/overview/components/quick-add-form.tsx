@@ -73,10 +73,7 @@ export function QuickAddForm({
       <form
         id="quick-add-form"
         className="flex flex-col gap-5 pb-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void form.handleSave();
-        }}
+        action={() => form.handleSave()}
       >
         <RecentsSection
           recents={form.recents}

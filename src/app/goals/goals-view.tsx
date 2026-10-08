@@ -3,15 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
-import { GoalCard } from "./components/goal-card";
 import { GoalDetail } from "./components/goal-detail";
 import { GoalDetailDrawer } from "./components/goal-detail-drawer";
+import { GoalsContent } from "./components/goals-content";
 import { GoalsDialogs } from "./components/goals-dialogs";
-import { GoalsEmptyState } from "./components/goals-empty-state";
 import { GoalsHeader } from "./components/goals-header";
-import { GoalsSummary } from "./components/goals-summary";
+import { resolveActiveId } from "./goals-helpers";
 import { useGoalsMutations } from "./use-goals-mutations";
 import { useIsXl } from "./use-is-xl";
 
@@ -35,12 +33,7 @@ export default function GoalsView() {
   >(null);
 
   const goals = data ?? [];
-  const activeId =
-    selectedId && goals.some((g) => g.id === selectedId)
-      ? selectedId
-      : isXl
-        ? (goals[0]?.id ?? null)
-        : null;
+  const activeId = resolveActiveId(goals, selectedId, isXl);
   const active = goals.find((g) => g.id === activeId) ?? null;
   const editing = goals.find((g) => g.id === editingId) ?? null;
   const contributing = goals.find((g) => g.id === contributeId) ?? null;
@@ -67,42 +60,18 @@ export default function GoalsView() {
     <div className="flex flex-col gap-5">
       <GoalsHeader onNew={openNew} />
 
-      {isLoading ? (
-        <div className="flex flex-col gap-3" aria-busy="true">
-          <Skeleton className="h-32 w-full rounded-lg" />
-          <Skeleton className="h-32 w-full rounded-lg" />
-        </div>
-      ) : goals.length === 0 ? (
-        <GoalsEmptyState onNew={openNew} />
-      ) : (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_26rem]">
-          <div className="flex flex-col gap-3">
-            <GoalsSummary goals={goals} />
-            <ul className="flex flex-col gap-3">
-              {goals.map((goal, i) => (
-                <GoalCard
-                  key={goal.id}
-                  goal={goal}
-                  index={i}
-                  selected={isXl && goal.id === activeId}
-                  onSelect={() => {
-                    setSelectedId(goal.id);
-                    setDetailOpen(true);
-                  }}
-                />
-              ))}
-            </ul>
-          </div>
-          {isXl && active && (
-            <aside
-              aria-label="Dettaglio obiettivo"
-              className="elevation-1 sticky top-8 h-fit rounded-xl bg-card p-5"
-            >
-              {detail}
-            </aside>
-          )}
-        </div>
-      )}
+      <GoalsContent
+        isLoading={isLoading}
+        goals={goals}
+        isXl={isXl}
+        activeId={activeId}
+        detail={detail}
+        onNew={openNew}
+        onSelect={(id) => {
+          setSelectedId(id);
+          setDetailOpen(true);
+        }}
+      />
 
       {!isXl && (
         <GoalDetailDrawer

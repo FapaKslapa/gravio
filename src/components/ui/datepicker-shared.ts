@@ -64,3 +64,26 @@ export function triggerProps(
     ),
   };
 }
+
+export function disabledDays(min?: Date, max?: Date) {
+  return [...(min ? [{ before: min }] : []), ...(max ? [{ after: max }] : [])];
+}
+
+export function isDayAllowed(day: Date, min?: Date, max?: Date) {
+  return (
+    (!min || !dayjs(day).isBefore(min, "day")) &&
+    (!max || !dayjs(day).isAfter(max, "day"))
+  );
+}
+
+export function orderDates(a: Date, b: Date): [Date, Date] {
+  return dayjs(a).isBefore(b, "day") ? [a, b] : [b, a];
+}
+
+export function formatRange(from?: Date, to?: Date) {
+  if (!from) return "";
+  if (!to) return `${dayjs(from).format("D MMM YYYY")} –`;
+  if (dayjs(from).isSame(to, "day")) return dayjs(from).format("D MMM YYYY");
+  const sameYear = dayjs(from).isSame(to, "year");
+  return `${dayjs(from).format(sameYear ? "D MMM" : "D MMM YYYY")} – ${dayjs(to).format("D MMM YYYY")}`;
+}

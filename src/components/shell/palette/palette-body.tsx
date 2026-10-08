@@ -1,6 +1,6 @@
 import { Search, SearchX } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Command, CommandList } from "@/components/ui/command";
 import {
   Empty,
@@ -25,13 +25,14 @@ export function PaletteBody({
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [recent, setRecent] = useState<string[]>([]);
+  const [recent, setRecent] = useState<string[]>(readRecent);
+  const inputRef = useRef<HTMLInputElement>(null);
   const debounced = useDebounced(query.trim(), 150);
   const search = usePaletteSearch(debounced);
   const { hasQuery, total, loading } = search;
 
   useEffect(() => {
-    setRecent(readRecent());
+    inputRef.current?.focus();
   }, []);
 
   const go = useCallback(
@@ -56,8 +57,7 @@ export function PaletteBody({
           aria-hidden="true"
         />
         <input
-          // biome-ignore lint/a11y/noAutofocus: la palette si apre per scrivere subito
-          autoFocus
+          ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cerca spese, amici, liste o azioni"

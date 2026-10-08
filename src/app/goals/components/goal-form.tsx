@@ -7,7 +7,8 @@ import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
-import { GOAL_COLORS, GoalColorField } from "./goal-color-field";
+import { GoalColorField } from "./goal-color-field";
+import { GOAL_COLORS } from "./goal-colors";
 import type { GoalFormSheetProps, GoalFormValues } from "./goal-form-types";
 import { GoalIconField } from "./goal-icon-field";
 

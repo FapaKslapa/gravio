@@ -1,6 +1,6 @@
 import { getDefaultClassNames } from "react-day-picker";
 import type { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 type Options = {

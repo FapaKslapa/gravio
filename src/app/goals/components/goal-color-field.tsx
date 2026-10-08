@@ -1,8 +1,6 @@
 import { Check } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { APPLE_COLORS } from "@/lib/constants";
-
-export const GOAL_COLORS = APPLE_COLORS.slice(0, 12);
+import { GOAL_COLORS } from "./goal-colors";
 
 type GoalColorFieldProps = {
   value: string;

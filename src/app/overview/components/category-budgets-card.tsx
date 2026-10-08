@@ -18,7 +18,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
-import { buildBudgetItems, CategoryBudgetRow } from "./category-budget-row";
+import { buildBudgetItems } from "./category-budget-items";
+import { CategoryBudgetRow } from "./category-budget-row";
 
 type CategoryBudgetInfo = {
   id: string;

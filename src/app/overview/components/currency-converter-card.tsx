@@ -13,10 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
-import {
-  CurrencyConverterField,
-  POPULAR_CURRENCIES,
-} from "./currency-converter-field";
+import { CurrencyConverterField } from "./currency-converter-field";
+import { POPULAR_CURRENCIES } from "./popular-currencies";
 
 export function CurrencyConverterCard({ className }: { className?: string }) {
   const { rates, displayCurrency, convertCurrency } = useDashboard();

@@ -46,41 +46,42 @@ export function MonthStrip({
         aria-label={label}
         className="relative flex h-32 items-end gap-[3px] md:h-44 xl:h-56"
       >
-        {daily.map((value, i) => {
-          const day = i + 1;
-          const future = day > today;
-          const over = allowed !== null && value > allowed + 0.005;
-          const height = future
-            ? 30
-            : value > 0
-              ? Math.max((value / peak) * 100, 4)
-              : 2;
-          return (
-            <div
-              key={day}
-              className="flex h-full min-w-0 flex-1 items-end justify-center"
-            >
-              {future ? (
-                <span
-                  className="h-[30%] border-l-2 border-dashed border-brand-foreground/40"
-                  aria-hidden="true"
-                />
-              ) : (
-                <m.span
-                  className={cn(
-                    "w-full rounded-t-[3px]",
-                    over ? "bg-warning" : "bg-brand-foreground",
-                    value === 0 && "opacity-50",
-                  )}
-                  style={{ height: `${height}%`, originY: 1 }}
-                  initial={reduce ? false : { scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ ...springs.snappy, delay: i * 0.012 }}
-                />
-              )}
-            </div>
-          );
-        })}
+        {daily
+          .map((value, i) => ({ day: i + 1, value }))
+          .map(({ day, value }) => {
+            const future = day > today;
+            const over = allowed !== null && value > allowed + 0.005;
+            const height = future
+              ? 30
+              : value > 0
+                ? Math.max((value / peak) * 100, 4)
+                : 2;
+            return (
+              <div
+                key={day}
+                className="flex h-full min-w-0 flex-1 items-end justify-center"
+              >
+                {future ? (
+                  <span
+                    className="h-[30%] border-l-2 border-dashed border-brand-foreground/40"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <m.span
+                    className={cn(
+                      "w-full rounded-t-[3px]",
+                      over ? "bg-warning" : "bg-brand-foreground",
+                      value === 0 && "opacity-50",
+                    )}
+                    style={{ height: `${height}%`, originY: 1 }}
+                    initial={reduce ? false : { scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ ...springs.snappy, delay: (day - 1) * 0.012 }}
+                  />
+                )}
+              </div>
+            );
+          })}
         {allowed !== null && allowed > 0 && (
           <span
             className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-brand-foreground/70"

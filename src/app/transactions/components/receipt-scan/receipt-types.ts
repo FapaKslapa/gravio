@@ -1,3 +1,7 @@
+import type { ReceiptData } from "@/lib/schemas/receipt";
+
+export type ReceiptLine = ReceiptData["items"][number] & { id: string };
+
 export type ReceiptCategory = {
   id: string;
   name: string;

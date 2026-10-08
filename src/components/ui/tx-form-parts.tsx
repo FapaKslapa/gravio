@@ -63,6 +63,7 @@ export function TxTypeSegment({
   );
 }
 
-export { sanitizeAmount, TxAmountHero } from "./tx-amount";
+export { sanitizeAmount } from "./sanitize-amount";
+export { TxAmountHero } from "./tx-amount";
 export { TX_CURRENCIES } from "./tx-currencies";
 export { TxCategoryChips, TxCurrencySelect } from "./tx-form-pickers";
