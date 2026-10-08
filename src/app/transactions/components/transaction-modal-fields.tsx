@@ -2,6 +2,7 @@
 
 import { ArrowRight, Plus } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
+import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -166,6 +167,7 @@ export function ConversionBadge({
 
 export function CategorySection({
   categoryId,
+  suggestedCategoryId,
   categories,
   onCategoryChange,
   isInlineCatOpen,
@@ -179,6 +181,7 @@ export function CategorySection({
   onCreateCategory,
 }: {
   categoryId: string;
+  suggestedCategoryId: string | null;
   categories: Category[];
   onCategoryChange: (id: string) => void;
   isInlineCatOpen: boolean;
@@ -260,6 +263,13 @@ export function CategorySection({
           </m.div>
         )}
       </AnimatePresence>
+      {!isInlineCatOpen && (
+        <CategorySuggestionChip
+          categoryId={suggestedCategoryId}
+          categories={categories}
+          onUse={onCategoryChange}
+        />
+      )}
     </Field>
   );
 }

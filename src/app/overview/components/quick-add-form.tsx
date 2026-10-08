@@ -1,8 +1,15 @@
 "use client";
 
 import dayjs from "dayjs";
-import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "lucide-react";
-import { useReducer } from "react";
+import {
+  ArrowDownLeft,
+  ArrowRight,
+  ArrowUpRight,
+  History,
+  Repeat,
+} from "lucide-react";
+import { useMemo, useReducer } from "react";
+import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { useDashboard } from "@/components/dashboard-layout";
 import { CategoryIcon } from "@/components/icon-helper";
 import { Button } from "@/components/ui/button";
@@ -18,14 +25,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useCategorySuggestion,
+  useDebouncedValue,
+} from "@/hooks/use-category-suggestion";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type CategoryType = { id: string; name: string; icon: string; color: string };
+
+type RecentTx = {
+  type: string;
+  amount: string;
+  currency: string;
+  categoryId: string | null;
+  description: string | null;
+  date: Date | string;
+};
 
 type QuickAddFormProps = {
   isOpen: boolean;
   onClose: () => void;
   categories: CategoryType[];
+  recentTransactions?: RecentTx[];
   onSave: (transaction: {
     description: string;
     type: "expense" | "income";
@@ -91,6 +112,7 @@ export function QuickAddForm({
   isOpen,
   onClose,
   categories,
+  recentTransactions = [],
   onSave,
 }: QuickAddFormProps) {
   const { convertCurrency, displayCurrency } = useDashboard();
@@ -111,12 +133,48 @@ export function QuickAddForm({
   const set = <K extends keyof FormState>(field: K, value: FormState[K]) =>
     dispatch({ type: "SET_FIELD", field, value });
 
+  const recents = useMemo(() => {
+    const seen = new Set<string>();
+    const out: RecentTx[] = [];
+    const sorted = [...recentTransactions].sort(
+      (a, b) => +new Date(b.date) - +new Date(a.date),
+    );
+    for (const t of sorted) {
+      if (t.type !== "expense" && t.type !== "income") continue;
+      const key = `${t.type}|${t.categoryId ?? ""}|${parseFloat(t.amount)}|${t.currency}|${t.description ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(t);
+      if (out.length === 4) break;
+    }
+    return out;
+  }, [recentTransactions]);
+
+  const applyRecent = (t: RecentTx) =>
+    dispatch({
+      type: "RESET",
+      payload: {
+        ...state,
+        type: t.type === "income" ? "income" : "expense",
+        amount: parseFloat(t.amount).toFixed(2),
+        currency: t.currency,
+        categoryId: t.categoryId ?? "",
+        desc: t.description ?? "",
+        date: "",
+        isSaving: false,
+      },
+    });
+
   const parsedAmount = parseFloat(amount);
   const hasAmount = !Number.isNaN(parsedAmount) && parsedAmount > 0;
   const showConversion = hasAmount && currency !== displayCurrency;
   const convertedAmount = showConversion
     ? convertCurrency(parsedAmount, currency, displayCurrency)
     : null;
+
+  const suggest = useCategorySuggestion(isOpen);
+  const debouncedDesc = useDebouncedValue(desc, 200);
+  const suggestedId = categoryId ? null : suggest(debouncedDesc);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const today = dayjs().format("YYYY-MM-DD");
@@ -159,6 +217,55 @@ export function QuickAddForm({
       className="sm:max-w-lg"
     >
       <div className="flex flex-col gap-5 pb-2">
+        {recents.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                <History className="size-4" aria-hidden="true" />
+                Recenti
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-11 rounded-full px-3 text-brand"
+                onClick={() => applyRecent(recents[0] as RecentTx)}
+              >
+                <Repeat data-icon="inline-start" />
+                Ripeti ultima
+              </Button>
+            </div>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {recents.map((t) => {
+                const cat = categories.find((c) => c.id === t.categoryId);
+                const label = t.description || cat?.name || "Senza nome";
+                return (
+                  <button
+                    key={`${t.type}-${t.categoryId}-${t.amount}-${t.currency}-${t.description}`}
+                    type="button"
+                    onClick={() => applyRecent(t)}
+                    className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border bg-card px-3.5 text-sm font-medium transition-colors active:scale-[0.97]"
+                  >
+                    {cat && (
+                      <span style={{ color: cat.color }}>
+                        <CategoryIcon name={cat.icon} size={16} />
+                      </span>
+                    )}
+                    <span className="max-w-28 truncate">{label}</span>
+                    <span
+                      className={cn(
+                        "tabular font-semibold",
+                        t.type === "income" ? "text-income" : "text-expense",
+                      )}
+                    >
+                      {formatCurrency(parseFloat(t.amount), t.currency)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div
           role="radiogroup"
           aria-label="Tipo di operazione"
@@ -291,6 +398,11 @@ export function QuickAddForm({
               </div>
             </Field>
           )}
+          <CategorySuggestionChip
+            categoryId={suggestedId}
+            categories={categories}
+            onUse={(id) => set("categoryId", id)}
+          />
 
           <Field>
             <FieldLabel>Data</FieldLabel>

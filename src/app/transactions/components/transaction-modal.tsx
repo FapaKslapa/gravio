@@ -6,6 +6,10 @@ import { useDashboard } from "@/components/dashboard-layout";
 import { FieldGroup } from "@/components/ui/field";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import {
+  useCategorySuggestion,
+  useDebouncedValue,
+} from "@/hooks/use-category-suggestion";
+import {
   AmountField,
   CategorySection,
   ConversionBadge,
@@ -98,6 +102,10 @@ export function TransactionModal({
     ? convertCurrency(parsedAmount, form.txCurrency, displayCurrency)
     : null;
 
+  const suggest = useCategorySuggestion(isOpen);
+  const debouncedDesc = useDebouncedValue(form.txDesc, 200);
+  const suggestedCategoryId = form.txCategoryId ? null : suggest(debouncedDesc);
+
   // Handlers
   const handleCreateCategoryInline = async () => {
     if (!form.newCatName) return;
@@ -180,6 +188,7 @@ export function TransactionModal({
         <FieldGroup>
           <CategorySection
             categoryId={form.txCategoryId}
+            suggestedCategoryId={suggestedCategoryId}
             categories={categories}
             onCategoryChange={(v) => set({ txCategoryId: v })}
             isInlineCatOpen={form.isInlineCatOpen}

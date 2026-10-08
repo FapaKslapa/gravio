@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDashboard } from "@/components/dashboard-layout";
 import { useTRPC } from "@/lib/trpc/client";
-import type { NormalizedTransaction } from "./transactions-utils";
 
 export type SaveTxPayload = {
   id?: string;

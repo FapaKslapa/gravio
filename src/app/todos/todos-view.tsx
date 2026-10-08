@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FolderPlus, ShoppingBasket } from "lucide-react";
 import { m } from "motion/react";
-import { useMemo, useReducer, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUrlActions } from "@/hooks/use-url-actions";
 import { fadeUp } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { TodoForm } from "./components/todo-form";
@@ -36,7 +37,7 @@ type UIState = {
 };
 
 type UIAction =
-  | { type: "SET_FIELD"; field: keyof UIState; value: any }
+  | { type: "SET_FIELD"; field: keyof UIState; value: unknown }
   | { type: "SET_FIELDS"; fields: Partial<UIState> };
 
 function uiReducer(state: UIState, action: UIAction): UIState {
@@ -124,6 +125,14 @@ function useTodoView() {
 
   const actualActiveListId =
     activeListId || (listsData && listsData.length > 0 ? listsData[0].id : "");
+
+  useUrlActions(
+    {
+      newList: () => setIsNewListOpen(true),
+      list: (id) => setActiveListId(id),
+    },
+    !!listsData,
+  );
 
   const handleSelectActiveList = (id: string) => {
     setActiveListId(id);

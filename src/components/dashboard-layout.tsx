@@ -9,11 +9,11 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   useSyncExternalStore,
 } from "react";
 import { useTRPC } from "@/lib/trpc/client";
 import { BottomNav } from "./shell/bottom-nav";
+import { CommandPaletteProvider } from "./shell/command-palette";
 import { MobileHeader } from "./shell/mobile-header";
 import { Sidebar } from "./shell/sidebar";
 import { useTheme } from "./theme-provider";
@@ -311,15 +311,17 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { displayCurrency, user } = useDashboard();
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
-      <Sidebar currency={displayCurrency} userName={user.name} />
-      <MobileHeader currency={displayCurrency} />
-      <main className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] pb-28 md:pt-0 md:pb-8 md:pl-[72px] xl:pl-64">
-        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-4 md:px-8 md:py-8">
-          {children}
-        </div>
-      </main>
-      <BottomNav />
-    </div>
+    <CommandPaletteProvider>
+      <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
+        <Sidebar currency={displayCurrency} userName={user.name} />
+        <MobileHeader currency={displayCurrency} />
+        <main className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] pb-28 md:pt-0 md:pb-8 md:pl-[72px] xl:pl-64">
+          <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-4 md:px-8 md:py-8">
+            {children}
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    </CommandPaletteProvider>
   );
 }

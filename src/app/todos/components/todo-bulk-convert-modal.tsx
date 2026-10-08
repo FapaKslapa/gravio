@@ -2,7 +2,8 @@
 
 import { Check } from "lucide-react";
 import type React from "react";
-import { useReducer } from "react";
+import { useMemo, useReducer } from "react";
+import { CategorySuggestionChip } from "@/components/category-suggestion-chip";
 import { useDashboard } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { CategorySelect } from "@/components/ui/category-select";
@@ -12,6 +13,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { useCategorySuggestion } from "@/hooks/use-category-suggestion";
 
 type TodoItem = {
   id: string;
@@ -53,7 +55,7 @@ type FormState = {
 };
 
 type FormAction =
-  | { type: "SET_FIELD"; field: keyof FormState; value: any }
+  | { type: "SET_FIELD"; field: keyof FormState; value: unknown }
   | { type: "SET_FIELDS"; fields: Partial<FormState> };
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -116,6 +118,26 @@ function TodoBulkConvertForm({
     txCategoryId,
     isSubmitting,
   } = state;
+
+  const suggest = useCategorySuggestion();
+  const suggestedCategoryId = useMemo(() => {
+    if (txCategoryId) return null;
+    const votes = new Map<string, number>();
+    for (const todo of selectedTodos) {
+      if (todo.categoryId) continue;
+      const id = suggest(todo.title);
+      if (id) votes.set(id, (votes.get(id) ?? 0) + 1);
+    }
+    let best: string | null = null;
+    let bestN = 0;
+    for (const [id, n] of votes) {
+      if (n > bestN) {
+        best = id;
+        bestN = n;
+      }
+    }
+    return best;
+  }, [txCategoryId, selectedTodos, suggest]);
 
   const setField = (field: keyof FormState, value: unknown) =>
     dispatch({ type: "SET_FIELD", field, value });
@@ -223,6 +245,11 @@ function TodoBulkConvertForm({
               onChange={(val) => setField("txCategoryId", val)}
               categories={categories}
               triggerClassName="h-11 text-sm"
+            />
+            <CategorySuggestionChip
+              categoryId={suggestedCategoryId}
+              categories={categories}
+              onUse={(id) => setField("txCategoryId", id)}
             />
           </Field>
           <Field>

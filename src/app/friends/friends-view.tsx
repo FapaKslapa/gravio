@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducer } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useUrlActions } from "@/hooks/use-url-actions";
 import { useTRPC } from "@/lib/trpc/client";
 
 import { AddFriendCard } from "./components/add-friend-card";
@@ -42,7 +43,7 @@ type UIState = {
 };
 
 type UIAction =
-  | { type: "SET_FIELD"; field: keyof UIState; value: any }
+  | { type: "SET_FIELD"; field: keyof UIState; value: unknown }
   | { type: "SET_FIELDS"; fields: Partial<UIState> };
 
 function uiReducer(state: UIState, action: UIAction): UIState {
@@ -132,6 +133,16 @@ export default function FriendsView() {
       { groupId: selectedGroup?.id || null },
       { enabled: !!selectedGroup?.id },
     ),
+  );
+
+  useUrlActions(
+    {
+      friend: (id) => {
+        const found = friendsData?.find((f) => f.user.id === id);
+        if (found) setSelectedFriend(found as FriendItem);
+      },
+    },
+    !!friendsData,
   );
 
   // ── Mutations ─────────────────────────────────────────────────────────────

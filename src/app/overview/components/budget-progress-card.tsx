@@ -57,6 +57,8 @@ export function BudgetProgressCard({
   const isOverMax = limit > 0 && totalExpense > limit;
   const isOverTarget = targetBudgetVal > 0 && totalExpense > targetBudgetVal;
   const remaining = limit - totalExpense;
+  const daysLeftInclusive = daysInMonth - dayOfMonth + 1;
+  const perDay = remaining > 0 ? remaining / daysLeftInclusive : 0;
 
   const status = isOverMax
     ? {
@@ -136,6 +138,12 @@ export function BudgetProgressCard({
                   ? `su un limite di ${formatCurrency(limit, displayCurrency)}`
                   : `su ${formatCurrency(limit, displayCurrency)} di limite`}
               </p>
+              {!isOverMax && (
+                <p className="tabular mt-1 inline-flex w-fit items-center rounded-full bg-brand-soft px-3 py-1 text-sm font-semibold text-brand">
+                  Puoi spendere {formatCurrency(perDay, displayCurrency)} al
+                  giorno
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">

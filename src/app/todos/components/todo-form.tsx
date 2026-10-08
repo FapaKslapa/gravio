@@ -43,7 +43,7 @@ type FormState = {
 };
 
 type FormAction =
-  | { type: "SET_FIELD"; field: keyof FormState; value: any }
+  | { type: "SET_FIELD"; field: keyof FormState; value: unknown }
   | { type: "RESET"; payload: Partial<FormState> };
 
 function formReducer(state: FormState, action: FormAction): FormState {

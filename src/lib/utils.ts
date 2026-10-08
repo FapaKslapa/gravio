@@ -65,7 +65,7 @@ function getFormatter(
   const key = `${currency}-${noDecimals}`;
   let formatter = commonFormatters[key] || formatterCache.get(key);
   if (!formatter) {
-    const NF = Intl["NumberFormat"];
+    const NF = Intl.NumberFormat;
     formatter = new NF(undefined, {
       style: "currency",
       currency,

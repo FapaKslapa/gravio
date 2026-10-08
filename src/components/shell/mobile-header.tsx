@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { CommandPaletteTrigger } from "./command-palette";
 
 export function MobileHeader({ currency }: { currency: string }) {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export function MobileHeader({ currency }: { currency: string }) {
         <Badge variant="secondary" className="tabular">
           {currency}
         </Badge>
+        <CommandPaletteTrigger variant="icon" />
         <NotificationBell />
         <Link
           href="/settings"

@@ -258,3 +258,30 @@ export const recurrentTransaction = sqliteTable("recurrent_transaction", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
+
+export const savingsGoal = sqliteTable("savings_goal", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  targetAmount: numeric("target_amount").notNull(),
+  currency: text("currency").notNull().default("EUR"),
+  targetDate: text("target_date"),
+  color: text("color").notNull(),
+  icon: text("icon").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const savingsContribution = sqliteTable("savings_contribution", {
+  id: text("id").primaryKey(),
+  goalId: text("goal_id")
+    .notNull()
+    .references(() => savingsGoal.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  amount: numeric("amount").notNull(),
+  date: text("date").notNull(),
+  note: text("note"),
+});

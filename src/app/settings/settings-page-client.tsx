@@ -49,7 +49,7 @@ type SettingsFormState = {
 };
 
 type SettingsFormAction =
-  | { type: "SET_FIELD"; field: keyof SettingsFormState; value: any }
+  | { type: "SET_FIELD"; field: keyof SettingsFormState; value: unknown }
   | { type: "SET_FIELDS"; fields: Partial<SettingsFormState> };
 
 function settingsFormReducer(
@@ -97,26 +97,22 @@ export function SettingsPageClient() {
     Boolean(rawTab && VALID_TABS.includes(rawTab)),
   );
 
-  const [formState, dispatch] = useReducer(
-    settingsFormReducer,
-    null as any,
-    () => ({
-      preferredCurrency: displayCurrency,
-      targetBudget: settings
-        ? toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2)
-        : "0.00",
-      maxBudget: settings
-        ? toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2)
-        : "0.00",
-      notifyBudget80: settings?.notifyBudget80 ?? true,
-      notifyRecurrentApplied: settings?.notifyRecurrentApplied ?? true,
-      notifyFriendActions: settings?.notifyFriendActions ?? true,
-      profileName: user.name || "",
-      profileImage: user.image || null,
-      catBudgets: {},
-      isSaving: false,
-    }),
-  ) as [SettingsFormState, React.Dispatch<SettingsFormAction>];
+  const [formState, dispatch] = useReducer(settingsFormReducer, null, () => ({
+    preferredCurrency: displayCurrency,
+    targetBudget: settings
+      ? toDisplayCurrency(parseFloat(settings.targetMonthlyBudget)).toFixed(2)
+      : "0.00",
+    maxBudget: settings
+      ? toDisplayCurrency(parseFloat(settings.maxMonthlyBudget)).toFixed(2)
+      : "0.00",
+    notifyBudget80: settings?.notifyBudget80 ?? true,
+    notifyRecurrentApplied: settings?.notifyRecurrentApplied ?? true,
+    notifyFriendActions: settings?.notifyFriendActions ?? true,
+    profileName: user.name || "",
+    profileImage: user.image || null,
+    catBudgets: {},
+    isSaving: false,
+  })) as [SettingsFormState, React.Dispatch<SettingsFormAction>];
 
   const {
     preferredCurrency,

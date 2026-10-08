@@ -457,159 +457,157 @@ export function CardStack({
   };
 
   return (
-    <>
-      <div className={className}>
-        <m.section
-          aria-label={ariaLabel}
-          aria-roledescription="carousel"
-          tabIndex={0}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            "relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          )}
-          initial={false}
-          animate={isFan ? undefined : { paddingTop: reserve }}
-          transition={transition}
-          style={
-            isFan
-              ? {
-                  paddingTop: `calc(${reserve}px + ${fanRise}%)`,
-                  paddingRight: reserve,
-                }
-              : undefined
-          }
+    <div className={className}>
+      <m.section
+        aria-label={ariaLabel}
+        aria-roledescription="carousel"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          "relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        )}
+        initial={false}
+        animate={isFan ? undefined : { paddingTop: reserve }}
+        transition={transition}
+        style={
+          isFan
+            ? {
+                paddingTop: `calc(${reserve}px + ${fanRise}%)`,
+                paddingRight: reserve,
+              }
+            : undefined
+        }
+      >
+        <m.div
+          className="relative w-full"
+          onPointerDownCapture={() => deckX.stop()}
+          style={{
+            x: deckX,
+            ...(cardAspectRatio
+              ? { aspectRatio: cardAspectRatio }
+              : { height: cardHeight }),
+          }}
         >
-          <m.div
-            className="relative w-full"
-            onPointerDownCapture={() => deckX.stop()}
-            style={{
-              x: deckX,
-              ...(cardAspectRatio
-                ? { aspectRatio: cardAspectRatio }
-                : { height: cardHeight }),
+          <AnimatePresence
+            initial={false}
+            custom={exitDirection}
+            onExitComplete={() => {
+              setExitDirection(0);
+              if (count === 0) {
+                setCollapsed(true);
+                onEmpty?.();
+              }
             }}
           >
-            <AnimatePresence
-              initial={false}
-              custom={exitDirection}
-              onExitComplete={() => {
-                setExitDirection(0);
-                if (count === 0) {
-                  setCollapsed(true);
-                  onEmpty?.();
-                }
-              }}
+            {stack.map((item) => (
+              <StackLayer
+                key={item.id}
+                exitDirection={exitDirection}
+                depth={ordered.indexOf(item)}
+                count={count}
+                offset={offset}
+                scaleFactor={scaleFactor}
+                visibleLayers={layers}
+                cardHeight={layerHeight}
+                variant={variant}
+                hideLayers={hideLayers}
+                fanAngle={fanAngle}
+                reduceMotion={reduceMotion}
+                onAdvance={next}
+                onSwipe={handleSwipe}
+                dismissOnSwipe={isDismiss}
+                item={item}
+              >
+                {item.content}
+              </StackLayer>
+            ))}
+          </AnimatePresence>
+        </m.div>
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2",
+            showControls
+              ? "mt-2"
+              : "sr-only focus-within:not-sr-only focus-within:absolute! focus-within:inset-x-2 focus-within:bottom-2 focus-within:z-50 focus-within:rounded-xl focus-within:bg-card focus-within:p-1 focus-within:shadow-md",
+          )}
+        >
+          {isDismiss ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="gap-1"
+              onClick={() => discardTop()}
             >
-              {stack.map((item) => (
-                <StackLayer
-                  key={item.id}
-                  exitDirection={exitDirection}
-                  depth={ordered.indexOf(item)}
-                  count={count}
-                  offset={offset}
-                  scaleFactor={scaleFactor}
-                  visibleLayers={layers}
-                  cardHeight={layerHeight}
-                  variant={variant}
-                  hideLayers={hideLayers}
-                  fanAngle={fanAngle}
-                  reduceMotion={reduceMotion}
-                  onAdvance={next}
-                  onSwipe={handleSwipe}
-                  dismissOnSwipe={isDismiss}
-                  item={item}
-                >
-                  {item.content}
-                </StackLayer>
-              ))}
-            </AnimatePresence>
-          </m.div>
+              <X aria-hidden />
+              {text.dismiss}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="gap-1"
+              onClick={previous}
+            >
+              <ChevronLeft aria-hidden />
+              {text.previous}
+            </Button>
+          )}
+          {count > 1 && (
+            <p
+              aria-live="polite"
+              className={
+                showControls
+                  ? "text-center text-sm font-medium tabular-nums text-muted-foreground"
+                  : "sr-only"
+              }
+            >
+              {text.position(current + 1, count, ordered[0] as CardStackItem)}
+            </p>
+          )}
+          {count > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="gap-1"
+              onClick={next}
+            >
+              {text.next}
+              <ChevronRight aria-hidden />
+            </Button>
+          )}
+        </div>
+      </m.section>
+      {indicator !== "none" &&
+        count > 1 &&
+        !(showControls && indicator === "count") && (
           <div
-            className={cn(
-              "flex items-center justify-between gap-2",
-              showControls
-                ? "mt-2"
-                : "sr-only focus-within:not-sr-only focus-within:absolute! focus-within:inset-x-2 focus-within:bottom-2 focus-within:z-50 focus-within:rounded-xl focus-within:bg-card focus-within:p-1 focus-within:shadow-md",
-            )}
+            aria-hidden
+            className="mt-2 flex h-3 items-center justify-center"
           >
-            {isDismiss ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="lg"
-                className="gap-1"
-                onClick={() => discardTop()}
-              >
-                <X aria-hidden />
-                {text.dismiss}
-              </Button>
+            {indicator === "dots" ? (
+              <div className="flex gap-1.5">
+                {stack.map((item, i) => (
+                  <span
+                    key={item.id}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-200 motion-reduce:transition-none",
+                      i === current
+                        ? "w-4 bg-foreground/50"
+                        : "w-1.5 bg-foreground/20",
+                    )}
+                  />
+                ))}
+              </div>
             ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="lg"
-                className="gap-1"
-                onClick={previous}
-              >
-                <ChevronLeft aria-hidden />
-                {text.previous}
-              </Button>
-            )}
-            {count > 1 && (
-              <p
-                aria-live="polite"
-                className={
-                  showControls
-                    ? "text-center text-sm font-medium tabular-nums text-muted-foreground"
-                    : "sr-only"
-                }
-              >
-                {text.position(current + 1, count, ordered[0] as CardStackItem)}
-              </p>
-            )}
-            {count > 1 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="lg"
-                className="gap-1"
-                onClick={next}
-              >
-                {text.next}
-                <ChevronRight aria-hidden />
-              </Button>
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                {current + 1}/{count}
+              </span>
             )}
           </div>
-        </m.section>
-        {indicator !== "none" &&
-          count > 1 &&
-          !(showControls && indicator === "count") && (
-            <div
-              aria-hidden
-              className="mt-2 flex h-3 items-center justify-center"
-            >
-              {indicator === "dots" ? (
-                <div className="flex gap-1.5">
-                  {stack.map((item, i) => (
-                    <span
-                      key={item.id}
-                      className={cn(
-                        "h-1.5 rounded-full transition-all duration-200 motion-reduce:transition-none",
-                        i === current
-                          ? "w-4 bg-foreground/50"
-                          : "w-1.5 bg-foreground/20",
-                      )}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                  {current + 1}/{count}
-                </span>
-              )}
-            </div>
-          )}
-      </div>
-    </>
+        )}
+    </div>
   );
 }

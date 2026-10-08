@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings, Target } from "lucide-react";
 import { m } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +13,13 @@ import {
 } from "@/components/ui/tooltip";
 import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { CommandPaletteTrigger } from "./command-palette";
 import { isActivePath, NAV_LINKS } from "./nav-links";
+
+const SIDEBAR_LINKS = [
+  ...NAV_LINKS,
+  { label: "Obiettivi", short: "Obiettivi", href: "/goals", icon: Target },
+];
 
 type SidebarProps = {
   currency: string;
@@ -43,9 +49,11 @@ export function Sidebar({ currency, userName }: SidebarProps) {
         </span>
       </Link>
 
+      <CommandPaletteTrigger variant="bar" />
+
       <nav aria-label="Navigazione principale" className="flex-1">
         <ul className="flex flex-col gap-1">
-          {NAV_LINKS.map((link) => {
+          {SIDEBAR_LINKS.map((link) => {
             const active = isActivePath(pathname, link.href);
             const Icon = link.icon;
             return (

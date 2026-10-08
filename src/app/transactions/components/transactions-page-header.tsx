@@ -54,7 +54,7 @@ export function TransactionsPageHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-48">
             <DropdownMenuItem onSelect={onImportCsv}>
-              <FileSpreadsheet /> Importa CSV
+              <FileSpreadsheet /> Importa estratto conto
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onManageCategories}>
               <Tags /> Gestisci categorie

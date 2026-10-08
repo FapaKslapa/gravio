@@ -9,9 +9,11 @@ import { useDashboard } from "@/components/dashboard-layout";
 import { fadeUp } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
+import { AttentionStack } from "./overview/components/attention-stack";
 import { BudgetProgressCard } from "./overview/components/budget-progress-card";
 import { CategoryBudgetsCard } from "./overview/components/category-budgets-card";
 import { CurrencyConverterCard } from "./overview/components/currency-converter-card";
+import { GoalsSummaryCard } from "./overview/components/goals-summary-card";
 import { OnboardingCard } from "./overview/components/onboarding-card";
 import { OverviewAnalyticsCard } from "./overview/components/overview-analytics-card";
 import { OverviewFriendBalancesCard } from "./overview/components/overview-friend-balances-card";
@@ -202,6 +204,11 @@ export default function OverviewClient() {
       className: "md:col-span-2 xl:col-span-12",
       node: <CurrencyConverterCard />,
     },
+    {
+      key: "goals",
+      className: "xl:col-span-4",
+      node: <GoalsSummaryCard />,
+    },
   ];
 
   return (
@@ -214,6 +221,15 @@ export default function OverviewClient() {
       <OnboardingCard
         showOnboarding={showOnboarding}
         onDismiss={handleDismissOnboarding}
+      />
+
+      <AttentionStack
+        categories={categoriesData || []}
+        categoryBudgets={categoryBudgets}
+        monthTransactions={currentMonthTransactions}
+        todos={todosData || []}
+        displayCurrency={displayCurrency}
+        convertCurrency={convertCurrency}
       />
 
       <m.div
@@ -237,6 +253,7 @@ export default function OverviewClient() {
         isOpen={isQuickAddOpen}
         onClose={() => setIsQuickAddOpen(false)}
         categories={categoriesData || []}
+        recentTransactions={transactions}
         onSave={handleSaveQuickAdd}
       />
     </div>

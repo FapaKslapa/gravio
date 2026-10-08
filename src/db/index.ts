@@ -4,11 +4,13 @@ import * as schema from "./schema";
 
 export const runtime = "edge";
 
+type D1Client = Parameters<typeof drizzle<typeof schema>>[0];
+
 const getD1 = () => {
   try {
-    const ctx = getRequestContext() as any;
-    if (ctx?.env?.DB) {
-      return drizzle(ctx.env.DB, { schema });
+    const env = getRequestContext()?.env as { DB?: D1Client } | undefined;
+    if (env?.DB) {
+      return drizzle(env.DB, { schema });
     }
   } catch (e) {
     // Ignore error when outside of request context (e.g. module load or build time)
@@ -16,7 +18,7 @@ const getD1 = () => {
 
   // In local node environment (e.g. scripts or build time if not in worker context)
   // we return a dummy drizzle or throw a lazy error if someone tries to query it.
-  return new Proxy({} as any, {
+  return new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
     get() {
       throw new Error(
         "D1 Database binding (DB) is not available. Ensure you are running in a Cloudflare worker environment with the binding configured.",

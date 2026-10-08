@@ -3,6 +3,7 @@
 import { useReducer } from "react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUrlActions } from "@/hooks/use-url-actions";
 import { CategoriesModal } from "./components/categories-modal";
 import { CsvImportModal } from "./components/csv-import-modal";
 import { TransactionFilters } from "./components/transaction-filters";
@@ -38,7 +39,7 @@ type UIState = {
 };
 
 type UIAction =
-  | { type: "SET_FIELD"; field: keyof UIState; value: any }
+  | { type: "SET_FIELD"; field: keyof UIState; value: unknown }
   | { type: "SET_FIELDS"; fields: Partial<UIState> };
 
 function uiReducer(state: UIState, action: UIAction): UIState {
@@ -172,6 +173,12 @@ export default function TransactionsView() {
     handleDeleteCategory,
   } = useTransactionMutations(refetchCategories);
 
+  useUrlActions({
+    new: () => setIsTxModalOpen(true),
+    import: () => setIsCsvModalOpen(true),
+    q: (value) => filters.handleFilterText(value),
+  });
+
   const handleSortChange = (field: SortField) => {
     if (sortField === field) {
       setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
@@ -277,9 +284,10 @@ export default function TransactionsView() {
       <ConfirmationDialog
         isOpen={txToDelete !== null}
         onClose={() => setTxToDelete(null)}
-        onConfirm={() =>
-          handleDeleteTransaction(txToDelete!, () => setTxToDelete(null))
-        }
+        onConfirm={() => {
+          if (txToDelete)
+            handleDeleteTransaction(txToDelete, () => setTxToDelete(null));
+        }}
         title="Elimina Transazione"
         message="Sei sicuro di voler eliminare questa transazione? L'operazione non può essere annullata."
         confirmLabel="Elimina"
@@ -289,9 +297,10 @@ export default function TransactionsView() {
       <ConfirmationDialog
         isOpen={catToDelete !== null}
         onClose={() => setCatToDelete(null)}
-        onConfirm={() =>
-          handleDeleteCategory(catToDelete!, () => setCatToDelete(null))
-        }
+        onConfirm={() => {
+          if (catToDelete)
+            handleDeleteCategory(catToDelete, () => setCatToDelete(null));
+        }}
         title="Elimina Categoria"
         message="Sei sicuro di voler eliminare questa categoria? Le transazioni collegate rimarranno ma diventeranno senza categoria."
         confirmLabel="Elimina"

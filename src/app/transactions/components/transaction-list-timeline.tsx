@@ -1,8 +1,12 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { EllipsisVertical, Pencil, Receipt, Trash2 } from "lucide-react";
+import { Copy, EllipsisVertical, Pencil, Receipt, Trash2 } from "lucide-react";
 import { m } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useDashboard } from "@/components/dashboard-layout";
 import { CategoryIcon } from "@/components/icon-helper";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +24,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { fadeUp } from "@/lib/motion";
+import { useTRPC } from "@/lib/trpc/client";
 import { cn, formatCurrency } from "@/lib/utils";
+import { SwipeRow } from "./swipe-row";
 
 export type Category = {
   id: string;
@@ -121,10 +127,12 @@ export function TransactionActionsMenu({
   tx,
   onEdit,
   onDelete,
+  onDuplicate,
 }: {
   tx: Transaction;
   onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (tx: Transaction) => void;
 }) {
   return (
     <DropdownMenu>
@@ -142,6 +150,11 @@ export function TransactionActionsMenu({
         <DropdownMenuItem onSelect={() => onEdit(tx)}>
           <Pencil /> Modifica
         </DropdownMenuItem>
+        {onDuplicate && (
+          <DropdownMenuItem onSelect={() => onDuplicate(tx)}>
+            <Copy /> Duplica
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
@@ -233,6 +246,114 @@ function dayLabel(date: string | Date) {
   return d.format("dddd D MMMM");
 }
 
+const UNDO_MS = 5000;
+
+function useSwipeActions() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { rates } = useDashboard();
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const timers = useRef(new Map<string, () => void>());
+
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: trpc.transaction.list.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.transaction.listPaginated.queryKey(),
+    });
+  }, [queryClient, trpc]);
+
+  const createMutation = useMutation(
+    trpc.transaction.create.mutationOptions({ onSuccess: invalidate }),
+  );
+  const deleteMutation = useMutation(
+    trpc.transaction.delete.mutationOptions({ onSuccess: invalidate }),
+  );
+  const createAsync = createMutation.mutateAsync;
+  const deleteAsync = deleteMutation.mutateAsync;
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      for (const flush of pending.values()) flush();
+      pending.clear();
+    };
+  }, []);
+
+  const softDelete = useCallback(
+    (tx: Transaction) => {
+      setHiddenIds((prev) => new Set(prev).add(tx.id));
+      const commit = () => {
+        timers.current.delete(tx.id);
+        deleteAsync({ id: tx.id }).catch(() => {
+          setHiddenIds((prev) => {
+            const next = new Set(prev);
+            next.delete(tx.id);
+            return next;
+          });
+          toast.error("Eliminazione non riuscita");
+        });
+      };
+      const timer = setTimeout(commit, UNDO_MS);
+      timers.current.set(tx.id, () => {
+        clearTimeout(timer);
+        commit();
+      });
+      toast("Movimento eliminato", {
+        duration: UNDO_MS,
+        action: {
+          label: "Annulla",
+          onClick: () => {
+            clearTimeout(timer);
+            timers.current.delete(tx.id);
+            setHiddenIds((prev) => {
+              const next = new Set(prev);
+              next.delete(tx.id);
+              return next;
+            });
+          },
+        },
+      });
+    },
+    [deleteAsync],
+  );
+
+  const duplicate = useCallback(
+    async (tx: Transaction) => {
+      try {
+        const copy = await createAsync({
+          description: tx.description ?? "",
+          type: tx.type,
+          amount: parseFloat(tx.amount),
+          currency: tx.currency,
+          exchangeRate: rates[tx.currency] ?? 1,
+          exchangeRateNok: rates.NOK ?? 11.85,
+          categoryId: tx.categoryId,
+          date: new Date().toISOString(),
+          sharedWithUserId: null,
+        });
+        toast("Movimento duplicato", {
+          duration: UNDO_MS,
+          action: {
+            label: "Annulla",
+            onClick: () => {
+              deleteAsync({ id: copy.id }).catch(() =>
+                toast.error("Impossibile annullare"),
+              );
+            },
+          },
+        });
+      } catch {
+        toast.error("Duplicazione non riuscita");
+      }
+    },
+    [createAsync, deleteAsync, rates],
+  );
+
+  return { hiddenIds, softDelete, duplicate };
+}
+
 export function TransactionListTimeline({
   groupedTx,
   categories,
@@ -241,11 +362,23 @@ export function TransactionListTimeline({
   onDeleteClick,
   onEditClick,
 }: TransactionListTimelineProps) {
-  if (groupedTx.length === 0) return <TransactionsEmpty />;
+  const { hiddenIds, softDelete, duplicate } = useSwipeActions();
+  const visibleGroups = useMemo(
+    () =>
+      groupedTx
+        .map((g) => ({
+          ...g,
+          list: g.list.filter((t) => !hiddenIds.has(t.id)),
+        }))
+        .filter((g) => g.list.length > 0),
+    [groupedTx, hiddenIds],
+  );
+
+  if (visibleGroups.length === 0) return <TransactionsEmpty />;
 
   return (
     <div className="flex flex-col gap-6">
-      {groupedTx.map((group, groupIndex) => {
+      {visibleGroups.map((group, groupIndex) => {
         const net = group.list.reduce((sum, tx) => {
           const v = resolveDisplayAmount(tx, displayCurrency, convertCurrency);
           return tx.type === "expense" ? sum - v : sum + v;
@@ -282,48 +415,55 @@ export function TransactionListTimeline({
               {group.list.map((tx) => {
                 const cat = categories.find((c) => c.id === tx.categoryId);
                 return (
-                  <li
-                    key={tx.id}
-                    className="relative flex items-center gap-1 pr-1"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-y-2 left-1 w-1 rounded-full"
-                      style={{
-                        backgroundColor: cat?.color ?? FALLBACK_CATEGORY_COLOR,
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => onEditClick(tx)}
-                      className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 pr-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                  <li key={tx.id}>
+                    <SwipeRow
+                      onEdit={() => onEditClick(tx)}
+                      onDelete={() => softDelete(tx)}
+                      onDuplicate={() => duplicate(tx)}
                     >
-                      <CategoryTile category={cat} />
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {tx.description || "Transazione"}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {cat ? cat.name : "Generale"}
-                          {tx.sharedInfo &&
-                            ` · ${
-                              tx.sharedInfo.isBorrowed
-                                ? `Split da ${tx.payerName || "Amico"}`
-                                : `Split con ${tx.sharedInfo.borrowerName}`
-                            }`}
-                        </span>
-                      </span>
-                      <AmountBlock
-                        tx={tx}
-                        displayCurrency={displayCurrency}
-                        convertCurrency={convertCurrency}
-                      />
-                    </button>
-                    <TransactionActionsMenu
-                      tx={tx}
-                      onEdit={onEditClick}
-                      onDelete={onDeleteClick}
-                    />
+                      <div className="relative flex items-center gap-1 pr-1">
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-y-2 left-1 w-1 rounded-full"
+                          style={{
+                            backgroundColor:
+                              cat?.color ?? FALLBACK_CATEGORY_COLOR,
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onEditClick(tx)}
+                          className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 pr-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                        >
+                          <CategoryTile category={cat} />
+                          <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-sm font-medium text-foreground">
+                              {tx.description || "Transazione"}
+                            </span>
+                            <span className="truncate text-xs text-muted-foreground">
+                              {cat ? cat.name : "Generale"}
+                              {tx.sharedInfo &&
+                                ` · ${
+                                  tx.sharedInfo.isBorrowed
+                                    ? `Split da ${tx.payerName || "Amico"}`
+                                    : `Split con ${tx.sharedInfo.borrowerName}`
+                                }`}
+                            </span>
+                          </span>
+                          <AmountBlock
+                            tx={tx}
+                            displayCurrency={displayCurrency}
+                            convertCurrency={convertCurrency}
+                          />
+                        </button>
+                        <TransactionActionsMenu
+                          tx={tx}
+                          onEdit={onEditClick}
+                          onDelete={onDeleteClick}
+                          onDuplicate={duplicate}
+                        />
+                      </div>
+                    </SwipeRow>
                   </li>
                 );
               })}
