@@ -45,3 +45,8 @@ Tutte le dipendenze all'ultima versione (next 16.4, react 19.3, ts 7, ecc.). Not
 - Rimozione di framer-motion duplicati/gsap/heroui non usati, pulizia lint.
 - Valutazione migrazione hosting a OpenNext.
 - Release: merge `development` -> `main`, changeset, tag.
+
+## Aggiunte funzionali (richieste in corso d'opera)
+- Import estratti conto: CSV, Excel (.xlsx) e PDF, tutto client-side (`src/lib/import/`), mappatura colonne guidata, anteprima, rilevamento duplicati, categoria suggerita dallo storico. UI nel flusso Transazioni (Fase 4b).
+- `CardStack` (`components/ui/card-stack.tsx`, portato da soci-k2b) per la sezione "Da sistemare" in Panoramica: importazioni da categorizzare, richieste amici, budget oltre l'80%, ricorrenti in arrivo. Swipe per scartare/avanzare.
+- Proposte da confermare: aggiunta rapida con suggerimenti (ripeti ultima, importi frequenti), swipe sulle righe (elimina/duplica), ricerca globale Cmd+K, "puoi spendere X al giorno", previsione di fine mese, regole categoria apprese, obiettivi di risparmio.
