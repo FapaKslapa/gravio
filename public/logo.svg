@@ -1,12 +1,6 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 <title>Gravio</title>
-<defs>
-<linearGradient id="bg" x1="96" y1="0" x2="416" y2="512" gradientUnits="userSpaceOnUse">
-<stop stop-color="#8A6BFF"/>
-<stop offset="1" stop-color="#4E2BDB"/>
-</linearGradient>
-</defs>
+<defs><linearGradient id="bg" x1="96" y1="0" x2="416" y2="512" gradientUnits="userSpaceOnUse"><stop stop-color="#8A6BFF"/><stop offset="1" stop-color="#4E2BDB"/></linearGradient></defs>
 <rect width="512" height="512" rx="116" fill="url(#bg)"/>
-<path d="M325 158A120 120 0 1 0 376 256H266" stroke="#fff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="364" cy="200" r="21" fill="#FFC247"/>
+<circle cx="164" cy="256" r="52" fill="#fff"/><circle cx="290" cy="256" r="34" fill="#fff" fill-opacity="0.7"/><circle cx="380" cy="256" r="22" fill="#FFC247"/>
 </svg>
