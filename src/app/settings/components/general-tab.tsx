@@ -9,9 +9,9 @@ import { Segmented, SettingsGroup, SettingsRow } from "./settings-ui";
 type GeneralTabProps = {
   preferredCurrency: string;
   setPreferredCurrency: (val: string) => void;
-  theme: "light" | "dark";
+  theme: "light" | "dark" | undefined;
   changeTheme: (theme: "light" | "dark") => void;
-  accent: string;
+  accent: string | undefined;
   changeAccent: (accent: string) => void;
 };
 

@@ -102,8 +102,8 @@ export function RecentTransactionsCard({
             </EmptyHeader>
           </Empty>
         ) : (
-          <ul className="flex max-h-[26rem] flex-col overflow-y-auto xl:max-h-none xl:flex-1">
-            {expenses.map((tx) => {
+          <ul className="flex flex-col xl:flex-1 xl:overflow-y-auto">
+            {expenses.map((tx, index) => {
               const cat = categories.find((c) => c.id === tx.categoryId);
               const color = cat?.color ?? "var(--muted-foreground)";
 
@@ -133,7 +133,10 @@ export function RecentTransactionsCard({
               return (
                 <li
                   key={tx.id}
-                  className="flex min-h-14 items-center gap-3 border-b py-2 last:border-b-0"
+                  className={cn(
+                    "flex min-h-16 items-center gap-3 border-b py-2.5 last:border-b-0",
+                    index >= 8 && "max-xl:hidden",
+                  )}
                 >
                   <span
                     className="flex size-10 shrink-0 items-center justify-center rounded-md"
@@ -148,12 +151,13 @@ export function RecentTransactionsCard({
                     />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-semibold">
+                    <div className="flex items-start gap-1.5">
+                      <span className="line-clamp-2 min-w-0 text-sm leading-snug font-semibold">
                         {tx.description || "Transazione"}
                       </span>
                       {tx.sharedInfo && (
                         <Badge
+                          className="shrink-0"
                           variant={
                             tx.sharedInfo.isBorrowed
                               ? "destructive"
@@ -164,7 +168,7 @@ export function RecentTransactionsCard({
                         </Badge>
                       )}
                     </div>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="text-xs leading-snug text-muted-foreground">
                       {cat?.name ?? "Senza categoria"} ·{" "}
                       {dayjs(tx.date).format("D MMM")}
                       {tx.sharedInfo &&

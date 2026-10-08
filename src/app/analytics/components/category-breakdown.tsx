@@ -90,7 +90,7 @@ export function CategoryBreakdown({
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-sm font-medium">
+                    <span className="line-clamp-2 break-words text-sm font-medium">
                       {cat.name}
                     </span>
                     <span className="shrink-0 text-sm font-semibold tabular">

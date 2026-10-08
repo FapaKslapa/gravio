@@ -5,8 +5,24 @@ import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { formatCompact } from "@/app/analytics/components/months";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import { formatCurrency } from "@/lib/utils";
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+  NOK: "kr",
+  SEK: "kr",
+  DKK: "kr",
+  CHF: "CHF",
+};
+
+function formatTick(value: number, currency: string): string {
+  const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] ?? currency;
+  return `${formatCompact(value)} ${symbol}`;
+}
 
 type MonthData = {
   label: string;
@@ -16,7 +32,7 @@ type MonthData = {
 };
 
 const HEIGHT = 220;
-const PADDING_LEFT = 44;
+const PADDING_LEFT = 60;
 const PADDING_RIGHT = 12;
 const PADDING_TOP = 12;
 const PADDING_BOTTOM = 28;
@@ -170,11 +186,7 @@ export function AnalyticsLineChart({
                 fontSize={11}
                 className="fill-muted-foreground tabular"
               >
-                {val >= 1000
-                  ? val >= 1000000
-                    ? `${(val / 1000000).toFixed(1)}M`
-                    : `${(val / 1000).toFixed(0)}k`
-                  : val.toFixed(0)}
+                {formatTick(val, displayCurrency)}
               </text>
             </g>
           );

@@ -1,6 +1,5 @@
 "use client";
 
-import Script from "next/script";
 import type * as React from "react";
 import {
   createContext,
@@ -22,24 +21,25 @@ const ThemeContext = createContext<{
 } | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") as Theme | null;
-      if (savedTheme) return savedTheme;
-      if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-        return "light";
-      }
-    }
-    return "dark";
-  });
-  const [accent, setAccent] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("theme-accent") || "blue";
-    }
-    return "blue";
-  });
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [accent, setAccent] = useState<string>("blue");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem("theme") as Theme | null;
+      if (savedTheme === "light" || savedTheme === "dark") {
+        setTheme(savedTheme);
+      } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+        setTheme("light");
+      }
+      setAccent(localStorage.getItem("theme-accent") || "blue");
+    } catch {}
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
@@ -50,14 +50,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove("dark");
       root.style.colorScheme = "light";
     }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {}
+  }, [theme, ready]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.accent = accent;
-    localStorage.setItem("theme-accent", accent);
-  }, [accent]);
+    if (!ready) return;
+    document.documentElement.dataset.accent = accent;
+    try {
+      localStorage.setItem("theme-accent", accent);
+    } catch {}
+  }, [accent, ready]);
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -83,29 +87,4 @@ export function useTheme() {
   const context = use(ThemeContext);
   if (!context) throw new Error("useTheme must be used within ThemeProvider");
   return context;
-}
-
-export function ThemeScript() {
-  return (
-    <Script id="theme-initializer" strategy="beforeInteractive">
-      {`
-        try {
-          var theme = localStorage.getItem('theme');
-          var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          var activeTheme = theme || systemTheme;
-          if (activeTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
-            document.documentElement.classList.add('light');
-            document.documentElement.classList.remove('dark');
-            document.documentElement.style.colorScheme = 'light';
-          }
-          
-          document.documentElement.dataset.accent = localStorage.getItem('theme-accent') || 'blue';
-        } catch (e) {}
-      `}
-    </Script>
-  );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import { Check, Loader2 } from "lucide-react";
 import { m } from "motion/react";
-import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { formatCurrency } from "@/lib/utils";
 import { MemberAvatar } from "./member-avatar";
@@ -23,9 +21,6 @@ type Props = {
   splitSummaryLabel: string;
   displayCurrency: string;
   convertCurrency: (amount: number, from: string, to: string) => number;
-  canSave: boolean;
-  isSaving: boolean;
-  onSave: () => Promise<void>;
 };
 
 export function SharedExpenseSummaryStep({
@@ -43,9 +38,6 @@ export function SharedExpenseSummaryStep({
   splitSummaryLabel,
   displayCurrency,
   convertCurrency,
-  canSave,
-  isSaving,
-  onSave,
 }: Props) {
   const fromNok = (nok: number) =>
     formatCurrency(convertCurrency(nok, "NOK", state.currency), state.currency);
@@ -129,20 +121,6 @@ export function SharedExpenseSummaryStep({
           ))}
         </ul>
       </section>
-
-      <Button
-        type="button"
-        disabled={!canSave || isSaving}
-        onClick={onSave}
-        className="h-12 w-full text-base"
-      >
-        {isSaving ? (
-          <Loader2 data-icon="inline-start" className="animate-spin" />
-        ) : (
-          <Check data-icon="inline-start" />
-        )}
-        {isSaving ? "Salvataggio..." : "Aggiungi spesa"}
-      </Button>
     </m.div>
   );
 }

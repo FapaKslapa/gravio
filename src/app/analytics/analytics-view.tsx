@@ -188,7 +188,7 @@ export default function AnalyticsView() {
     <m.div
       initial="hidden"
       animate="show"
-      className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-3 pb-28 text-foreground md:gap-6 md:px-8 md:pb-12"
+      className="flex w-full flex-col gap-4 text-foreground md:gap-6"
     >
       <m.div variants={fadeUp} custom={0}>
         <AnalyticsHeader

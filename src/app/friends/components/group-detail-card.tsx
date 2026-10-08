@@ -113,7 +113,7 @@ export function GroupDetailCard({
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h2 className="truncate font-display text-lg font-bold leading-tight">
+          <h2 className="line-clamp-2 break-words font-display text-lg font-bold leading-tight">
             {selectedGroup.name}
           </h2>
           <span className="text-xs text-muted-foreground">

@@ -247,6 +247,7 @@ function dayLabel(date: string | Date) {
 }
 
 const UNDO_MS = 5000;
+const DAYS_PER_PAGE = 14;
 
 function useSwipeActions() {
   const trpc = useTRPC();
@@ -363,6 +364,7 @@ export function TransactionListTimeline({
   onEditClick,
 }: TransactionListTimelineProps) {
   const { hiddenIds, softDelete, duplicate } = useSwipeActions();
+  const [shownDays, setShownDays] = useState(DAYS_PER_PAGE);
   const visibleGroups = useMemo(
     () =>
       groupedTx
@@ -376,9 +378,12 @@ export function TransactionListTimeline({
 
   if (visibleGroups.length === 0) return <TransactionsEmpty />;
 
+  const shownGroups = visibleGroups.slice(0, shownDays);
+  const remainingDays = visibleGroups.length - shownGroups.length;
+
   return (
     <div className="flex flex-col gap-6">
-      {visibleGroups.map((group, groupIndex) => {
+      {shownGroups.map((group, groupIndex) => {
         const net = group.list.reduce((sum, tx) => {
           const v = resolveDisplayAmount(tx, displayCurrency, convertCurrency);
           return tx.type === "expense" ? sum - v : sum + v;
@@ -471,6 +476,18 @@ export function TransactionListTimeline({
           </m.section>
         );
       })}
+      {remainingDays > 0 && (
+        <Button
+          variant="outline"
+          onClick={() => setShownDays((n) => n + DAYS_PER_PAGE)}
+          className="h-11 self-center rounded-full px-5"
+        >
+          Mostra altri giorni
+          <span className="tabular text-muted-foreground">
+            ({remainingDays})
+          </span>
+        </Button>
+      )}
     </div>
   );
 }

@@ -34,7 +34,7 @@ function TodoMeta({
     <div className="min-w-0 flex-1 py-2">
       <span
         className={cn(
-          "block truncate text-[15px] font-medium leading-snug",
+          "line-clamp-2 text-[15px] font-medium leading-snug break-words",
           completed && "text-muted-foreground line-through",
         )}
       >
@@ -93,7 +93,7 @@ export function TodoItemRow({
   };
 
   const rowClass = cn(
-    "flex min-h-14 items-center rounded-lg elevation-1 bg-card transition-colors",
+    "flex min-h-14 flex-wrap items-center rounded-lg elevation-1 bg-card transition-colors",
     completed && "bg-muted/50 shadow-none",
     isSelectionMode && isSelected && "bg-brand-soft",
   );
@@ -167,20 +167,22 @@ export function TodoItemRow({
 
       {completed ? (
         todoItem.convertedToTransactionId ? (
-          <span className="mr-2 inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full bg-income-soft px-2.5 text-xs font-semibold text-income">
+          <span className="mr-3 inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full bg-income-soft px-2.5 text-xs font-semibold text-income">
             <Check className="size-3.5" strokeWidth={3} />
             Importato
           </span>
         ) : (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onImportTodo?.(todoItem)}
-            className="mr-1 h-11 shrink-0 rounded-full px-3.5 text-xs font-semibold"
-          >
-            <Receipt />
-            Importa spesa
-          </Button>
+          <div className="basis-full pr-3 pb-2 pl-11">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onImportTodo?.(todoItem)}
+              className="h-11 w-full rounded-full px-3.5 text-sm font-semibold sm:w-auto"
+            >
+              <Receipt />
+              Importa spesa
+            </Button>
+          </div>
         )
       ) : (
         onDeleteTodo && (

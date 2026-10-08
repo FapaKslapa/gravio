@@ -284,24 +284,47 @@ export const transactionRouter = router({
 
       const borrowerMap = new Map(borrowerUsers.map((u) => [u.id, u]));
 
-      return rawTxs.map((row) => {
-        const tx = row.transaction;
-        const shared = row.shared;
+      // The sharedExpense join yields one row per debtor: collapse them so each
+      // transaction appears once. The payer sees the sum of all debtor splits.
+      const byTx = new Map<string, typeof rawTxs>();
+      for (const row of rawTxs) {
+        const rows = byTx.get(row.transaction.id);
+        if (rows) rows.push(row);
+        else byTx.set(row.transaction.id, [row]);
+      }
+
+      return [...byTx.values()].map((rows) => {
+        const first = rows[0];
+        const tx = first.transaction;
+        const shares = rows.flatMap((r) => (r.shared ? [r.shared] : []));
+        const mine = shares.find((s) => s.borrowerId === userId);
+        const shared = mine ?? shares[0] ?? null;
+        const splitTotal = shares.reduce(
+          (sum, s) => sum + parseFloat(s.splitAmountNok),
+          0,
+        );
+        const borrowerName = mine
+          ? borrowerMap.get(mine.borrowerId)?.name || "Amico"
+          : shares
+              .map((s) => borrowerMap.get(s.borrowerId)?.name || "Amico")
+              .join(", ");
         const borrower = shared ? borrowerMap.get(shared.borrowerId) : null;
 
         return {
           ...tx,
-          payerName: row.payerName,
-          payerEmail: row.payerEmail,
+          payerName: first.payerName,
+          payerEmail: first.payerEmail,
           sharedInfo: shared
             ? {
                 id: shared.id,
                 payerId: shared.payerId,
                 borrowerId: shared.borrowerId,
-                borrowerName: borrower?.name || "Amico",
+                borrowerName,
                 borrowerEmail: borrower?.email || "",
-                splitAmountNok: shared.splitAmountNok,
-                settled: shared.settled,
+                splitAmountNok: mine
+                  ? mine.splitAmountNok
+                  : splitTotal.toFixed(2),
+                settled: shares.every((s) => s.settled),
                 isBorrowed: shared.borrowerId === userId,
                 isPaidByMe: shared.payerId === userId,
               }

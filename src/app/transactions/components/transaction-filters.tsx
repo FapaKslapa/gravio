@@ -82,7 +82,7 @@ function FilterChip({
       type="button"
       onClick={onRemove}
       aria-label={`Rimuovi filtro ${label}`}
-      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft pl-3 pr-2.5 text-xs font-medium text-foreground outline-none transition-colors hover:bg-brand-soft/70 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97]"
+      className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft pl-4 pr-3.5 text-xs font-medium text-foreground outline-none transition-colors hover:bg-brand-soft/70 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97]"
     >
       {label}
       <X aria-hidden="true" className="size-3.5" />
@@ -136,7 +136,7 @@ export function TransactionFilters({
           <Input
             type="search"
             aria-label="Cerca transazione"
-            placeholder="Cerca descrizione o importo"
+            placeholder="Cerca movimenti"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             className="h-11 rounded-full bg-card pl-10 pr-10 text-base"
@@ -146,7 +146,7 @@ export function TransactionFilters({
               type="button"
               onClick={() => setFilterText("")}
               aria-label="Cancella ricerca"
-              className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <X aria-hidden="true" className="size-4" />
             </button>
@@ -202,7 +202,7 @@ export function TransactionFilters({
           <Button
             variant="ghost"
             onClick={resetAll}
-            className="h-9 shrink-0 rounded-full px-3 text-xs text-muted-foreground"
+            className="h-11 shrink-0 rounded-full px-4 text-xs text-muted-foreground"
           >
             Azzera filtri
           </Button>
@@ -215,6 +215,24 @@ export function TransactionFilters({
         title="Filtri"
         description="Restringi l'elenco delle transazioni"
         className="sm:max-w-md"
+        footer={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="h-11 flex-1 rounded-full"
+              disabled={!hasAny}
+              onClick={resetAll}
+            >
+              Azzera
+            </Button>
+            <Button
+              className="h-11 flex-1 rounded-full bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={() => setOpen(false)}
+            >
+              Mostra risultati
+            </Button>
+          </div>
+        }
       >
         <div className="flex flex-col gap-6 pb-2">
           <fieldset className="flex flex-col gap-2">
@@ -301,23 +319,6 @@ export function TransactionFilters({
               }}
             />
           </fieldset>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="h-11 flex-1 rounded-full"
-              disabled={!hasAny}
-              onClick={resetAll}
-            >
-              Azzera
-            </Button>
-            <Button
-              className="h-11 flex-1 rounded-full bg-brand text-brand-foreground hover:bg-brand/90"
-              onClick={() => setOpen(false)}
-            >
-              Mostra risultati
-            </Button>
-          </div>
         </div>
       </ResponsiveSheet>
     </div>

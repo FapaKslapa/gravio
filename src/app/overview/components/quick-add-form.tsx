@@ -216,8 +216,35 @@ export function QuickAddForm({
       title={type === "expense" ? "Nuova spesa" : "Nuova entrata"}
       description="Registra una transazione in pochi tocchi"
       className="sm:max-w-lg"
+      footer={
+        <Button
+          type="submit"
+          form="quick-add-form"
+          size="lg"
+          disabled={isSaving || !hasAmount}
+          className={cn(
+            "h-12 w-full rounded-full text-base font-semibold text-background active:scale-[0.97]",
+            type === "expense"
+              ? "bg-expense hover:bg-expense/90"
+              : "bg-income hover:bg-income/90",
+          )}
+        >
+          {isSaving
+            ? "Salvataggio..."
+            : type === "expense"
+              ? "Aggiungi spesa"
+              : "Aggiungi entrata"}
+        </Button>
+      }
     >
-      <div className="flex flex-col gap-5 pb-2">
+      <form
+        id="quick-add-form"
+        className="flex flex-col gap-5 pb-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSave();
+        }}
+      >
         {recents.length > 0 && (
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
@@ -418,26 +445,7 @@ export function QuickAddForm({
             />
           </Field>
         </FieldGroup>
-
-        <Button
-          type="button"
-          size="lg"
-          disabled={isSaving || !hasAmount}
-          onClick={handleSave}
-          className={cn(
-            "h-12 w-full rounded-full text-base font-semibold text-background active:scale-[0.97]",
-            type === "expense"
-              ? "bg-expense hover:bg-expense/90"
-              : "bg-income hover:bg-income/90",
-          )}
-        >
-          {isSaving
-            ? "Salvataggio..."
-            : type === "expense"
-              ? "Aggiungi spesa"
-              : "Aggiungi entrata"}
-        </Button>
-      </div>
+      </form>
     </ResponsiveSheet>
   );
 }

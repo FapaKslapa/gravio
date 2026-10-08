@@ -117,7 +117,7 @@ export function GroupExpenseList({
                 className="flex items-center justify-between gap-3 px-4 py-3 not-last:border-b"
               >
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate text-sm font-semibold">
+                  <span className="line-clamp-2 break-words text-sm font-semibold">
                     {tx.description || "Spesa gruppo"}
                   </span>
                   <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">

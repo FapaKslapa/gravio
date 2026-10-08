@@ -1,6 +1,8 @@
 "use client";
 
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
+import { Button } from "@/components/ui/button";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { SharedExpenseFormStep } from "./shared-expense/form-step";
 import { SharedExpenseSplitStep } from "./shared-expense/split-step";
@@ -66,6 +68,47 @@ export function SharedExpenseDialog({
   const handleBack = () =>
     set({ step: state.step === "summary" ? "split" : "form" });
 
+  const splitBlocked =
+    state.shareType === "group" &&
+    (form.checkedCount === 0 ||
+      (state.groupSplitMode === "custom" && !form.customIsExact));
+
+  const footer =
+    state.step === "form" ? (
+      <Button
+        type="submit"
+        form="shared-expense-form"
+        className="h-12 w-full text-base"
+      >
+        Continua
+        <ArrowRight data-icon="inline-end" />
+      </Button>
+    ) : state.step === "split" ? (
+      <Button
+        type="button"
+        disabled={splitBlocked}
+        onClick={() => set({ step: "summary" })}
+        className="h-12 w-full text-base"
+      >
+        Vai al riepilogo
+        <ArrowRight data-icon="inline-end" />
+      </Button>
+    ) : (
+      <Button
+        type="button"
+        disabled={!form.canSave || form.isSaving}
+        onClick={form.handleSave}
+        className="h-12 w-full text-base"
+      >
+        {form.isSaving ? (
+          <Loader2 data-icon="inline-start" className="animate-spin" />
+        ) : (
+          <Check data-icon="inline-start" />
+        )}
+        {form.isSaving ? "Salvataggio..." : "Aggiungi spesa"}
+      </Button>
+    );
+
   return (
     <ResponsiveSheet
       open={isOpen}
@@ -75,6 +118,7 @@ export function SharedExpenseDialog({
       title="Spesa condivisa"
       description={STEP_DESCRIPTION[state.step]}
       className="sm:max-w-lg"
+      footer={footer}
     >
       <div className="flex flex-col gap-6 pb-2">
         <StepHeader step={state.step} onBack={handleBack} />
@@ -111,7 +155,6 @@ export function SharedExpenseDialog({
               friendNok={form.friendNok}
               myPct={form.myPct}
               friendPct={form.friendPct}
-              checkedCount={form.checkedCount}
               customIsExact={form.customIsExact}
               customDifference={form.customDifference}
               onToggleGroupSplitMode={form.handleToggleGroupSplitMode}
@@ -135,9 +178,6 @@ export function SharedExpenseDialog({
               splitSummaryLabel={form.splitSummaryLabel}
               displayCurrency={form.displayCurrency}
               convertCurrency={form.convertCurrency}
-              canSave={form.canSave}
-              isSaving={form.isSaving}
-              onSave={form.handleSave}
             />
           )}
         </AnimatePresence>

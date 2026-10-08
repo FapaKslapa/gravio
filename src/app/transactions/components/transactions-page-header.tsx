@@ -24,7 +24,7 @@ export function TransactionsPageHeader({
   extraActions,
 }: TransactionsPageHeaderProps) {
   return (
-    <header className="flex w-full items-center justify-between gap-3">
+    <header className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 flex-col">
         <h1 className="font-display text-2xl font-bold tracking-[-0.025em]">
           Transazioni
@@ -34,7 +34,7 @@ export function TransactionsPageHeader({
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         {extraActions}
         <Button
           onClick={onNewTransaction}

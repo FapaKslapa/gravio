@@ -164,7 +164,7 @@ export function Segmented<T extends string>({
   label,
   layoutId,
 }: {
-  value: T;
+  value: T | undefined;
   onChange: (v: T) => void;
   options: { value: T; label: string; icon?: LucideIcon }[];
   label: string;

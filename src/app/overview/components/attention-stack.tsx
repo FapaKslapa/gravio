@@ -66,8 +66,10 @@ function AttentionCard({
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="font-display truncate text-base font-semibold">{title}</p>
-        <p className="tabular truncate text-sm text-muted-foreground">
+        <p className="font-display line-clamp-2 text-base leading-tight font-semibold">
+          {title}
+        </p>
+        <p className="tabular line-clamp-2 text-sm leading-snug text-muted-foreground">
           {detail}
         </p>
       </div>
@@ -231,7 +233,7 @@ export function AttentionStack({
         mode="dismiss"
         controls="visible"
         indicator="none"
-        cardHeight="5.5rem"
+        cardHeight="7.5rem"
         ariaLabel="Elementi da sistemare"
       />
     </section>

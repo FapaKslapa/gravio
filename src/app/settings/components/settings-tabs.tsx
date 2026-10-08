@@ -1,6 +1,13 @@
 "use client";
 
-import { Bell, type LucideIcon, Palette, Target, User } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  type LucideIcon,
+  Palette,
+  Target,
+  User,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SettingsGroup, SettingsRow, type Tone } from "./settings-ui";
 
@@ -42,6 +49,7 @@ type SettingsNavProps = {
   onSelect: (tab: Tab) => void;
   user: { name: string; email: string };
   profileImage: string | null;
+  onLogout?: () => void;
 };
 
 export function SettingsNav({
@@ -50,6 +58,7 @@ export function SettingsNav({
   onSelect,
   user,
   profileImage,
+  onLogout,
 }: SettingsNavProps) {
   const row = (id: Tab) => (
     <SettingsRow
@@ -92,6 +101,18 @@ export function SettingsNav({
         {row("budget")}
         {row("notifications")}
       </SettingsGroup>
+
+      {onLogout && (
+        <SettingsGroup index={2}>
+          <SettingsRow
+            icon={LogOut}
+            tone="expense"
+            title="Esci"
+            subtitle="Chiudi la sessione su questo dispositivo"
+            onClick={onLogout}
+          />
+        </SettingsGroup>
+      )}
     </nav>
   );
 }

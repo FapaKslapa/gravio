@@ -1,8 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import { m } from "motion/react";
-import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { FriendSplit } from "./friend-split";
 import { GroupMemberSplits } from "./group-member-splits";
@@ -24,7 +22,6 @@ type Props = {
   friendNok: number;
   myPct: number;
   friendPct: number;
-  checkedCount: number;
   customIsExact: boolean;
   customDifference: number;
   onToggleGroupSplitMode: (mode: "equal" | "custom") => void;
@@ -48,18 +45,12 @@ export function SharedExpenseSplitStep({
   friendNok,
   myPct,
   friendPct,
-  checkedCount,
   customIsExact,
   customDifference,
   onToggleGroupSplitMode,
   onToggleMember,
   onChangeCustomSplit,
 }: Props) {
-  const blocked =
-    state.shareType === "group" &&
-    (checkedCount === 0 ||
-      (state.groupSplitMode === "custom" && !customIsExact));
-
   return (
     <m.div
       key="split-step"
@@ -108,16 +99,6 @@ export function SharedExpenseSplitStep({
           onChangeCustomSplit={onChangeCustomSplit}
         />
       )}
-
-      <Button
-        type="button"
-        disabled={blocked}
-        onClick={() => set({ step: "summary" })}
-        className="h-12 w-full text-base"
-      >
-        Vai al riepilogo
-        <ArrowRight data-icon="inline-end" />
-      </Button>
     </m.div>
   );
 }

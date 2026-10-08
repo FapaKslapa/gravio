@@ -36,19 +36,19 @@ export function convertAmounts(
   return { amountEur, amountNok };
 }
 const commonFormatters: Record<string, Intl.NumberFormat> = {
-  "EUR-false": new Intl.NumberFormat(undefined, {
+  "EUR-false": new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }),
-  "NOK-false": new Intl.NumberFormat(undefined, {
+  "NOK-false": new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "NOK",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }),
-  "USD-false": new Intl.NumberFormat(undefined, {
+  "USD-false": new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
@@ -66,7 +66,7 @@ function getFormatter(
   let formatter = commonFormatters[key] || formatterCache.get(key);
   if (!formatter) {
     const NF = Intl.NumberFormat;
-    formatter = new NF(undefined, {
+    formatter = new NF("it-IT", {
       style: "currency",
       currency,
       minimumFractionDigits: noDecimals ? 0 : 2,

@@ -3,7 +3,8 @@ import { Bricolage_Grotesque, Onest } from "next/font/google";
 import "./globals.css";
 
 import { PwaRegister } from "@/components/pwa-register";
-import { ThemeProvider, ThemeScript } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeScript } from "@/components/theme-script";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/lib/trpc/Provider";

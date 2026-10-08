@@ -130,8 +130,8 @@ export function TodoForm({
           type="text"
           enterKeyHint="send"
           autoComplete="off"
-          aria-label="Articolo da aggiungere"
-          placeholder={`Aggiungi a ${listName}`}
+          aria-label={`Articolo da aggiungere a ${listName}`}
+          placeholder="Aggiungi articolo"
           value={todoTitle}
           onChange={(e) => setField("todoTitle", e.target.value)}
           className="h-12 min-w-0 flex-1 border-0 bg-transparent px-3 text-base font-medium shadow-none focus-visible:ring-0 md:text-base dark:bg-transparent"

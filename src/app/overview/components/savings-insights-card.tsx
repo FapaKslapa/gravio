@@ -84,7 +84,7 @@ export function SavingsInsightsCard() {
                           <Icon className="size-4" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold">
+                          <p className="text-sm leading-tight font-semibold">
                             {tip.title}
                           </p>
                           <p className="line-clamp-2 text-xs text-muted-foreground">

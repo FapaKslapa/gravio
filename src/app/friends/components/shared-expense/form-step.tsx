@@ -1,9 +1,8 @@
 "use client";
 
-import { ArrowRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { m } from "motion/react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { CustomDatePicker } from "@/components/ui/custom-datepicker";
 import {
   Field,
@@ -85,6 +84,7 @@ export function SharedExpenseFormStep({
 
   return (
     <m.form
+      id="shared-expense-form"
       key="form-step"
       variants={fadeUp}
       initial="hidden"
@@ -269,11 +269,6 @@ export function SharedExpenseFormStep({
           />
         </Field>
       </FieldGroup>
-
-      <Button type="submit" className="h-12 w-full text-base">
-        Continua
-        <ArrowRight data-icon="inline-end" />
-      </Button>
     </m.form>
   );
 }

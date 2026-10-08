@@ -104,7 +104,7 @@ export function RecentLogs({
                     <CategoryIcon name={cat?.icon || "HelpCircle"} size={18} />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium">
+                    <span className="line-clamp-2 break-words text-sm font-medium">
                       {tx.description || "Nessuna descrizione"}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">

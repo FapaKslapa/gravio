@@ -142,6 +142,10 @@ export default function OverviewClient() {
           targetBudgetVal={targetBudgetVal}
           maxBudgetVal={maxBudgetVal}
           displayCurrency={displayCurrency}
+          monthExpenses={currentMonthTransactions.filter(
+            (t) => t.type === "expense",
+          )}
+          convertCurrency={convertCurrency}
           onOpenSettings={() => router.push("/settings?tab=budget")}
         />
       ),

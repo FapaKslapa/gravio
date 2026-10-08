@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useReducer } from "react";
+import { useReducer, useSyncExternalStore } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useUrlActions } from "@/hooks/use-url-actions";
@@ -108,6 +108,21 @@ export default function FriendsView() {
     settleConfirmFriend,
     groupToDelete,
   } = uiState;
+
+  const isXl = useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia("(min-width: 1280px)");
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(min-width: 1280px)").matches,
+    () => false,
+  );
+  const autoFriend =
+    isXl && !selectedFriend && !selectedGroup && activeMobileTab === "friends"
+      ? ((friendsData?.[0] as FriendItem | undefined) ?? null)
+      : null;
+  const shownFriend = selectedFriend ?? autoFriend;
 
   const setActiveMobileTab = (val: "friends" | "groups") =>
     dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
@@ -285,7 +300,7 @@ export default function FriendsView() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-3 pb-24 text-foreground md:px-8 md:pb-12">
+    <div className="flex w-full flex-col gap-5 text-foreground">
       <FriendsHeader
         hasFriends={!!friendsData && friendsData.length > 0}
         onAddExpense={() => setIsSharedExpenseOpen(true)}
@@ -309,7 +324,7 @@ export default function FriendsView() {
           friends={friendsData ?? []}
           balances={balances}
           groups={groupsData ?? []}
-          selectedFriendId={selectedFriend?.user.id}
+          selectedFriendId={shownFriend?.user.id}
           selectedGroupId={selectedGroup?.id}
           displayCurrency={displayCurrency}
           convertNokAmount={convertNokAmount}
@@ -328,7 +343,7 @@ export default function FriendsView() {
         />
 
         <FriendsRightColumn
-          selectedFriend={selectedFriend}
+          selectedFriend={shownFriend}
           selectedGroup={selectedGroup}
           balances={balances}
           transactions={transactionsData ?? []}
@@ -364,7 +379,7 @@ export default function FriendsView() {
         friends={friendsData ?? []}
         groups={groupsData ?? []}
         selectedGroup={selectedGroup}
-        selectedFriend={selectedFriend}
+        selectedFriend={shownFriend}
         onSaveSharedExpense={handleSharedExpense}
         onSaveGroupExpense={handleGroupExpense}
         isCreateGroupOpen={isCreateGroupOpen}

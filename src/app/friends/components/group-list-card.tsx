@@ -107,7 +107,7 @@ export function GroupListCard({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold">
+                  <span className="line-clamp-2 break-words text-sm font-semibold">
                     {group.name}
                   </span>
                   <span className="text-xs text-muted-foreground">

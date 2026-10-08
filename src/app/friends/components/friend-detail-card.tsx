@@ -120,7 +120,7 @@ export function FriendDetailCard({
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h2 className="truncate font-display text-lg font-bold leading-tight">
+          <h2 className="line-clamp-2 break-words font-display text-lg font-bold leading-tight">
             {selectedFriend.user.name}
           </h2>
           <span className="truncate text-xs text-muted-foreground">
@@ -225,7 +225,7 @@ export function FriendDetailCard({
                   className="flex items-center justify-between gap-3 px-4 py-3 not-last:border-b"
                 >
                   <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate text-sm font-semibold">
+                    <span className="line-clamp-2 break-words text-sm font-semibold">
                       {tx.description || "Spesa condivisa"}
                     </span>
                     <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">

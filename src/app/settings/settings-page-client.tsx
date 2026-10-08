@@ -165,6 +165,12 @@ export function SettingsPageClient() {
   const setMaxBudget = (val: string) =>
     dispatch({ type: "SET_FIELD", field: "maxBudget", value: val });
 
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const [_permissionVersion, setPermissionVersion] = useState(0);
   // Read Notification.permission on demand; permissionVersion bump triggers re-read
   const pushNotificationPermission = useSyncExternalStore<
@@ -351,6 +357,7 @@ export function SettingsPageClient() {
             onSelect={selectTab}
             user={user}
             profileImage={profileImage}
+            onLogout={handleLogout}
           />
         </div>
 
@@ -370,9 +377,9 @@ export function SettingsPageClient() {
                 <GeneralTab
                   preferredCurrency={preferredCurrency}
                   setPreferredCurrency={setPreferredCurrency}
-                  theme={theme}
+                  theme={hydrated ? theme : undefined}
                   changeTheme={changeTheme}
-                  accent={accent}
+                  accent={hydrated ? accent : undefined}
                   changeAccent={changeAccent}
                 />
               )}
