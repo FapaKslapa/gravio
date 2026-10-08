@@ -49,3 +49,8 @@ next-env.d.ts
 .open-next
 .wrangler
 .dev.vars
+
+# markdown: only the root README is tracked
+*.md
+*.mdx
+!/README.md
