@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.1.2
+
+### Patch Changes
+
+- Replace the server deploy workflow with a GitHub release plus Cloudflare Workers deploy on version tags, and rewrite the README in English.
+
 ## 1.1.1
 
 ### Patch Changes
