@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   AnimatePresence,
   animate,
@@ -8,8 +9,7 @@ import {
   useMotionValue,
   useReducedMotion,
   useTransform,
-} from "framer-motion";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+} from "motion/react";
 import {
   type CSSProperties,
   type KeyboardEvent,

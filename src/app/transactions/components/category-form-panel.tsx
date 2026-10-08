@@ -2,10 +2,136 @@
 
 import { Check } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
 import { CategoryIcon } from "@/components/icon-helper";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { APPLE_COLORS, CURATED_ICONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { FormAction } from "./category-types";
+
+export function CategoryColorPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  return (
+    <fieldset
+      aria-label="Colore categoria"
+      className="m-0 grid min-w-0 border-0 grid-cols-7 gap-2"
+    >
+      {APPLE_COLORS.map((col) => {
+        const selected = value === col;
+        return (
+          <button
+            key={col}
+            type="button"
+            aria-pressed={selected}
+            aria-label={`Colore ${col}`}
+            onClick={() => onChange(col)}
+            className="flex size-11 items-center justify-center rounded-full outline-none transition-transform active:scale-95 focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <span
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full text-white transition-shadow",
+                selected &&
+                  "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+              )}
+              style={{ backgroundColor: col }}
+            >
+              {selected && <Check className="size-4" aria-hidden />}
+            </span>
+          </button>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+export function CategoryIconPicker({
+  value,
+  color,
+  onChange,
+}: {
+  value: string;
+  color: string;
+  onChange: (icon: string) => void;
+}) {
+  return (
+    <fieldset
+      aria-label="Icona categoria"
+      className="m-0 grid min-w-0 border-0 grid-cols-6 gap-2"
+    >
+      {CURATED_ICONS.map((ico) => {
+        const selected = value === ico;
+        return (
+          <button
+            key={ico}
+            type="button"
+            aria-pressed={selected}
+            aria-label={`Icona ${ico}`}
+            onClick={() => onChange(ico)}
+            className={cn(
+              "flex size-11 items-center justify-center rounded-md border outline-none transition-transform active:scale-95 focus-visible:ring-3 focus-visible:ring-ring/50",
+              selected ? "border-transparent" : "border-border bg-card",
+            )}
+            style={
+              selected
+                ? {
+                    backgroundColor: `${color}26`,
+                    color,
+                    boxShadow: `inset 0 0 0 2px ${color}`,
+                  }
+                : undefined
+            }
+          >
+            <CategoryIcon name={ico} size={18} />
+          </button>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+export function CategoryPreview({
+  name,
+  icon,
+  color,
+}: {
+  name: string;
+  icon: string;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+      <span
+        className="flex size-11 shrink-0 items-center justify-center rounded-md"
+        style={{ backgroundColor: `${color}26`, color }}
+      >
+        <CategoryIcon name={icon} size={20} />
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold">
+          {name.trim() || "Nome categoria"}
+        </p>
+        <p className="text-xs text-muted-foreground">Anteprima</p>
+      </div>
+      <span
+        className="ml-auto h-6 w-1 shrink-0 rounded-full"
+        style={{ backgroundColor: color }}
+        aria-hidden
+      />
+    </div>
+  );
+}
 
 type CategoryFormPanelProps = {
   editingId: string | null;
@@ -28,116 +154,90 @@ export function CategoryFormPanel({
   onSubmit,
   onCancelEdit,
 }: CategoryFormPanelProps) {
+  const [touched, setTouched] = useState(false);
+  const nameInvalid = touched && !newCatName.trim();
+
   return (
-    <>
-      <div className="flex justify-between items-center shrink-0">
-        <h4 className="text-[10px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-          {editingId ? "Modifica Categoria" : "Crea Nuova Categoria"}
-        </h4>
+    <form
+      noValidate
+      onSubmit={(e) => {
+        setTouched(true);
+        if (!newCatName.trim()) {
+          e.preventDefault();
+          return;
+        }
+        setTouched(false);
+        return onSubmit(e);
+      }}
+      className="flex min-h-0 flex-1 flex-col gap-4"
+    >
+      <h4 className="text-base font-semibold">
+        {editingId ? "Modifica categoria" : "Nuova categoria"}
+      </h4>
+
+      <CategoryPreview
+        name={newCatName}
+        icon={newCatIcon}
+        color={newCatColor}
+      />
+
+      <FieldGroup>
+        <Field data-invalid={nameInvalid || undefined}>
+          <FieldLabel htmlFor="category-name">Nome</FieldLabel>
+          <Input
+            id="category-name"
+            className="h-11"
+            placeholder="Es. Spesa, Svago, Bollette"
+            value={newCatName}
+            aria-invalid={nameInvalid || undefined}
+            onChange={(e) =>
+              dispatch({ type: "SET_NAME", val: e.target.value })
+            }
+          />
+          {nameInvalid && <FieldError>Inserisci un nome.</FieldError>}
+        </Field>
+
+        <Field>
+          <FieldLabel>Colore</FieldLabel>
+          <CategoryColorPicker
+            value={newCatColor}
+            onChange={(val) => dispatch({ type: "SET_COLOR", val })}
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>Icona</FieldLabel>
+          <CategoryIconPicker
+            value={newCatIcon}
+            color={newCatColor}
+            onChange={(val) => dispatch({ type: "SET_ICON", val })}
+          />
+        </Field>
+      </FieldGroup>
+
+      <div className="sticky bottom-0 mt-auto flex gap-2 bg-popover pb-1 pt-3">
         {editingId && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="h-12 flex-1"
             onClick={onCancelEdit}
-            className="text-[10px] font-black text-blue-500 hover:underline border-0 cursor-pointer bg-transparent"
           >
-            Annulla modifica
-          </button>
+            Annulla
+          </Button>
         )}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="h-12 flex-1 bg-brand text-brand-foreground hover:bg-brand/90"
+        >
+          {isSubmitting
+            ? "Salvataggio..."
+            : editingId
+              ? "Salva modifiche"
+              : "Aggiungi categoria"}
+        </Button>
       </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          {/* Name */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-              Nome Categoria
-            </span>
-            <input
-              type="text"
-              aria-label="Nome categoria"
-              placeholder="Es. Spesa, Svago, Bollette..."
-              value={newCatName}
-              onChange={(e) =>
-                dispatch({ type: "SET_NAME", val: e.target.value })
-              }
-              required
-              className="h-11 px-3 bg-neutral-500/5 dark:bg-zinc-800/30 rounded-xl border border-(--card-border) outline-none text-xs font-bold text-foreground placeholder:text-(--text-muted) focus-within:ring-2 focus-within:ring-blue-500/20"
-            />
-          </div>
-
-          {/* Icon picker */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-              Icona Categoria
-            </span>
-            <div className="grid grid-cols-5 gap-2 max-h-[120px] overflow-y-auto pr-1 p-2 bg-neutral-500/5 rounded-xl border border-(--card-border)/40">
-              {CURATED_ICONS.map((ico) => {
-                const isSelected = newCatIcon === ico;
-                return (
-                  <button
-                    key={ico}
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_ICON", val: ico })}
-                    aria-label={`Seleziona icona ${ico}`}
-                    className={cn(
-                      "h-8 w-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer hover:scale-105 active:scale-95",
-                      isSelected
-                        ? "bg-foreground text-background border-transparent shadow-sm"
-                        : "bg-transparent text-foreground border-transparent hover:bg-neutral-500/10",
-                    )}
-                  >
-                    <CategoryIcon name={ico} size={13} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Color picker */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-              Colore Categoria
-            </span>
-            <div className="flex flex-wrap gap-2 p-2 bg-neutral-500/5 rounded-xl border border-(--card-border)/40 max-h-[90px] overflow-y-auto">
-              {APPLE_COLORS.map((col) => {
-                const isSelected = newCatColor === col;
-                return (
-                  <button
-                    key={col}
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_COLOR", val: col })}
-                    aria-label={`Seleziona colore ${col}`}
-                    className="h-6 w-6 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 active:scale-95 shrink-0"
-                    style={{ backgroundColor: col }}
-                  >
-                    {isSelected && (
-                      <Check
-                        size={12}
-                        className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] font-black"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-foreground text-background font-black text-xs h-11 rounded-xl cursor-pointer hover:opacity-90 mt-1 shadow-sm border-0 disabled:opacity-50 flex items-center justify-center transition-all w-full"
-          >
-            {isSubmitting
-              ? editingId
-                ? "Salvataggio..."
-                : "Aggiunta..."
-              : editingId
-                ? "Salva Modifiche"
-                : "Aggiungi Categoria"}
-          </button>
-        </form>
-      </div>
-    </>
+    </form>
   );
 }

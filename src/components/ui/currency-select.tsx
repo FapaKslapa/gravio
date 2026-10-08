@@ -1,8 +1,12 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
-import { Check, ChevronDown, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import {
+  PickerChevron,
+  PickerList,
+  PickerShell,
+  pickerTriggerClass,
+} from "@/components/ui/picker-shell";
 import { cn } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -54,173 +58,40 @@ export function CurrencySelect({
   currencies = ALL_CURRENCIES,
 }: CurrencySelectProps) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  const filtered = query.trim()
-    ? currencies.filter(
-        (c) =>
-          c.code.toLowerCase().includes(query.toLowerCase()) ||
-          c.name.toLowerCase().includes(query.toLowerCase()),
-      )
-    : currencies;
-
-  const onChangeRef = useRef(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  });
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setOpen(false);
-      return;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const cur = filtered[activeIndex];
-      if (cur) {
-        onChangeRef.current(cur.code);
-        setOpen(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!listRef.current) return;
-    const item = listRef.current.children[activeIndex] as
-      | HTMLElement
-      | undefined;
-    item?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
 
   return (
-    <div className={cn("relative", className)}>
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(true);
-          setQuery("");
-          setActiveIndex(0);
-          requestAnimationFrame(() => searchRef.current?.focus());
+    <PickerShell
+      open={open}
+      onOpenChange={setOpen}
+      title="Seleziona valuta"
+      className={className}
+      trigger={
+        <button
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className={cn("group/picker", pickerTriggerClass, triggerClassName)}
+        >
+          <span className="font-semibold tabular">{value || "—"}</span>
+          <PickerChevron />
+        </button>
+      }
+    >
+      <PickerList
+        items={currencies.map((c) => ({
+          value: c.code,
+          label: c.code,
+          description: c.name,
+        }))}
+        value={value}
+        searchable
+        searchLabel="Cerca valuta"
+        emptyLabel="Nessuna valuta trovata."
+        onSelect={(v) => {
+          onChange(v);
+          setOpen(false);
         }}
-        className={cn(
-          "w-full h-11 px-3 rounded-xl flex items-center justify-between gap-1.5 text-xs font-bold bg-neutral-500/5 dark:bg-zinc-800/30 text-foreground hover:bg-neutral-500/10 dark:hover:bg-zinc-800/50 transition-all outline-none cursor-pointer border-0 focus-visible:ring-2 focus-visible:ring-blue-500/30 select-none",
-          triggerClassName,
-        )}
-      >
-        <span>{value || "—"}</span>
-        <ChevronDown size={12} className="text-neutral-400 shrink-0" />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <>
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[190] bg-black/50 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-            />
-
-            <m.div
-              initial={{ opacity: 0, scale: 0.96, y: -8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: -8 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed left-1/2 top-[20vh] z-[200] w-full max-w-[360px] -translate-x-1/2 rounded-2xl border border-(--card-border) bg-(--card-solid) shadow-2xl overflow-hidden flex flex-col"
-              style={{ maxHeight: "60vh" }}
-            >
-              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--card-border)">
-                <Search size={14} className="text-(--text-muted) shrink-0" />
-                <input
-                  ref={searchRef}
-                  type="text"
-                  aria-label="Cerca valuta"
-                  placeholder="Cerca valuta…"
-                  value={query}
-                  onKeyDown={handleKeyDown}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setActiveIndex(0);
-                  }}
-                  className="flex-1 bg-transparent border-0 outline-none text-xs text-foreground placeholder:text-(--text-muted) font-medium"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="text-(--text-muted) hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-0.5"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              <div
-                ref={listRef}
-                className="overflow-y-auto py-1.5 flex flex-col"
-              >
-                {filtered.length === 0 && (
-                  <div className="py-8 text-center text-xs text-(--text-muted) font-medium">
-                    Nessuna valuta trovata.
-                  </div>
-                )}
-                {filtered.map((cur, idx) => {
-                  const isSelected = cur.code === value;
-                  const isActive = idx === activeIndex;
-                  return (
-                    <button
-                      key={cur.code}
-                      type="button"
-                      onClick={() => {
-                        onChange(cur.code);
-                        setOpen(false);
-                      }}
-                      onMouseEnter={() => setActiveIndex(idx)}
-                      className={cn(
-                        "flex items-center justify-between px-4 py-2.5 text-left transition-colors border-0 cursor-pointer",
-                        isActive
-                          ? "bg-neutral-500/10 dark:bg-zinc-800/50"
-                          : "bg-transparent",
-                      )}
-                    >
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span
-                          className={cn(
-                            "text-xs font-black",
-                            isSelected ? "text-blue-500" : "text-foreground",
-                          )}
-                        >
-                          {cur.code}
-                        </span>
-                        <span className="text-[10px] text-(--text-muted) font-medium truncate">
-                          {cur.name}
-                        </span>
-                      </div>
-                      {isSelected && (
-                        <Check
-                          size={13}
-                          className="text-blue-500 shrink-0 ml-3"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </m.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+      />
+    </PickerShell>
   );
 }

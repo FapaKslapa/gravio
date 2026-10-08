@@ -1,19 +1,27 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import dayjs from "dayjs";
-import { Clock, Edit3, Pause, Play, Trash2 } from "lucide-react";
-import { CategoryIcon } from "@/components/icon-helper";
+import { EllipsisVertical, Pause, Pencil, Play, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn, formatCurrency } from "@/lib/utils";
+import { CategoryTile } from "./transaction-list-timeline";
 
-type CategoryOption = {
+export type CategoryOption = {
   id: string;
   name: string;
   icon: string;
   color: string;
 };
 
-type RecurrentTx = {
+export type RecurrentTx = {
   id: string;
   description: string;
   amount: string;
@@ -27,6 +35,13 @@ type RecurrentTx = {
   nextOccurrence?: Date | string | null;
 };
 
+export const FREQUENCY_LABELS: Record<string, string> = {
+  daily: "Giornaliero",
+  weekly: "Settimanale",
+  monthly: "Mensile",
+  yearly: "Annuale",
+};
+
 type RecurrentTransactionRowProps = {
   rt: RecurrentTx;
   category?: CategoryOption;
@@ -35,6 +50,77 @@ type RecurrentTransactionRowProps = {
   onDelete: (id: string) => void;
   isDeletePending: boolean;
 };
+
+export function RecurrentActionsMenu({
+  rt,
+  onToggleStatus,
+  onEdit,
+  onDelete,
+  isDeletePending,
+}: Omit<RecurrentTransactionRowProps, "category">) {
+  const isPaused = rt.status === "paused";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-11 rounded-full text-muted-foreground md:size-9"
+          aria-label={`Azioni per ${rt.description}`}
+        >
+          <EllipsisVertical />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-44">
+        <DropdownMenuItem onSelect={() => onToggleStatus(rt.id, rt.status)}>
+          {isPaused ? <Play /> : <Pause />}
+          {isPaused ? "Attiva" : "Sospendi"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onEdit(rt)}>
+          <Pencil /> Modifica
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={isDeletePending}
+          onSelect={() => onDelete(rt.id)}
+        >
+          <Trash2 /> Elimina
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function RecurrentTypeBadge({ type }: { type: string }) {
+  return (
+    <Badge
+      variant="secondary"
+      className={cn(
+        type === "income"
+          ? "bg-income-soft text-income"
+          : "bg-expense-soft text-expense",
+      )}
+    >
+      {type === "income" ? "Entrata" : "Spesa"}
+    </Badge>
+  );
+}
+
+export function RecurrentStatusBadge({ paused }: { paused: boolean }) {
+  return (
+    <Badge
+      variant="secondary"
+      className={cn(
+        paused
+          ? "bg-muted text-muted-foreground"
+          : "bg-brand-soft text-foreground",
+      )}
+    >
+      {paused ? "Sospeso" : "Attivo"}
+    </Badge>
+  );
+}
 
 export function RecurrentTransactionRow({
   rt,
@@ -49,112 +135,44 @@ export function RecurrentTransactionRow({
   return (
     <tr
       className={cn(
-        "hover:bg-neutral-500/5 transition-colors",
-        isPaused && "opacity-60",
+        "transition-colors hover:bg-muted/40",
+        isPaused && "text-muted-foreground",
       )}
     >
-      <td className="py-3 pl-2 font-bold flex items-center gap-2">
-        {category ? (
-          <div
-            className="w-5 h-5 rounded-md flex items-center justify-center text-white"
-            style={{ backgroundColor: category.color }}
-          >
-            <CategoryIcon
-              name={category.icon}
-              size={11}
-              className="text-white"
-            />
-          </div>
-        ) : (
-          <div
-            className="w-5 h-5 rounded-md flex items-center justify-center text-white"
-            style={{ backgroundColor: "#8E8E93" }}
-          >
-            <CategoryIcon name="Sparkles" size={11} className="text-white" />
-          </div>
-        )}
-        <span>{rt.description}</span>
+      <td className="px-3 py-2.5">
+        <div className="flex items-center gap-3">
+          <CategoryTile category={category} size="sm" />
+          <span className="font-medium text-foreground">{rt.description}</span>
+        </div>
       </td>
-      <td className="py-3">
-        <span
-          className={`px-2 py-0.5 rounded-full text-[9px] font-bold capitalize ${
-            rt.type === "income"
-              ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-              : "bg-red-500/10 text-red-500 border border-red-500/20"
-          }`}
-        >
-          {rt.type === "income" ? "Entrata" : "Spesa"}
-        </span>
+      <td className="px-3 py-2.5">
+        <RecurrentTypeBadge type={rt.type} />
       </td>
-      <td className="py-3">
-        <span
-          className={cn(
-            "px-2 py-0.5 rounded-full text-[9px] font-bold capitalize border",
-            isPaused
-              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-              : "bg-blue-500/10 text-blue-500 border-blue-500/20",
-          )}
-        >
-          {isPaused ? "Sospeso" : "Attivo"}
-        </span>
+      <td className="px-3 py-2.5">
+        <RecurrentStatusBadge paused={isPaused} />
       </td>
-      <td className="py-3 font-black text-foreground">
+      <td className="tabular whitespace-nowrap px-3 py-2.5 text-right font-semibold">
         {formatCurrency(parseFloat(rt.amount), rt.currency)}
       </td>
-      <td className="py-3 font-bold text-(--text-muted) capitalize">
-        {rt.frequency === "daily" && "Giornaliero"}
-        {rt.frequency === "weekly" && "Settimanale"}
-        {rt.frequency === "monthly" && "Mensile"}
-        {rt.frequency === "yearly" && "Annuale"}
+      <td className="px-3 py-2.5">{FREQUENCY_LABELS[rt.frequency]}</td>
+      <td className="tabular whitespace-nowrap px-3 py-2.5">
+        {rt.endDate ? dayjs(rt.endDate).format("DD/MM/YYYY") : "Nessuna"}
       </td>
-      <td className="py-3 text-(--text-muted) font-medium">
-        {rt.endDate ? dayjs(rt.endDate).format("DD/MM/YYYY") : "-"}
+      <td className="tabular whitespace-nowrap px-3 py-2.5">
+        {isPaused
+          ? "Sospesa"
+          : rt.nextOccurrence
+            ? dayjs(rt.nextOccurrence).format("DD/MM/YYYY")
+            : "-"}
       </td>
-      <td className="py-3 text-(--text-muted) font-medium">
-        <div className="flex items-center gap-1">
-          <Clock size={11} className="opacity-60" />
-          {isPaused ? (
-            <span className="text-amber-500 font-bold">Sospesa</span>
-          ) : rt.nextOccurrence ? (
-            dayjs(rt.nextOccurrence).format("DD/MM/YYYY")
-          ) : (
-            "-"
-          )}
-        </div>
-      </td>
-      <td className="py-3 text-right pr-2">
-        <div className="flex justify-end gap-1.5">
-          <Button
-            isIconOnly
-            variant="ghost"
-            className={cn(
-              "h-8 w-8 rounded-xl cursor-pointer border-0",
-              isPaused
-                ? "text-emerald-500 hover:bg-emerald-500/10"
-                : "text-amber-500 hover:bg-amber-500/10",
-            )}
-            onPress={() => onToggleStatus(rt.id, rt.status)}
-          >
-            {isPaused ? <Play size={13} /> : <Pause size={13} />}
-          </Button>
-          <Button
-            isIconOnly
-            variant="ghost"
-            className="h-8 w-8 text-blue-500 hover:bg-blue-500/10 rounded-xl cursor-pointer border-0"
-            onPress={() => onEdit(rt)}
-          >
-            <Edit3 size={13} />
-          </Button>
-          <Button
-            isIconOnly
-            variant="ghost"
-            className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 rounded-xl cursor-pointer border-0"
-            onPress={() => onDelete(rt.id)}
-            isDisabled={isDeletePending}
-          >
-            <Trash2 size={13} />
-          </Button>
-        </div>
+      <td className="px-2 py-1 text-right">
+        <RecurrentActionsMenu
+          rt={rt}
+          onToggleStatus={onToggleStatus}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          isDeletePending={isDeletePending}
+        />
       </td>
     </tr>
   );

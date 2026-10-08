@@ -1,8 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@heroui/react";
 import dayjs from "dayjs";
-import { BarChart3 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { AnalyticsLineChart } from "./analytics-line-chart";
 
 type Transaction = {
@@ -16,12 +22,14 @@ type OverviewAnalyticsCardProps = {
   transactions: Transaction[];
   displayCurrency: string;
   convertCurrency: (amount: number, from: string, to: string) => number;
+  className?: string;
 };
 
 export function OverviewAnalyticsCard({
   transactions,
   displayCurrency,
   convertCurrency,
+  className,
 }: OverviewAnalyticsCardProps) {
   const months = Array.from({ length: 12 }, (_, i) => {
     const m = dayjs().subtract(11 - i, "month");
@@ -62,30 +70,25 @@ export function OverviewAnalyticsCard({
   );
 
   return (
-    <Card className="border border-(--card-border) bg-(--card-solid) shadow-xl p-6 rounded-[2rem] select-none w-full h-full flex flex-col">
-      <CardHeader className="p-0 pb-4 border-b border-(--card-border) mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-        <div className="flex flex-col items-start gap-1">
-          <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-sans">
-            <BarChart3 size={14} className="text-blue-500" />
-            Analisi Trend
-          </h4>
-          <p className="text-[10px] text-(--text-muted)">
-            Entrate e Spese degli ultimi 12 mesi
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-[10px] font-bold">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#34c759] shadow-sm" />
-            <span className="text-(--text-muted) font-mono">Entrate</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff3b30] shadow-sm" />
-            <span className="text-(--text-muted) font-mono">Spese</span>
-          </div>
-        </div>
+    <Card className={cn("elevation-1 h-full rounded-lg ring-0", className)}>
+      <CardHeader>
+        <CardTitle className="font-display text-base font-semibold">
+          Andamento
+        </CardTitle>
+        <CardDescription>Entrate e spese degli ultimi 12 mesi</CardDescription>
+        <ul className="flex items-center gap-4 pt-1 text-xs font-medium">
+          <li className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full bg-income" />
+            Entrate
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full border-t-2 border-dashed border-expense" />
+            Spese
+          </li>
+        </ul>
       </CardHeader>
 
-      <CardContent className="p-0 relative flex-1 min-h-0">
+      <CardContent className="min-h-52 flex-1">
         <AnalyticsLineChart
           months={months}
           maxVal={maxVal}

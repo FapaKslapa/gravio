@@ -1,7 +1,13 @@
 "use client";
 
-import { Camera, LogOut, Trash2, User } from "lucide-react";
-import NextImage from "next/image";
+import { Camera, LogOut, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { SettingsGroup } from "./settings-ui";
 
 type ProfileTabProps = {
   profileName: string;
@@ -28,45 +34,33 @@ export function ProfileTab({
   handleFileChange,
   handleLogout,
 }: ProfileTabProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Avatar + name */}
-      <div className="bg-(--card-solid) border border-(--card-border) rounded-[2rem] p-6 flex flex-col gap-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-(--card-border)">
-          <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-xl shrink-0">
-            <User size={14} />
-          </div>
-          <div>
-            <p className="text-xs font-black">Informazioni Personali</p>
-            <p className="text-[10px] text-(--text-muted)">
-              Nome e foto profilo
-            </p>
-          </div>
-        </div>
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const initial = (profileName || user.name || "U").charAt(0).toUpperCase();
 
-        <div className="flex flex-col items-center gap-3">
+  return (
+    <div className="flex flex-col gap-6">
+      <SettingsGroup title="Foto profilo" index={0}>
+        <div className="flex items-center gap-4 p-4">
           <button
             type="button"
-            className="relative group cursor-pointer border-0 p-0 bg-transparent rounded-full outline-none"
+            aria-label="Cambia foto profilo"
             onClick={() => fileInputRef.current?.click()}
+            className="relative cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
-            <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-blue-500/30 bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-2xl uppercase shadow-md transition-all group-hover:border-blue-500/60">
-              {profileImage ? (
-                <NextImage
-                  src={profileImage}
-                  alt={profileName}
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span>{profileName ? profileName[0] : "S"}</span>
+            <Avatar className="size-20">
+              {profileImage && (
+                <AvatarImage src={profileImage} alt={profileName} />
               )}
-            </div>
-            <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-opacity">
-              <Camera size={16} className="mb-0.5" />
-              <span>Cambia</span>
-            </div>
+              <AvatarFallback className="bg-brand-soft font-display text-2xl font-bold text-brand">
+                {initial}
+              </AvatarFallback>
+            </Avatar>
+            <span
+              aria-hidden
+              className="elevation-1 absolute right-0 bottom-0 flex size-8 items-center justify-center rounded-full bg-brand text-brand-foreground"
+            >
+              <Camera className="size-4" />
+            </span>
           </button>
           <input
             type="file"
@@ -76,94 +70,85 @@ export function ProfileTab({
             className="hidden"
             aria-label="Carica immagine profilo"
           />
-          {profileImage && (
-            <button
-              type="button"
-              onClick={() => setProfileImage(null)}
-              className="text-[10px] font-black text-rose-500 hover:text-rose-600 bg-transparent border-0 cursor-pointer flex items-center gap-1"
-            >
-              <Trash2 size={11} /> Rimuovi foto
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-              Nome
-            </span>
-            <input
-              type="text"
-              aria-label="Nome profilo"
-              placeholder="Il tuo nome"
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
-              className="h-11 px-3.5 bg-neutral-500/5 dark:bg-zinc-800/30 rounded-xl border border-(--card-border) outline-none text-xs font-bold text-foreground placeholder:text-(--text-muted) focus-within:ring-2 focus-within:ring-blue-500/20"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 opacity-70">
-            <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-              Email
-            </span>
-            <input
-              type="email"
-              aria-label="Email account"
-              value={user.email}
-              disabled
-              readOnly
-              className="h-11 w-full px-3.5 bg-neutral-500/10 dark:bg-zinc-800/50 rounded-xl border border-(--card-border) outline-none text-xs font-bold text-(--text-muted) cursor-not-allowed"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Account actions */}
-      <div className="bg-(--card-solid) border border-(--card-border) rounded-[2rem] p-6 flex flex-col gap-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-(--card-border)">
-          <div className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl shrink-0">
-            <LogOut size={14} />
-          </div>
-          <div>
-            <p className="text-xs font-black">Account</p>
-            <p className="text-[10px] text-(--text-muted)">
-              Azioni sull&apos;account
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            <p className="truncate text-base font-semibold">
+              {profileName || user.name}
             </p>
+            <p className="max-w-full truncate text-sm text-muted-foreground">
+              {user.email}
+            </p>
+            {profileImage && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setProfileImage(null)}
+                className="-ml-2 h-11 px-2 text-destructive hover:text-destructive"
+              >
+                <Trash2 data-icon="inline-start" />
+                Rimuovi foto
+              </Button>
+            )}
           </div>
         </div>
+      </SettingsGroup>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-4 p-4 bg-neutral-500/5 rounded-2xl border border-(--card-border)/40">
-            <div>
-              <p className="text-xs font-bold">{user.name}</p>
-              <p className="text-[10px] text-(--text-muted) truncate">
-                {user.email}
-              </p>
-            </div>
-            <div className="h-9 w-9 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center font-black text-sm uppercase shrink-0">
-              {profileImage ? (
-                <NextImage
-                  src={profileImage}
-                  alt={user.name}
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                (user.name?.[0] ?? "U")
-              )}
-            </div>
-          </div>
+      <SettingsGroup title="Dati personali" index={1}>
+        <div className="p-4">
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="profile-name">Nome</FieldLabel>
+              <Input
+                id="profile-name"
+                type="text"
+                placeholder="Il tuo nome"
+                autoComplete="name"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className="h-11 rounded-md text-base md:text-sm"
+              />
+            </Field>
+            <Field data-disabled>
+              <FieldLabel htmlFor="profile-email">Email</FieldLabel>
+              <Input
+                id="profile-email"
+                type="email"
+                value={user.email}
+                disabled
+                readOnly
+                className="h-11 rounded-md text-base md:text-sm"
+              />
+            </Field>
+          </FieldGroup>
+        </div>
+      </SettingsGroup>
 
-          <button
+      <SettingsGroup index={2}>
+        <div className="p-2">
+          <Button
             type="button"
-            onClick={handleLogout}
-            className="w-full text-rose-500 hover:bg-rose-500/10 text-xs font-bold rounded-2xl h-11 cursor-pointer flex items-center justify-center gap-2 border border-rose-500/20 bg-transparent transition-all"
+            variant="ghost"
+            onClick={() => setConfirmLogout(true)}
+            className="h-12 w-full justify-start gap-3 px-2 text-destructive hover:bg-expense-soft hover:text-destructive"
           >
-            <LogOut size={14} />
-            Disconnetti Account
-          </button>
+            <span
+              aria-hidden
+              className="flex size-9 items-center justify-center rounded-sm bg-expense-soft"
+            >
+              <LogOut className="size-[18px]" />
+            </span>
+            <span className="font-semibold">Disconnetti account</span>
+          </Button>
         </div>
-      </div>
+      </SettingsGroup>
+
+      <ConfirmationDialog
+        isOpen={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+        title="Disconnettere l'account?"
+        message="Dovrai accedere di nuovo con un Magic Link."
+        confirmLabel="Disconnetti"
+      />
     </div>
   );
 }

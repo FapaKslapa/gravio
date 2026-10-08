@@ -1,26 +1,24 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { AnimatePresence, m } from "framer-motion";
-import {
-  ArrowLeftRight,
-  CalendarDays,
-  Tag,
-  TrendingDown,
-  TrendingUp,
-  Type,
-  Wallet,
-  X,
-} from "lucide-react";
-import type React from "react";
-import { useEffect, useReducer, useRef, useState } from "react";
+import dayjs from "dayjs";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import { useReducer } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
-import { CategorySelect } from "@/components/ui/category-select";
-import { CurrencySelect } from "@/components/ui/currency-select";
-import { CustomDatePicker } from "@/components/ui/custom-datepicker";
+import { CategoryIcon } from "@/components/icon-helper";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
-import { useIsMobile } from "@/hooks/use-is-mobile";
-import { cn } from "@/lib/utils";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type CategoryType = { id: string; name: string; icon: string; color: string };
 
@@ -38,20 +36,22 @@ type QuickAddFormProps = {
   }) => Promise<void>;
 };
 
-function FieldLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="flex items-center gap-1.5 text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-1.5">
-      <Icon size={11} className="opacity-60" />
-      {children}
-    </span>
-  );
-}
+const CURRENCIES = [
+  "EUR",
+  "NOK",
+  "USD",
+  "GBP",
+  "SEK",
+  "DKK",
+  "CHF",
+  "CAD",
+  "AUD",
+  "JPY",
+  "PLN",
+  "CZK",
+];
+
+const AMOUNT_PRESETS = [5, 10, 20, 50];
 
 type FormState = {
   desc: string;
@@ -64,7 +64,11 @@ type FormState = {
 };
 
 type FormAction =
-  | { type: "SET_FIELD"; field: keyof FormState; value: any }
+  | {
+      type: "SET_FIELD";
+      field: keyof FormState;
+      value: FormState[keyof FormState];
+    }
   | { type: "RESET"; payload: FormState };
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -78,6 +82,11 @@ function formReducer(state: FormState, action: FormAction): FormState {
   }
 }
 
+const TYPES = [
+  { value: "expense", label: "Spesa", Icon: ArrowUpRight },
+  { value: "income", label: "Entrata", Icon: ArrowDownLeft },
+] as const;
+
 export function QuickAddForm({
   isOpen,
   onClose,
@@ -85,452 +94,267 @@ export function QuickAddForm({
   onSave,
 }: QuickAddFormProps) {
   const { convertCurrency, displayCurrency } = useDashboard();
-  const isMobile = useIsMobile();
 
-  const [state, dispatch] = useReducer(formReducer, null, () => ({
+  const initial: FormState = {
     desc: "",
-    type: "expense" as const,
+    type: "expense",
     amount: "",
     currency: displayCurrency,
     categoryId: "",
     date: "",
     isSaving: false,
-  }));
+  };
 
+  const [state, dispatch] = useReducer(formReducer, initial);
   const { desc, type, amount, currency, categoryId, date, isSaving } = state;
 
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  });
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  const set = <K extends keyof FormState>(field: K, value: FormState[K]) =>
+    dispatch({ type: "SET_FIELD", field, value });
 
   const parsedAmount = parseFloat(amount);
   const hasAmount = !Number.isNaN(parsedAmount) && parsedAmount > 0;
-
   const showConversion = hasAmount && currency !== displayCurrency;
   const convertedAmount = showConversion
     ? convertCurrency(parsedAmount, currency, displayCurrency)
     : null;
-  const targetCurrency = displayCurrency;
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const today = dayjs().format("YYYY-MM-DD");
+  const yesterday = dayjs().subtract(1, "day").format("YYYY-MM-DD");
+  const effectiveDate = date || today;
+  const currencyOptions = CURRENCIES.includes(currency)
+    ? CURRENCIES
+    : [currency, ...CURRENCIES];
 
   const handleSave = async () => {
-    if (!desc.trim() || !hasAmount) return;
-    dispatch({ type: "SET_FIELD", field: "isSaving", value: true });
+    if (!hasAmount) return;
+    set("isSaving", true);
     try {
       await onSave({
-        description: desc.trim(),
+        description:
+          desc.trim() ||
+          selectedCategory?.name ||
+          (type === "expense" ? "Spesa" : "Entrata"),
         type,
         amount: parsedAmount,
         currency,
         categoryId: categoryId || null,
         date: date || new Date().toISOString(),
       });
-      dispatch({
-        type: "RESET",
-        payload: {
-          desc: "",
-          type: "expense",
-          amount: "",
-          currency: displayCurrency,
-          categoryId: "",
-          date: "",
-          isSaving: false,
-        },
-      });
+      dispatch({ type: "RESET", payload: initial });
       onClose();
     } finally {
-      dispatch({ type: "SET_FIELD", field: "isSaving", value: false });
+      set("isSaving", false);
     }
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
-          />
-          <m.div
-            initial={
-              isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }
-            }
-            animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.97, y: 16 }}
-            transition={
-              isMobile
-                ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }
-                : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
-            }
-            drag={isMobile ? "y" : false}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.4 }}
-            onDragEnd={(_, info) => {
-              if (isMobile && (info.offset.y > 120 || info.velocity.y > 500)) {
-                onClose();
-              }
-            }}
-            className="relative bg-(--card-solid) border border-(--card-border) w-full md:max-w-[520px] rounded-t-[2rem] md:rounded-[2rem] shadow-2xl text-foreground z-10 max-h-[92dvh] md:max-h-[85vh] flex flex-col mx-0 md:mx-4 overflow-hidden"
-          >
-            <div className="flex md:hidden justify-center pt-3 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-(--card-border)" />
-            </div>
-
-            <div className="flex items-center justify-between px-6 pt-3 md:pt-6 pb-4 border-b border-(--card-border) shrink-0">
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    "h-9 w-9 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300",
-                    type === "expense"
-                      ? "bg-rose-500/10 border-rose-500/20 text-rose-500"
-                      : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
-                  )}
-                >
-                  {type === "expense" ? (
-                    <TrendingDown size={16} />
-                  ) : (
-                    <TrendingUp size={16} />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm leading-tight">
-                    {type === "expense" ? "Nuova Spesa" : "Nuovo Guadagno"}
-                  </h3>
-                  <p className="text-[10px] text-(--text-muted)">
-                    Registra rapidamente una transazione
-                  </p>
-                </div>
-              </div>
-              <Button
-                isIconOnly
-                variant="ghost"
-                className="text-(--text-muted) rounded-xl hover:bg-neutral-500/10 h-8 w-8 border-0 cursor-pointer flex items-center justify-center shrink-0"
-                onPress={onClose}
+    <ResponsiveSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={type === "expense" ? "Nuova spesa" : "Nuova entrata"}
+      description="Registra una transazione in pochi tocchi"
+      className="sm:max-w-lg"
+    >
+      <div className="flex flex-col gap-5 pb-2">
+        <div
+          role="radiogroup"
+          aria-label="Tipo di operazione"
+          className="grid h-11 grid-cols-2 gap-1 rounded-full bg-muted p-1"
+        >
+          {TYPES.map(({ value, label, Icon }) => {
+            const active = type === value;
+            return (
+              // biome-ignore lint/a11y/useSemanticElements: segmented radio
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => set("type", value)}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors active:scale-[0.97]",
+                  active
+                    ? value === "expense"
+                      ? "bg-expense text-background"
+                      : "bg-income text-background"
+                    : "text-muted-foreground",
+                )}
               >
-                <X size={16} />
-              </Button>
-            </div>
-
-            <QuickAddFields
-              type={type}
-              setType={(val) =>
-                dispatch({ type: "SET_FIELD", field: "type", value: val })
-              }
-              desc={desc}
-              setDesc={(val) =>
-                dispatch({ type: "SET_FIELD", field: "desc", value: val })
-              }
-              amount={amount}
-              setAmount={(val) =>
-                dispatch({ type: "SET_FIELD", field: "amount", value: val })
-              }
-              currency={currency}
-              setCurrency={(val) =>
-                dispatch({ type: "SET_FIELD", field: "currency", value: val })
-              }
-              categoryId={categoryId}
-              setCategoryId={(val) =>
-                dispatch({ type: "SET_FIELD", field: "categoryId", value: val })
-              }
-              date={date}
-              setDate={(val) =>
-                dispatch({ type: "SET_FIELD", field: "date", value: val })
-              }
-              categories={categories}
-              convertedAmount={convertedAmount}
-              targetCurrency={targetCurrency}
-              displayCurrency={displayCurrency}
-            />
-
-            <QuickAddFooter
-              type={type}
-              isSaving={isSaving}
-              canSave={hasAmount && !!desc.trim()}
-              onCancel={onClose}
-              onSave={handleSave}
-            />
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-type QuickAddFieldsProps = {
-  type: "expense" | "income";
-  setType: (type: "expense" | "income") => void;
-  desc: string;
-  setDesc: (desc: string) => void;
-  amount: string;
-  setAmount: (amount: string) => void;
-  currency: string;
-  setCurrency: (currency: string) => void;
-  categoryId: string;
-  setCategoryId: (categoryId: string) => void;
-  date: string;
-  setDate: (date: string) => void;
-  categories: CategoryType[];
-  convertedAmount: number | null;
-  targetCurrency: string;
-  displayCurrency: string;
-};
-
-function QuickAddFields({
-  type,
-  setType,
-  desc,
-  setDesc,
-  amount,
-  setAmount,
-  currency,
-  setCurrency,
-  categoryId,
-  setCategoryId,
-  date,
-  setDate,
-  categories,
-  convertedAmount,
-  targetCurrency,
-  displayCurrency,
-}: QuickAddFieldsProps) {
-  const parsedAmount = parseFloat(amount);
-  const hasAmount = !Number.isNaN(parsedAmount) && parsedAmount > 0;
-
-  return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
-      <div className="px-6 pt-5 pb-5 flex flex-col gap-5">
-        <div>
-          <FieldLabel icon={Tag}>Tipo operazione</FieldLabel>
-          <div className="relative flex p-1 bg-neutral-500/5 rounded-xl border border-(--card-border) h-11 overflow-hidden select-none">
-            <div
-              className={cn(
-                "absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-lg transition-all duration-300 shadow-sm",
-                type === "expense"
-                  ? "left-1 bg-rose-500"
-                  : "left-[calc(50%+2px)] bg-emerald-500",
-              )}
-            />
-            <button
-              type="button"
-              onClick={() => setType("expense")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 text-xs font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-                type === "expense" ? "text-white" : "text-(--text-muted)",
-              )}
-            >
-              <TrendingDown size={12} /> Spesa
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("income")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 text-xs font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-                type === "income" ? "text-white" : "text-(--text-muted)",
-              )}
-            >
-              <TrendingUp size={12} /> Guadagno
-            </button>
-          </div>
+                <Icon className="size-4" aria-hidden="true" />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
-        <div>
-          <FieldLabel icon={Type}>Descrizione</FieldLabel>
-          <div className="bg-neutral-500/5 dark:bg-zinc-800/30 h-11 px-3 rounded-xl flex items-center border border-(--card-border) focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-            <input
-              type="text"
-              aria-label="Descrizione transazione"
-              placeholder="Es. Cena fuori, Stipendio, Supermercato..."
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              className="text-xs text-foreground flex-1 bg-transparent border-0 outline-none w-full font-semibold placeholder:font-normal placeholder:text-(--text-muted)"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-2">
-            <FieldLabel icon={Wallet}>Importo</FieldLabel>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-stretch gap-2">
             <MoneyInput
               value={amount}
-              onChange={setAmount}
+              onChange={(v) => set("amount", v)}
               currency={currency}
-              className="h-11"
-              inputClassName="text-sm font-black"
+              placeholder="0.00"
+              className="h-auto min-h-16 flex-1 rounded-lg border-input bg-muted px-4"
+              inputClassName="num-display tabular h-14 text-4xl font-bold"
             />
-            {/* Presets */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 mt-1.5 scrollbar-none select-none">
-              {[1, 5, 10, 20, 50, 100].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    if (navigator.vibrate) navigator.vibrate(10);
-                    const current = parseFloat(amount) || 0;
-                    setAmount((current + num).toFixed(2));
-                  }}
-                  className="text-[9px] font-black px-2.5 py-1.5 rounded-lg bg-neutral-500/5 dark:bg-zinc-800/20 hover:bg-neutral-500/10 dark:hover:bg-zinc-800/40 text-foreground border border-(--card-border)/40 cursor-pointer transition-colors shrink-0"
-                >
-                  +{num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  if (navigator.vibrate) navigator.vibrate(10);
-                  setAmount("");
-                }}
-                className="text-[9px] font-black px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 cursor-pointer transition-colors ml-auto shrink-0"
+            <Select value={currency} onValueChange={(v) => set("currency", v)}>
+              <SelectTrigger
+                aria-label="Valuta"
+                className="h-auto min-h-16 w-24 rounded-lg"
               >
-                Clear
-              </button>
-            </div>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {currencyOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
-          <div>
-            <FieldLabel icon={ArrowLeftRight}>Valuta</FieldLabel>
-            <CurrencySelect value={currency} onChange={setCurrency} />
+          <div className="flex flex-wrap items-center gap-2">
+            {AMOUNT_PRESETS.map((n) => (
+              <Button
+                key={n}
+                type="button"
+                variant="outline"
+                className="tabular h-11 min-w-14 rounded-full"
+                onClick={() => {
+                  const current = parseFloat(amount) || 0;
+                  set("amount", (current + n).toFixed(2));
+                }}
+              >
+                +{n}
+              </Button>
+            ))}
+            {amount && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-11 rounded-full"
+                onClick={() => set("amount", "")}
+              >
+                Azzera
+              </Button>
+            )}
           </div>
+          {convertedAmount !== null && (
+            <p className="tabular flex items-center gap-1.5 text-sm text-muted-foreground">
+              {formatCurrency(parsedAmount, currency)}
+              <ArrowRight className="size-4" aria-hidden="true" />
+              <span className="font-semibold text-foreground">
+                {formatCurrency(convertedAmount, displayCurrency)}
+              </span>
+            </p>
+          )}
         </div>
 
-        <AnimatePresence>
-          {convertedAmount !== null && (
-            <m.div
-              key="conv"
-              initial={{ opacity: 0, height: 0, marginTop: -16 }}
-              animate={{ opacity: 1, height: "auto", marginTop: 0 }}
-              exit={{ opacity: 0, height: 0, marginTop: -16 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-blue-500/5 border border-blue-500/10">
-                <div className="flex items-center gap-2 text-[11px] font-semibold text-(--text-muted)">
-                  <ArrowLeftRight size={11} className="text-blue-500" />
-                  Conversione stimata
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-black">
-                  <span className="text-(--text-muted)">
-                    {parsedAmount.toFixed(2)} {currency}
-                  </span>
-                  <span className="text-neutral-400">→</span>
-                  <span className="text-blue-500">
-                    {convertedAmount.toFixed(2)} {targetCurrency}
-                  </span>
-                </div>
-              </div>
-            </m.div>
-          )}
-        </AnimatePresence>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <FieldLabel icon={Tag}>Categoria</FieldLabel>
-            <CategorySelect
-              value={categoryId}
-              onChange={setCategoryId}
-              categories={categories}
-            />
-            {/* Quick Categories */}
-            {categories.length > 0 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-1 mt-1.5 scrollbar-none select-none">
-                {categories.slice(0, 4).map((cat) => {
-                  const isSelected = categoryId === cat.id;
+        <FieldGroup>
+          {categories.length > 0 && (
+            <Field>
+              <FieldLabel>Categoria</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const selected = categoryId === cat.id;
                   return (
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => {
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        setCategoryId(isSelected ? "" : cat.id);
-                      }}
-                      style={{
-                        backgroundColor: isSelected ? cat.color : undefined,
-                        color: isSelected ? "#ffffff" : undefined,
-                      }}
+                      aria-pressed={selected}
+                      onClick={() => set("categoryId", selected ? "" : cat.id)}
                       className={cn(
-                        "text-[9px] font-black px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all flex items-center gap-1 shrink-0",
-                        isSelected
-                          ? "border-transparent"
-                          : "bg-neutral-500/5 dark:bg-zinc-800/20 hover:bg-neutral-500/10 dark:hover:bg-zinc-800/40 text-foreground border-(--card-border)/40",
+                        "inline-flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors active:scale-[0.97]",
+                        selected ? "font-semibold" : "bg-card",
                       )}
+                      style={
+                        selected
+                          ? {
+                              backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
+                              borderColor: cat.color,
+                            }
+                          : undefined
+                      }
                     >
-                      <span>{cat.name}</span>
+                      <span style={{ color: cat.color }}>
+                        <CategoryIcon name={cat.icon} size={16} />
+                      </span>
+                      {cat.name}
                     </button>
                   );
                 })}
               </div>
-            )}
-          </div>
-          <div>
-            <FieldLabel icon={CalendarDays}>Data</FieldLabel>
-            <CustomDatePicker value={date} onChange={setDate} />
-          </div>
-        </div>
+            </Field>
+          )}
+
+          <Field>
+            <FieldLabel>Data</FieldLabel>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant={effectiveDate === today ? "secondary" : "outline"}
+                aria-pressed={effectiveDate === today}
+                className="h-11 rounded-full px-4"
+                onClick={() => set("date", "")}
+              >
+                Oggi
+              </Button>
+              <Button
+                type="button"
+                variant={effectiveDate === yesterday ? "secondary" : "outline"}
+                aria-pressed={effectiveDate === yesterday}
+                className="h-11 rounded-full px-4"
+                onClick={() => set("date", yesterday)}
+              >
+                Ieri
+              </Button>
+              <Input
+                type="date"
+                aria-label="Altra data"
+                value={effectiveDate}
+                max={today}
+                onChange={(e) => set("date", e.target.value)}
+                className="tabular h-11 w-auto min-w-40 flex-1"
+              />
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="quick-add-desc">Descrizione</FieldLabel>
+            <Input
+              id="quick-add-desc"
+              placeholder="Facoltativa, es. cena fuori"
+              value={desc}
+              onChange={(e) => set("desc", e.target.value)}
+              className="h-11"
+            />
+          </Field>
+        </FieldGroup>
+
+        <Button
+          type="button"
+          size="lg"
+          disabled={isSaving || !hasAmount}
+          onClick={handleSave}
+          className={cn(
+            "h-12 w-full rounded-full text-base font-semibold text-background active:scale-[0.97]",
+            type === "expense"
+              ? "bg-expense hover:bg-expense/90"
+              : "bg-income hover:bg-income/90",
+          )}
+        >
+          {isSaving
+            ? "Salvataggio..."
+            : type === "expense"
+              ? "Aggiungi spesa"
+              : "Aggiungi entrata"}
+        </Button>
       </div>
-    </div>
-  );
-}
-
-type QuickAddFooterProps = {
-  type: "expense" | "income";
-  isSaving: boolean;
-  canSave: boolean;
-  onCancel: () => void;
-  onSave: () => void;
-};
-
-function QuickAddFooter({
-  type,
-  isSaving,
-  canSave,
-  onCancel,
-  onSave,
-}: QuickAddFooterProps) {
-  return (
-    <div className="px-6 pb-6 pt-3 border-t border-(--card-border) flex gap-3 shrink-0 bg-(--card-solid)">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="flex-1 h-12 text-xs font-bold text-foreground border border-(--card-border) hover:bg-neutral-500/10 rounded-xl cursor-pointer bg-transparent transition-colors"
-      >
-        Annulla
-      </button>
-      <button
-        type="button"
-        onClick={onSave}
-        disabled={isSaving || !canSave}
-        className={cn(
-          "flex-[2] h-12 text-sm font-bold rounded-xl cursor-pointer shadow-sm border-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-          type === "expense"
-            ? "bg-rose-500 hover:bg-rose-600 text-white"
-            : "bg-emerald-500 hover:bg-emerald-600 text-white",
-        )}
-      >
-        {isSaving
-          ? "Salvataggio..."
-          : type === "expense"
-            ? "Aggiungi Spesa"
-            : "Aggiungi Guadagno"}
-      </button>
-    </div>
+    </ResponsiveSheet>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useReducer, useRef } from "react";
+import { useMemo, useReducer, useRef, useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import type {
   FormAction,
@@ -104,6 +104,8 @@ export function useSharedExpenseForm({
     ...initialFormState,
     currency: displayCurrency,
   });
+
+  const [isSaving, setIsSaving] = useState(false);
 
   const set = (payload: Partial<FormState>) =>
     dispatch({ type: "SET", payload });
@@ -246,7 +248,8 @@ export function useSharedExpenseForm({
 
   const handleSave = async () => {
     if (!state.desc || !hasAmount) return;
-    set({ step: "form" }); // prevent double-save via optimistic UI
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       if (state.shareType === "group") {
         if (!state.groupId || checkedCount === 0) return;
@@ -288,8 +291,9 @@ export function useSharedExpenseForm({
       resetForm();
       onClose();
     } catch {
-      // restore split step on error so the user can retry
-      set({ step: "split" });
+      set({ step: "summary" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -318,6 +322,7 @@ export function useSharedExpenseForm({
     amountNok,
     selectedFriend,
     selectedGroup,
+    checkedMemberIdsSet,
     myNok,
     friendNok,
     myPct,
@@ -327,6 +332,7 @@ export function useSharedExpenseForm({
     customIsExact,
     customDifference,
     canSave,
+    isSaving,
     handleClose,
     handleToggleGroupSplitMode,
     handleToggleMember,

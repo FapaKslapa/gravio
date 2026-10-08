@@ -39,7 +39,7 @@ export function AmountWithTooltip({
 
   if (!isRounded) {
     return (
-      <span className={className}>
+      <span className={cn("tabular", className)}>
         {prefix}
         {full}
       </span>
@@ -53,9 +53,10 @@ export function AmountWithTooltip({
       <button
         type="button"
         className={cn(
+          "tabular cursor-help border-0 bg-transparent p-0 font-[inherit] underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
           className,
-          "underline decoration-dotted underline-offset-2 cursor-help bg-transparent border-0 p-0 font-[inherit]",
         )}
+        aria-label={`${prefix}${full}`}
         onMouseEnter={(e) => {
           setPos({ x: e.clientX, y: e.clientY });
           setVisible(true);
@@ -74,17 +75,18 @@ export function AmountWithTooltip({
         visible &&
         createPortal(
           <div
-            className="fixed z-[9999] pointer-events-none bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-2.5 py-2 rounded-xl text-[9px] font-bold shadow-lg whitespace-nowrap flex flex-col gap-0.5"
+            role="tooltip"
+            className="pointer-events-none fixed z-[9999] flex flex-col gap-0.5 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-2 text-background elevation-2"
             style={{
               left: pos.x,
               top: pos.y,
               transform: "translate(-50%, calc(-100% - 8px))",
             }}
           >
-            <span className="opacity-50 uppercase text-[7px] tracking-wider font-extrabold">
+            <span className="text-[11px] font-medium opacity-70">
               Importo esatto
             </span>
-            <span className="text-xs font-black">{full}</span>
+            <span className="tabular text-sm font-bold">{full}</span>
           </div>,
           document.body,
         )}

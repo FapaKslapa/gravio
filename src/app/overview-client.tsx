@@ -2,11 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { m } from "framer-motion";
+import { m } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { fadeUp } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
+import { cn } from "@/lib/utils";
 import { BudgetProgressCard } from "./overview/components/budget-progress-card";
 import { CategoryBudgetsCard } from "./overview/components/category-budgets-card";
 import { CurrencyConverterCard } from "./overview/components/currency-converter-card";
@@ -17,7 +19,6 @@ import { OverviewHeader } from "./overview/components/overview-header";
 import { QuickAddForm } from "./overview/components/quick-add-form";
 import { RecentTodoCard } from "./overview/components/recent-todo-card";
 import { RecentTransactionsCard } from "./overview/components/recent-transactions-card";
-import { StatsGrid } from "./overview/components/stats-grid";
 
 export default function OverviewClient() {
   const router = useRouter();
@@ -91,7 +92,6 @@ export default function OverviewClient() {
 
   const totalIncome = convertCurrency(totalIncomeEur, "EUR", displayCurrency);
   const totalExpense = convertCurrency(totalExpenseEur, "EUR", displayCurrency);
-  const netSavings = totalIncome - totalExpense;
 
   const targetBudgetValNok = settings
     ? parseFloat(settings.targetMonthlyBudget)
@@ -128,129 +128,110 @@ export default function OverviewClient() {
     });
   };
 
+  const cards: { key: string; className: string; node: ReactNode }[] = [
+    {
+      key: "hero",
+      className: "md:col-span-2 xl:col-span-8",
+      node: (
+        <BudgetProgressCard
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          targetBudgetVal={targetBudgetVal}
+          maxBudgetVal={maxBudgetVal}
+          displayCurrency={displayCurrency}
+          onOpenSettings={() => router.push("/settings?tab=budget")}
+        />
+      ),
+    },
+    {
+      key: "recent",
+      className:
+        "relative md:col-span-2 xl:col-span-4 xl:row-span-2 xl:h-0 xl:min-h-full",
+      node: (
+        <RecentTransactionsCard
+          transactions={transactions}
+          categories={categoriesData || []}
+          displayCurrency={displayCurrency}
+          convertCurrency={convertCurrency}
+          className="xl:absolute xl:inset-0"
+        />
+      ),
+    },
+    {
+      key: "analytics",
+      className: "md:col-span-2 xl:col-span-8",
+      node: (
+        <OverviewAnalyticsCard
+          transactions={transactions}
+          displayCurrency={displayCurrency}
+          convertCurrency={convertCurrency}
+        />
+      ),
+    },
+    {
+      key: "categories",
+      className: "xl:col-span-4",
+      node: (
+        <CategoryBudgetsCard
+          transactions={currentMonthTransactions}
+          categories={categoriesData || []}
+          categoryBudgets={categoryBudgets}
+          displayCurrency={displayCurrency}
+          convertCurrency={convertCurrency}
+          onOpenSettings={() => router.push("/settings?tab=budget")}
+        />
+      ),
+    },
+    {
+      key: "todo",
+      className: "xl:col-span-4",
+      node: (
+        <RecentTodoCard
+          todos={todosData || []}
+          displayCurrency={displayCurrency}
+        />
+      ),
+    },
+    {
+      key: "friends",
+      className: "md:col-span-2 xl:col-span-4",
+      node: <OverviewFriendBalancesCard />,
+    },
+    {
+      key: "converter",
+      className: "md:col-span-2 xl:col-span-12",
+      node: <CurrencyConverterCard />,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
-      <m.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <OverviewHeader
-          userName={user.name}
-          onOpenQuickAdd={() => setIsQuickAddOpen(true)}
-        />
-      </m.div>
+      <OverviewHeader
+        userName={user.name}
+        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+      />
 
       <OnboardingCard
         showOnboarding={showOnboarding}
         onDismiss={handleDismissOnboarding}
       />
 
-      <StatsGrid
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        netSavings={netSavings}
-        displayCurrency={displayCurrency}
-      />
-
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6 w-max md:w-auto">
+      <m.div
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-12"
+      >
+        {cards.map((card, i) => (
           <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-1"
+            key={card.key}
+            variants={fadeUp}
+            custom={i}
+            className={cn("min-w-0", card.className)}
           >
-            <BudgetProgressCard
-              totalExpense={totalExpense}
-              targetBudgetVal={targetBudgetVal}
-              maxBudgetVal={maxBudgetVal}
-              displayCurrency={displayCurrency}
-              onOpenSettings={() => router.push("/settings?tab=budget")}
-            />
+            {card.node}
           </m.div>
-
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-2"
-          >
-            <RecentTransactionsCard
-              transactions={transactions}
-              categories={categoriesData || []}
-              displayCurrency={displayCurrency}
-              convertCurrency={convertCurrency}
-            />
-          </m.div>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6 w-max md:w-auto">
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.29, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-1"
-          >
-            <CategoryBudgetsCard
-              transactions={currentMonthTransactions}
-              categories={categoriesData || []}
-              categoryBudgets={categoryBudgets}
-              displayCurrency={displayCurrency}
-              convertCurrency={convertCurrency}
-              onOpenSettings={() => router.push("/settings?tab=budget")}
-            />
-          </m.div>
-
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-1"
-          >
-            <RecentTodoCard
-              todos={todosData || []}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.43, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-1"
-          >
-            <CurrencyConverterCard />
-          </m.div>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6 w-max md:w-auto">
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-2"
-          >
-            <OverviewAnalyticsCard
-              transactions={transactions}
-              displayCurrency={displayCurrency}
-              convertCurrency={convertCurrency}
-            />
-          </m.div>
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[340px] flex flex-col md:w-auto md:shrink md:h-full md:col-span-1"
-          >
-            <OverviewFriendBalancesCard />
-          </m.div>
-        </div>
-      </div>
+        ))}
+      </m.div>
 
       <QuickAddForm
         isOpen={isQuickAddOpen}

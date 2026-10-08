@@ -1,6 +1,13 @@
 "use client";
 
-import { Activity, Calendar } from "lucide-react";
+import { Receipt } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type TransactionInfo = {
@@ -37,19 +44,29 @@ export function GroupExpenseList({
   convertCurrency,
 }: GroupExpenseListProps) {
   return (
-    <div className="flex flex-col flex-1">
-      <h4 className="text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-3 flex items-center gap-1.5">
-        <Activity size={12} className="opacity-60" />
-        Cronologia Spese Gruppo
-      </h4>
+    <section aria-label="Spese del gruppo" className="border-t">
+      <div className="flex items-center justify-between px-4 py-3">
+        <h3 className="text-base font-semibold">Spese del gruppo</h3>
+        <span className="tabular text-xs text-muted-foreground">
+          {transactions.length}
+        </span>
+      </div>
 
-      <div className="flex-1 overflow-y-auto max-h-[200px] pr-1 flex flex-col gap-2.5">
-        {transactions.length === 0 ? (
-          <div className="text-center py-8 text-xs text-(--text-muted) font-semibold">
-            Nessuna spesa inserita per questo gruppo.
-          </div>
-        ) : (
-          transactions.map((tx) => {
+      {transactions.length === 0 ? (
+        <Empty className="border-t py-10">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Receipt />
+            </EmptyMedia>
+            <EmptyTitle>Nessuna spesa nel gruppo</EmptyTitle>
+            <EmptyDescription>
+              Aggiungi la prima spesa per iniziare a dividere.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <ul className="flex flex-col border-t">
+          {transactions.map((tx) => {
             const isPayer = tx.userId === currentUserId;
 
             let activeAmount = 0;
@@ -95,20 +112,17 @@ export function GroupExpenseList({
             );
 
             return (
-              <div
+              <li
                 key={tx.id}
-                className="flex justify-between items-center p-3 rounded-2xl bg-neutral-500/5 border border-(--card-border) shrink-0"
+                className="flex items-center justify-between gap-3 px-4 py-3 not-last:border-b"
               >
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-foreground truncate leading-tight">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="truncate text-sm font-semibold">
                     {tx.description || "Spesa gruppo"}
                   </span>
-                  <span className="text-[8px] text-(--text-muted) font-semibold flex items-center gap-2 mt-1">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={9} />
-                      {new Date(tx.date).toLocaleDateString()}
-                    </span>
-                    <span>•</span>
+                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                    <span>{new Date(tx.date).toLocaleDateString()}</span>
+                    <span aria-hidden>·</span>
                     <span>
                       {isPayer
                         ? "Hai pagato tu"
@@ -116,25 +130,25 @@ export function GroupExpenseList({
                     </span>
                   </span>
                 </div>
-                <div className="flex flex-col items-end shrink-0">
+                <div className="flex shrink-0 flex-col items-end">
                   <span
                     className={cn(
-                      "text-xs font-black",
-                      isPayer ? "text-emerald-500" : "text-rose-500",
+                      "tabular text-sm font-bold",
+                      isPayer ? "text-income" : "text-expense",
                     )}
                   >
-                    {isPayer ? "+" : "-"}{" "}
+                    {isPayer ? "+" : "-"}
                     {formatCurrency(activeAmount, displayCurrency)}
                   </span>
-                  <span className="text-[8px] text-(--text-muted) font-semibold mt-0.5">
-                    Totale: {formatCurrency(originalAmount, displayCurrency)}
+                  <span className="tabular text-xs text-muted-foreground">
+                    Totale {formatCurrency(originalAmount, displayCurrency)}
                   </span>
                 </div>
-              </div>
+              </li>
             );
-          })
-        )}
-      </div>
-    </div>
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

@@ -1,11 +1,21 @@
 "use client";
 
-import { Card, CardContent } from "@heroui/react";
 import { ArrowRightLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { formatCurrency } from "@/lib/utils";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { cn, formatCurrency } from "@/lib/utils";
 
 const POPULAR_CURRENCIES = [
   "EUR",
@@ -31,7 +41,7 @@ const POPULAR_CURRENCIES = [
   "INR",
 ];
 
-export function CurrencyConverterCard() {
+export function CurrencyConverterCard({ className }: { className?: string }) {
   const { rates, displayCurrency, convertCurrency } = useDashboard();
 
   const defaultFrom = displayCurrency === "EUR" ? "USD" : "EUR";
@@ -94,89 +104,81 @@ export function CurrencyConverterCard() {
       ? (rates[toCurrency] / rates[fromCurrency]).toFixed(4)
       : "—";
 
-  return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-6 apple-widget h-full flex flex-col justify-between transition-all">
-      <div className="flex flex-row gap-2.5 items-start pb-4 border-b border-(--card-border) mb-4 select-none">
-        <div className="p-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl shrink-0 mt-0.5">
-          <ArrowRightLeft size={15} />
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="font-bold text-xs">Convertitore Valute</span>
-          <span className="text-[8px] text-(--text-muted) font-extrabold uppercase tracking-wide mt-0.5">
-            1 {fromCurrency} = {rate} {toCurrency}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={handleSwap}
-          className="ml-auto text-[10px] font-black uppercase tracking-wider text-blue-500 hover:text-blue-400 bg-transparent border-0 cursor-pointer shrink-0"
-        >
-          Inverti
-        </button>
-      </div>
+  const currencyList = availableCurrencies.map((c) => ({ code: c, name: c }));
 
-      <CardContent className="p-0 flex flex-col gap-3">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-            Da
-          </span>
-          <div className="flex gap-2">
-            <div className="flex-1 bg-neutral-500/5 dark:bg-zinc-800/30 h-9 px-2 rounded-xl flex items-center focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-              <input
+  return (
+    <Card className={cn("elevation-1 h-full rounded-lg ring-0", className)}>
+      <CardHeader>
+        <CardTitle className="font-display text-base font-semibold">
+          Convertitore valute
+        </CardTitle>
+        <CardDescription className="tabular">
+          1 {fromCurrency} = {rate} {toCurrency}
+        </CardDescription>
+        <CardAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 rounded-full"
+            onClick={handleSwap}
+            aria-label="Inverti valute"
+          >
+            <ArrowRightLeft />
+          </Button>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="conv-from">Da</FieldLabel>
+            <div className="flex gap-2">
+              <Input
+                id="conv-from"
                 type="number"
-                aria-label="Importo di partenza"
+                inputMode="decimal"
                 value={fromAmount}
                 onChange={(e) => handleFromChange(e.target.value)}
-                className="text-xs text-foreground font-semibold flex-1 bg-transparent border-0 outline-none w-full"
+                className="tabular h-11 flex-1 text-base font-semibold"
               />
+              <div className="w-24">
+                <CurrencySelect
+                  value={fromCurrency}
+                  onChange={setFromCurrency}
+                  triggerClassName="h-11 text-sm"
+                  currencies={currencyList}
+                />
+              </div>
             </div>
-            <div className="w-[90px]">
-              <CurrencySelect
-                value={fromCurrency}
-                onChange={setFromCurrency}
-                triggerClassName="h-9 text-xs"
-                currencies={availableCurrencies.map((c) => ({
-                  code: c,
-                  name: c,
-                }))}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-            A
-          </span>
-          <div className="flex gap-2">
-            <div className="flex-1 bg-neutral-500/5 dark:bg-zinc-800/30 h-9 px-2 rounded-xl flex items-center focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-              <input
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="conv-to">A</FieldLabel>
+            <div className="flex gap-2">
+              <Input
+                id="conv-to"
                 type="number"
-                aria-label="Importo di destinazione"
+                inputMode="decimal"
                 value={toAmount}
                 onChange={(e) => handleToChange(e.target.value)}
-                className="text-xs text-foreground font-semibold flex-1 bg-transparent border-0 outline-none w-full"
+                className="tabular h-11 flex-1 text-base font-semibold"
               />
+              <div className="w-24">
+                <CurrencySelect
+                  value={toCurrency}
+                  onChange={setToCurrency}
+                  triggerClassName="h-11 text-sm"
+                  currencies={currencyList}
+                />
+              </div>
             </div>
-            <div className="w-[90px]">
-              <CurrencySelect
-                value={toCurrency}
-                onChange={setToCurrency}
-                triggerClassName="h-9 text-xs"
-                currencies={availableCurrencies.map((c) => ({
-                  code: c,
-                  name: c,
-                }))}
-              />
-            </div>
-          </div>
+          </Field>
         </div>
 
         {fromAmount && toAmount && (
-          <div className="text-center text-[9px] text-(--text-muted) font-semibold mt-1 select-none">
+          <p className="num-display tabular text-lg font-bold">
             {formatCurrency(parseFloat(fromAmount) || 0, fromCurrency)} ={" "}
             {formatCurrency(parseFloat(toAmount) || 0, toCurrency)}
-          </div>
+          </p>
         )}
       </CardContent>
     </Card>

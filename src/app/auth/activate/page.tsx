@@ -1,11 +1,13 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { m } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { m } from "motion/react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { springs } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 
 function ActivateContent() {
@@ -43,93 +45,82 @@ function ActivateContent() {
   }, [token, email, activateMutation.mutate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <m.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-[380px] bg-(--card-solid) border border-(--card-border) rounded-3xl p-8 shadow-(--card-shadow) text-foreground flex flex-col items-center text-center gap-5"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.smooth}
+        className="elevation-2 flex w-full max-w-sm flex-col items-center gap-5 rounded-xl bg-card p-8 text-center text-card-foreground"
       >
         <Image
           src="/logo.png"
           alt="Gravio"
           width={52}
           height={52}
-          className="rounded-2xl"
+          className="rounded-md"
         />
-        <h1 className="text-xl font-bold tracking-tight">Gravio</h1>
 
         {status === "loading" && (
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center gap-3"
-          >
-            <Loader2 size={28} className="animate-spin text-blue-500" />
-            <p className="text-xs text-(--text-muted)">
+          <div role="status" className="flex flex-col items-center gap-3 py-2">
+            <Loader2 aria-hidden className="size-8 animate-spin text-brand" />
+            <p className="text-sm text-muted-foreground">
               Attivazione in corso...
             </p>
-          </m.div>
+          </div>
         )}
 
         {status === "success" && (
-          <m.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
-            className="flex flex-col items-center gap-4"
+          <div
+            role="status"
+            className="flex w-full flex-col items-center gap-4"
           >
-            <div className="p-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full">
-              <CheckCircle2 size={30} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold mb-1">Account attivato!</h2>
-              <p className="text-xs text-(--text-muted) leading-relaxed max-w-[260px]">
-                Il tuo account è ora attivo. Accedi inserendo la tua email — ti
+            <span className="flex size-14 items-center justify-center rounded-full bg-income-soft text-income">
+              <CheckCircle2 aria-hidden className="size-7" />
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <h1 className="font-display text-xl font-bold">
+                Account attivato
+              </h1>
+              <p className="text-sm text-muted-foreground text-pretty">
+                Il tuo account è ora attivo. Accedi inserendo la tua email: ti
                 invieremo un Magic Link.
               </p>
             </div>
-            <m.button
+            <Button
               type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
               onClick={() => router.push("/login")}
-              className="w-full h-11 bg-foreground text-background font-semibold text-xs rounded-xl border-0 cursor-pointer hover:opacity-90 transition-all shadow-sm"
+              className="h-12 w-full rounded-full text-base font-semibold"
             >
               Vai al login
-            </m.button>
-          </m.div>
+            </Button>
+          </div>
         )}
 
         {status === "error" && (
-          <m.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
-            className="flex flex-col items-center gap-4"
-          >
-            <div className="p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full">
-              <AlertCircle size={30} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold mb-1">Attivazione fallita</h2>
-              <p className="text-xs text-(--text-muted) leading-relaxed max-w-[260px]">
+          <div role="alert" className="flex w-full flex-col items-center gap-4">
+            <span className="flex size-14 items-center justify-center rounded-full bg-expense-soft text-destructive">
+              <AlertCircle aria-hidden className="size-7" />
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <h1 className="font-display text-xl font-bold">
+                Attivazione fallita
+              </h1>
+              <p className="text-sm text-muted-foreground text-pretty">
                 {errorMessage}
               </p>
             </div>
-            <m.button
+            <Button
               type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              variant="outline"
               onClick={() => router.push("/login")}
-              className="w-full h-11 border border-(--card-border) text-foreground font-semibold text-xs rounded-xl cursor-pointer hover:bg-neutral-500/10 transition-all bg-transparent"
+              className="h-12 w-full rounded-full"
             >
               Torna alla registrazione
-            </m.button>
-          </m.div>
+            </Button>
+          </div>
         )}
       </m.div>
-    </div>
+    </main>
   );
 }
 

@@ -8,6 +8,7 @@ type MoneyInputProps = {
   onChange: (val: string) => void;
   currency?: string;
   placeholder?: string;
+  label?: string;
   required?: boolean;
   className?: string;
   inputClassName?: string;
@@ -18,6 +19,7 @@ export function MoneyInput({
   onChange,
   currency = "EUR",
   placeholder = "0.00",
+  label,
   required = false,
   className,
   inputClassName,
@@ -52,25 +54,27 @@ export function MoneyInput({
   return (
     <div
       className={cn(
-        "bg-neutral-500/5 dark:bg-zinc-800/30 focus-within:bg-neutral-500/10 dark:focus-within:bg-zinc-800/50 h-11 px-3 rounded-xl flex items-center w-full focus-within:ring-2 focus-within:ring-blue-500/30 dark:focus-within:ring-blue-500/20 transition-all duration-300 border border-(--card-border)",
+        "flex h-14 w-full items-center gap-2 rounded-md border border-input bg-card px-4 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40",
         className,
       )}
     >
       <input
         type="text"
-        aria-label={placeholder || "Importo"}
+        aria-label={label || "Importo"}
         inputMode="decimal"
+        autoComplete="off"
+        enterKeyHint="done"
         placeholder={placeholder}
         value={value}
         onChange={handleInputChange}
         onBlur={handleBlur}
         required={required}
         className={cn(
-          "text-xs text-foreground flex-1 bg-transparent border-0 outline-none w-full min-w-0",
+          "num-display min-w-0 w-full flex-1 bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60",
           inputClassName,
         )}
       />
-      <span className="flex items-center text-xs font-extrabold text-(--text-muted) select-none ml-2 shrink-0">
+      <span className="tabular shrink-0 select-none text-sm font-semibold text-muted-foreground">
         {currency}
       </span>
     </div>

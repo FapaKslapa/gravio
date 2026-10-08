@@ -1,12 +1,16 @@
 "use client";
 
 import dayjs from "dayjs";
-import { AnimatePresence, m } from "framer-motion";
-import { X } from "lucide-react";
 import type React from "react";
 import { useMemo, useReducer, useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
-import { CsvMappingPreview } from "./csv-import/csv-mapping-preview";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import {
+  CsvMappingStep,
+  CsvPreviewStep,
+} from "./csv-import/csv-mapping-preview";
 import { CsvUploadZone } from "./csv-import/csv-upload-zone";
 
 type Category = {
@@ -71,7 +75,7 @@ type CsvImportState = {
 };
 
 type CsvImportAction =
-  | { type: "SET_FIELD"; field: keyof CsvImportState; value: any }
+  | { type: "SET_FIELD"; field: keyof CsvImportState; value: unknown }
   | { type: "RESET" };
 
 function csvImportReducer(
@@ -107,6 +111,7 @@ export function CsvImportModal({
   onImport,
 }: CsvImportModalProps) {
   const { rates } = useDashboard();
+  const [step, setStep] = useState<0 | 1 | 2>(0);
 
   const [state, dispatch] = useReducer(csvImportReducer, {
     csvFile: null,
@@ -200,6 +205,7 @@ export function CsvImportModal({
           autoMapping.category = h;
       });
       setCsvMapping(autoMapping);
+      setStep(1);
     };
     reader.readAsText(file);
   };
@@ -260,6 +266,7 @@ export function CsvImportModal({
 
       await onImport(dataToImport);
       dispatch({ type: "RESET" });
+      setStep(0);
       onClose();
     } catch (err) {
       console.error(err);
@@ -268,70 +275,94 @@ export function CsvImportModal({
     }
   };
 
+  const STEPS = [
+    {
+      title: "Carica il file",
+      hint: "Scegli un file CSV con le tue transazioni",
+    },
+    {
+      title: "Associa le colonne",
+      hint: "Indica quale colonna corrisponde a ogni campo",
+    },
+    {
+      title: "Controlla e importa",
+      hint: "Verifica l'anteprima prima di importare",
+    },
+  ];
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <m.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="bg-(--card-solid) border border-(--card-border) w-full max-w-[620px] rounded-3xl p-6 shadow-2xl text-foreground flex flex-col max-h-[85vh]"
+    <ResponsiveSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title="Importazione da CSV"
+      description={`Passo ${step + 1} di 3: ${STEPS[step].title}`}
+      className="md:max-w-xl"
+    >
+      <div className="flex flex-col gap-5">
+        <Progress
+          value={((step + 1) / 3) * 100}
+          aria-label={`Passo ${step + 1} di 3`}
+        />
+        <p className="-mt-2 text-sm text-muted-foreground">
+          {STEPS[step].hint}
+        </p>
+
+        {step === 0 && (
+          <CsvUploadZone csvFile={csvFile} onChange={handleCsvChange} />
+        )}
+        {step === 1 && (
+          <CsvMappingStep
+            csvHeaders={csvHeaders}
+            csvMapping={csvMapping}
+            onMappingChange={(field, val) =>
+              setCsvMapping((prev) => ({ ...prev, [field]: val }))
+            }
+          />
+        )}
+        {step === 2 && (
+          <CsvPreviewStep
+            csvPreviewRows={csvPreviewRows}
+            categories={categories}
+          />
+        )}
+
+        <div className="sticky bottom-0 -mx-4 flex gap-2 border-t bg-popover px-4 pb-1 pt-3 md:mx-0 md:px-0">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-12 flex-1"
+            onClick={() =>
+              step === 0 ? onClose() : setStep((step - 1) as 0 | 1)
+            }
           >
-            {/* Header */}
-            <div className="flex justify-between items-center pb-4 border-b border-(--card-border) mb-4">
-              <h3 className="font-extrabold text-base">Importazione da CSV</h3>
-              <button
-                type="button"
-                aria-label="Chiudi"
-                className="text-(--text-muted) rounded-lg hover:bg-neutral-500/10 h-7 w-7 border-0 cursor-pointer bg-transparent flex items-center justify-center transition-all"
-                onClick={onClose}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
-              {/* Upload zone */}
-              <CsvUploadZone csvFile={csvFile} onChange={handleCsvChange} />
-
-              {/* Mapping + preview */}
-              {csvRows.length > 0 && (
-                <CsvMappingPreview
-                  csvHeaders={csvHeaders}
-                  csvMapping={csvMapping}
-                  onMappingChange={(field, val) =>
-                    setCsvMapping((prev) => ({ ...prev, [field]: val }))
-                  }
-                  csvPreviewRows={csvPreviewRows}
-                  categories={categories}
-                />
-              )}
-            </div>
-
-            {/* Footer actions */}
-            <div className="pt-4 border-t border-(--card-border) mt-4 flex gap-3">
-              <button
-                type="button"
-                className="flex-1 border border-(--card-border) hover:bg-neutral-500/10 text-xs rounded-xl h-11 text-foreground bg-transparent cursor-pointer flex items-center justify-center transition-all"
-                onClick={onClose}
-              >
-                Annulla
-              </button>
-              <button
-                type="button"
-                disabled={csvPreviewRows.length === 0 || isImporting}
-                className="flex-1 bg-emerald-500 text-white border-0 hover:opacity-90 text-xs rounded-xl h-11 cursor-pointer flex items-center justify-center transition-all disabled:opacity-50"
-                onClick={handleCsvImportSubmit}
-              >
-                {isImporting
-                  ? "Importazione..."
-                  : `Importa ${csvPreviewRows.length} elementi`}
-              </button>
-            </div>
-          </m.div>
+            {step === 0 ? "Annulla" : "Indietro"}
+          </Button>
+          {step === 1 && (
+            <Button
+              type="button"
+              disabled={csvPreviewRows.length === 0}
+              className="h-12 flex-[2] bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={() => setStep(2)}
+            >
+              Continua
+            </Button>
+          )}
+          {step === 2 && (
+            <Button
+              type="button"
+              disabled={csvPreviewRows.length === 0 || isImporting}
+              className="h-12 flex-[2] bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={handleCsvImportSubmit}
+            >
+              {isImporting
+                ? "Importazione..."
+                : `Importa ${csvPreviewRows.length} elementi`}
+            </Button>
+          )}
         </div>
-      )}
-    </AnimatePresence>
+      </div>
+    </ResponsiveSheet>
   );
 }

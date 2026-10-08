@@ -1,9 +1,17 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
+import { MousePointerClick } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { FriendDetailCard } from "./friend-detail-card";
-import { FriendListPanel } from "./friend-list-panel";
 import { GroupDetailCard } from "./group-detail-card";
 
 type FriendUser = {
@@ -61,10 +69,8 @@ type GroupSettlementProposal = {
 };
 
 interface FriendsRightColumnProps {
-  activeMobileTab: "friends" | "groups" | "manage";
   selectedFriend: FriendItem | null;
   selectedGroup: GroupItem | null;
-  friends: FriendItem[];
   balances: BalanceInfo[];
   transactions: TransactionInfo[];
   proposals: GroupSettlementProposal[];
@@ -75,7 +81,6 @@ interface FriendsRightColumnProps {
   convertCurrency: (amount: number, from: string, to: string) => number;
   onClearFriend: () => void;
   onClearGroup: () => void;
-  onSelectFriend: (friend: FriendItem) => void;
   onOpenSharedExpense: () => void;
   onOpenSettleDebt: (friend: FriendItem) => void;
   onOpenDeleteFriend: (friend: FriendItem) => void;
@@ -84,10 +89,8 @@ interface FriendsRightColumnProps {
 }
 
 export function FriendsRightColumn({
-  activeMobileTab,
   selectedFriend,
   selectedGroup,
-  friends,
   balances,
   transactions,
   proposals,
@@ -98,7 +101,6 @@ export function FriendsRightColumn({
   convertCurrency,
   onClearFriend,
   onClearGroup,
-  onSelectFriend,
   onOpenSharedExpense,
   onOpenSettleDebt,
   onOpenDeleteFriend,
@@ -120,17 +122,23 @@ export function FriendsRightColumn({
     ? transactions.filter((tx) => tx.groupId === selectedGroup.id)
     : [];
 
+  const slide = {
+    initial: { opacity: 0, x: 16 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -16 },
+    transition: springs.smooth,
+  };
+
   return (
-    <div className="order-1 md:order-2 md:col-span-2 flex flex-col gap-6">
-      <AnimatePresence mode="wait">
+    <div
+      className={cn(
+        "min-w-0 flex-col gap-4",
+        selectedFriend || selectedGroup ? "flex" : "hidden xl:flex",
+      )}
+    >
+      <AnimatePresence mode="wait" initial={false}>
         {selectedFriend && (
-          <m.div
-            key={`friend-detail-${selectedFriend.user.id}`}
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -15 }}
-            transition={{ duration: 0.3 }}
-          >
+          <m.div key={`friend-detail-${selectedFriend.user.id}`} {...slide}>
             <FriendDetailCard
               selectedFriend={selectedFriend}
               onClear={onClearFriend}
@@ -148,13 +156,7 @@ export function FriendsRightColumn({
         )}
 
         {selectedGroup && (
-          <m.div
-            key={`group-detail-${selectedGroup.id}`}
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -15 }}
-            transition={{ duration: 0.3 }}
-          >
+          <m.div key={`group-detail-${selectedGroup.id}`} {...slide}>
             <GroupDetailCard
               selectedGroup={selectedGroup}
               onClear={onClearGroup}
@@ -174,23 +176,18 @@ export function FriendsRightColumn({
         )}
 
         {!selectedFriend && !selectedGroup && (
-          <m.div
-            key="friends-list-panel"
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 15 }}
-            transition={{ duration: 0.3 }}
-            className={cn(activeMobileTab !== "friends" && "hidden md:block")}
-          >
-            <FriendListPanel
-              friends={friends}
-              balances={balances}
-              displayCurrency={displayCurrency}
-              convertNokAmount={convertNokAmount}
-              onSelectFriend={onSelectFriend}
-              onSettleFriend={onOpenSettleDebt}
-              onDeleteFriend={onOpenDeleteFriend}
-            />
+          <m.div key="empty-detail" {...slide}>
+            <Empty className="min-h-80 rounded-xl border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <MousePointerClick />
+                </EmptyMedia>
+                <EmptyTitle>Seleziona un amico o un gruppo</EmptyTitle>
+                <EmptyDescription>
+                  Qui vedi il saldo e la cronologia delle spese in comune.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </m.div>
         )}
       </AnimatePresence>

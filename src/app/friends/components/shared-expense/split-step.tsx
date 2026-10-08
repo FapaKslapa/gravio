@@ -1,19 +1,23 @@
 "use client";
 
-import { m } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { m } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { fadeUp } from "@/lib/motion";
+import { FriendSplit } from "./friend-split";
 import { GroupMemberSplits } from "./group-member-splits";
-import { SplitModeSelector } from "./split-mode-selector";
 import type { FormState, Friend, Group } from "./types";
 
-type SharedExpenseSplitStepProps = {
+type Props = {
   state: FormState;
   set: (payload: Partial<FormState>) => void;
   selectedFriend?: Friend;
   selectedGroup?: Group;
   currentUserId: string;
+  payerName: string;
+  payerImage?: string | null;
   amountNok: number;
   groupShareNok: number;
-  parsedAmount: number;
   displayCurrency: string;
   convertCurrency: (amount: number, from: string, to: string) => number;
   myNok: number;
@@ -26,7 +30,6 @@ type SharedExpenseSplitStepProps = {
   onToggleGroupSplitMode: (mode: "equal" | "custom") => void;
   onToggleMember: (mId: string) => void;
   onChangeCustomSplit: (memberId: string, val: string) => void;
-  handleSave: () => Promise<void>;
 };
 
 export function SharedExpenseSplitStep({
@@ -35,9 +38,10 @@ export function SharedExpenseSplitStep({
   selectedFriend,
   selectedGroup,
   currentUserId,
+  payerName,
+  payerImage,
   amountNok,
   groupShareNok,
-  parsedAmount,
   displayCurrency,
   convertCurrency,
   myNok,
@@ -50,23 +54,28 @@ export function SharedExpenseSplitStep({
   onToggleGroupSplitMode,
   onToggleMember,
   onChangeCustomSplit,
-  handleSave,
-}: SharedExpenseSplitStepProps) {
+}: Props) {
+  const blocked =
+    state.shareType === "group" &&
+    (checkedCount === 0 ||
+      (state.groupSplitMode === "custom" && !customIsExact));
+
   return (
     <m.div
       key="split-step"
-      initial={{ opacity: 0, x: 16 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 16 }}
-      transition={{ duration: 0.2 }}
-      className="px-6 pt-5 pb-6 flex flex-col gap-5"
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col gap-6"
     >
       {state.shareType === "friend" ? (
-        <SplitModeSelector
+        <FriendSplit
           splitMode={state.splitMode}
           percentage={state.percentage}
           exactNok={state.exactNok}
           n={state.n}
+          payerName={payerName}
+          payerImage={payerImage}
           friendName={selectedFriend?.user.name}
           myNok={myNok}
           friendNok={friendNok}
@@ -90,7 +99,6 @@ export function SharedExpenseSplitStep({
           currency={state.currency}
           amountNok={amountNok}
           groupShareNok={groupShareNok}
-          parsedAmount={parsedAmount}
           displayCurrency={displayCurrency}
           customIsExact={customIsExact}
           customDifference={customDifference}
@@ -101,24 +109,15 @@ export function SharedExpenseSplitStep({
         />
       )}
 
-      {/* Split step actions */}
-      <div className="flex gap-2.5">
-        <button
-          type="button"
-          onClick={() => set({ step: "form" })}
-          className="flex-1 h-11 text-xs font-bold text-foreground border border-(--card-border) hover:bg-neutral-500/10 rounded-xl cursor-pointer bg-transparent transition-all"
-        >
-          Indietro
-        </button>
-        <button
-          type="button"
-          disabled={state.shareType === "group" && checkedCount === 0}
-          onClick={handleSave}
-          className="flex-[2] h-11 text-xs font-bold bg-blue-500 hover:bg-blue-600 text-white rounded-xl cursor-pointer shadow-sm border-0 disabled:opacity-50"
-        >
-          Aggiungi Spesa
-        </button>
-      </div>
+      <Button
+        type="button"
+        disabled={blocked}
+        onClick={() => set({ step: "summary" })}
+        className="h-12 w-full text-base"
+      >
+        Vai al riepilogo
+        <ArrowRight data-icon="inline-end" />
+      </Button>
     </m.div>
   );
 }

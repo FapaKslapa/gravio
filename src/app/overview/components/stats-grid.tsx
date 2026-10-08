@@ -1,62 +1,39 @@
 "use client";
 
-import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 type StatsGridProps = {
   totalIncome: number;
   totalExpense: number;
-  netSavings: number;
   displayCurrency: string;
 };
 
 export function StatsGrid({
   totalIncome,
   totalExpense,
-  netSavings,
   displayCurrency,
 }: StatsGridProps) {
   return (
-    <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto pb-1 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
-      <div className="snap-start shrink-0 w-[85vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Entrate (Mese)"
-          value={formatCurrency(totalIncome, displayCurrency)}
-          subtitle="Questo mese"
-          icon={<TrendingUp size={14} />}
-          iconBgColor="bg-emerald-500/10"
-          iconColor="text-emerald-500"
-          delayIndex={0}
-        />
+    <dl className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col gap-1 rounded-lg bg-income-soft p-3.5">
+        <dt className="flex items-center gap-1.5 text-xs font-semibold text-income">
+          <ArrowDownLeft className="size-4" aria-hidden="true" />
+          Entrate
+        </dt>
+        <dd className="num-display tabular truncate text-xl font-bold text-income md:text-2xl">
+          {formatCurrency(totalIncome, displayCurrency)}
+        </dd>
       </div>
-
-      <div className="snap-start shrink-0 w-[85vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Uscite (Mese)"
-          value={formatCurrency(totalExpense, displayCurrency)}
-          subtitle="Questo mese"
-          icon={<TrendingDown size={14} />}
-          iconBgColor="bg-rose-500/10"
-          iconColor="text-rose-500"
-          delayIndex={1}
-        />
+      <div className="flex flex-col gap-1 rounded-lg bg-expense-soft p-3.5">
+        <dt className="flex items-center gap-1.5 text-xs font-semibold text-expense">
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+          Uscite
+        </dt>
+        <dd className="num-display tabular truncate text-xl font-bold text-expense md:text-2xl">
+          {formatCurrency(totalExpense, displayCurrency)}
+        </dd>
       </div>
-
-      <div className="snap-start shrink-0 w-[85vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Bilancio Netto"
-          value={formatCurrency(netSavings, displayCurrency)}
-          valueClassName={
-            netSavings >= 0 ? "text-emerald-500" : "text-rose-500"
-          }
-          subtitle="Risparmio netto mensile"
-          icon={<DollarSign size={14} />}
-          iconBgColor="bg-blue-500/10"
-          iconColor="text-blue-500"
-          delayIndex={2}
-        />
-      </div>
-    </div>
+    </dl>
   );
 }

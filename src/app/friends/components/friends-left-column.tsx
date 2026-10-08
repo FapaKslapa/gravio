@@ -1,9 +1,11 @@
 "use client";
 
-import { m } from "framer-motion";
+import { m } from "motion/react";
+import { fadeUp } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { AddFriendCard } from "./add-friend-card";
+import { FriendListPanel } from "./friend-list-panel";
 import { GroupListCard } from "./group-list-card";
+import { MobileTabBar } from "./mobile-tab-bar";
 import { PendingRequestsCard } from "./pending-requests-card";
 
 type GroupMember = { id: string; name: string; email: string };
@@ -23,92 +25,107 @@ type FriendItem = {
   createdAt: Date | null;
 };
 
+type BalanceInfo = {
+  user: { id: string; name: string; email: string };
+  balanceNok: number;
+};
+
+type PendingItem = {
+  id: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  } | null;
+  createdAt: Date | null;
+};
+
 interface FriendsLeftColumnProps {
-  activeMobileTab: "friends" | "groups" | "manage";
+  activeTab: "friends" | "groups";
+  onTabChange: (tab: "friends" | "groups") => void;
   isSelecting: boolean;
-  pendingIncoming: Array<{
-    id: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      image: string | null;
-    } | null;
-    createdAt: Date | null;
-  }>;
-  pendingOutgoing: Array<{
-    id: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      image: string | null;
-    } | null;
-    createdAt: Date | null;
-  }>;
+  pendingIncoming: PendingItem[];
+  pendingOutgoing: PendingItem[];
+  friends: FriendItem[];
+  balances: BalanceInfo[];
   groups: GroupItem[];
+  selectedFriendId: string | undefined;
   selectedGroupId: string | undefined;
-  onAddFriendSuccess: () => void;
+  displayCurrency: string;
+  convertNokAmount: (val: number) => number;
+  onAddFriend: () => void;
   onPendingActionSuccess: () => void;
+  onSelectFriend: (friend: FriendItem) => void;
   onSelectGroup: (group: GroupItem) => void;
   onClearFriend: () => void;
   onOpenCreateGroup: () => void;
 }
 
 export function FriendsLeftColumn({
-  activeMobileTab,
+  activeTab,
+  onTabChange,
   isSelecting,
   pendingIncoming,
   pendingOutgoing,
+  friends,
+  balances,
   groups,
+  selectedFriendId,
   selectedGroupId,
-  onAddFriendSuccess,
+  displayCurrency,
+  convertNokAmount,
+  onAddFriend,
   onPendingActionSuccess,
+  onSelectFriend,
   onSelectGroup,
   onClearFriend,
   onOpenCreateGroup,
 }: FriendsLeftColumnProps) {
+  const incoming = pendingIncoming.filter(
+    (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
+      r.user !== null,
+  );
+  const outgoing = pendingOutgoing.filter(
+    (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
+      r.user !== null,
+  );
+
   return (
-    <div
+    <m.div
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      custom={2}
       className={cn(
-        "order-2 md:order-1 md:col-span-1 flex flex-col gap-6",
-        isSelecting && "hidden md:flex",
+        "flex min-w-0 flex-col gap-4",
+        isSelecting && "hidden xl:flex",
       )}
     >
-      <m.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(activeMobileTab !== "manage" && "hidden md:block")}
-      >
-        <AddFriendCard onSuccess={onAddFriendSuccess} />
-      </m.div>
+      <MobileTabBar
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        pendingCount={incoming.length}
+      />
 
-      <m.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.33, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(activeMobileTab !== "manage" && "hidden md:block")}
-      >
-        <PendingRequestsCard
-          incomingRequests={pendingIncoming.filter(
-            (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
-              r.user !== null,
-          )}
-          outgoingRequests={pendingOutgoing.filter(
-            (r): r is typeof r & { user: NonNullable<typeof r.user> } =>
-              r.user !== null,
-          )}
-          onActionSuccess={onPendingActionSuccess}
-        />
-      </m.div>
-
-      <m.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(activeMobileTab !== "groups" && "hidden md:block")}
-      >
+      {activeTab === "friends" ? (
+        <>
+          <PendingRequestsCard
+            incomingRequests={incoming}
+            outgoingRequests={outgoing}
+            onActionSuccess={onPendingActionSuccess}
+          />
+          <FriendListPanel
+            friends={friends}
+            balances={balances}
+            selectedFriendId={selectedFriendId}
+            displayCurrency={displayCurrency}
+            convertNokAmount={convertNokAmount}
+            onSelectFriend={onSelectFriend}
+            onAddFriend={onAddFriend}
+          />
+        </>
+      ) : (
         <GroupListCard
           groups={groups}
           selectedGroupId={selectedGroupId}
@@ -116,7 +133,7 @@ export function FriendsLeftColumn({
           onClearFriend={onClearFriend}
           onOpenCreateGroup={onOpenCreateGroup}
         />
-      </m.div>
-    </div>
+      )}
+    </m.div>
   );
 }

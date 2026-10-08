@@ -1,41 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@heroui/react";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { useState } from "react";
-import { createPortal } from "react-dom";
-import { useIsMounted } from "@/hooks/use-is-mounted";
+import { X } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-
-const MONTH_NAMES = [
-  "Gennaio",
-  "Febbraio",
-  "Marzo",
-  "Aprile",
-  "Maggio",
-  "Giugno",
-  "Luglio",
-  "Agosto",
-  "Settembre",
-  "Ottobre",
-  "Novembre",
-  "Dicembre",
-];
-
-const MONTH_SHORT = [
-  "Gen",
-  "Feb",
-  "Mar",
-  "Apr",
-  "Mag",
-  "Giu",
-  "Lug",
-  "Ago",
-  "Set",
-  "Ott",
-  "Nov",
-  "Dic",
-];
+import { MONTH_NAMES } from "./months";
 
 type SpendingCalendarCardProps = {
   currentMonth: number;
@@ -47,6 +14,24 @@ type SpendingCalendarCardProps = {
   displayCurrency: string;
 };
 
+const WEEKDAYS = ["L", "M", "M", "G", "V", "S", "D"];
+
+const LEVELS = [
+  "color-mix(in oklab, var(--brand) 14%, transparent)",
+  "color-mix(in oklab, var(--brand) 30%, transparent)",
+  "color-mix(in oklab, var(--brand) 55%, transparent)",
+  "var(--brand)",
+];
+
+function levelFor(amount: number, max: number): number {
+  if (amount <= 0) return -1;
+  const ratio = amount / max;
+  if (ratio > 0.75) return 3;
+  if (ratio > 0.5) return 2;
+  if (ratio > 0.25) return 1;
+  return 0;
+}
+
 export function SpendingCalendarCard({
   currentMonth,
   currentYear,
@@ -56,150 +41,117 @@ export function SpendingCalendarCard({
   setSelectedDay,
   displayCurrency,
 }: SpendingCalendarCardProps) {
-  const [tooltip, setTooltip] = useState<{
-    x: number;
-    y: number;
-    day: number;
-    amount: number;
-  } | null>(null);
-  const mounted = useIsMounted();
-
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayIndex =
     (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
-
   const spacers = Array.from({ length: firstDayIndex }, (_, i) => i);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-4 md:p-6 apple-widget w-full md:h-full flex flex-col">
-      <CardHeader className="p-0 pb-3 border-b border-(--card-border) mb-4 md:mb-6 flex flex-col items-start gap-1 shrink-0">
-        <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-sans">
-          <CalendarIcon size={14} className="text-blue-500" />
-          Calendario di Spesa
-        </h4>
-        <p className="text-[10px] text-(--text-muted)">
-          L'intensità del colore mostra i giorni con maggiore spesa. Clicca su
-          un giorno per filtrare.
+    <section className="elevation-1 flex flex-col gap-4 rounded-lg bg-card p-4 md:p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-display text-base font-semibold">
+          Calendario di spesa
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Più il giorno è intenso, più hai speso. Tocca un giorno per filtrare i
+          movimenti.
         </p>
-      </CardHeader>
+      </div>
 
-      <CardContent className="p-0 flex-grow flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar">
-        <div className="grid grid-cols-7 gap-1 md:gap-1.5 text-center select-none">
-          {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day) => (
-            <span
+      <div className="grid grid-cols-7 gap-1.5 text-center">
+        {WEEKDAYS.map((d, i) => (
+          <span
+            // biome-ignore lint/suspicious/noArrayIndexKey: static weekday labels
+            key={i}
+            className="py-1 text-xs font-medium text-muted-foreground"
+            aria-hidden
+          >
+            {d}
+          </span>
+        ))}
+
+        {spacers.map((s) => (
+          <div key={`spacer-${s}`} aria-hidden />
+        ))}
+
+        {days.map((day) => {
+          const amount = dailyExpensesMap[day] || 0;
+          const level = levelFor(amount, maxDailyExpense);
+          const isSelected = selectedDay === day;
+          return (
+            <button
+              type="button"
               key={day}
-              className="text-[9px] font-black uppercase tracking-wider text-(--text-muted) py-1"
+              onClick={() => setSelectedDay(isSelected ? null : day)}
+              aria-pressed={isSelected}
+              aria-label={`${day} ${MONTH_NAMES[currentMonth]}, ${
+                amount > 0
+                  ? formatCurrency(amount, displayCurrency)
+                  : "nessuna spesa"
+              }`}
+              title={
+                amount > 0 ? formatCurrency(amount, displayCurrency) : undefined
+              }
+              style={
+                level >= 0 ? { backgroundColor: LEVELS[level] } : undefined
+              }
+              className={cn(
+                "flex aspect-square min-h-11 items-center justify-center rounded-md text-xs font-semibold tabular outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.95]",
+                level < 0 && "bg-muted text-muted-foreground",
+                level >= 0 && level < 3 && "text-foreground",
+                level === 3 && "text-brand-foreground",
+                isSelected &&
+                  "ring-2 ring-foreground ring-offset-2 ring-offset-card",
+              )}
             >
               {day}
-            </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
+        aria-hidden
+      >
+        <span>Meno</span>
+        <div className="flex items-center gap-1.5">
+          <span className="size-4 rounded-sm bg-muted" />
+          {LEVELS.map((c) => (
+            <span
+              key={c}
+              className="size-4 rounded-sm"
+              style={{ backgroundColor: c }}
+            />
           ))}
-
-          {spacers.map((spacer) => (
-            <div key={`spacer-${spacer}`} className="aspect-square" />
-          ))}
-
-          {days.map((day) => {
-            const dailyExpense = dailyExpensesMap[day] || 0;
-            const isSelected = selectedDay === day;
-
-            let heatOpacity = 0;
-            if (dailyExpense > 0) {
-              heatOpacity = 0.15 + (dailyExpense / maxDailyExpense) * 0.85;
-            }
-
-            const dayStyle =
-              dailyExpense > 0
-                ? { backgroundColor: `rgba(0, 122, 255, ${heatOpacity})` }
-                : {};
-
-            return (
-              <button
-                type="button"
-                key={`day-${day}`}
-                onClick={() => setSelectedDay(isSelected ? null : day)}
-                onMouseEnter={(e) =>
-                  dailyExpense > 0 &&
-                  setTooltip({
-                    x: e.clientX,
-                    y: e.clientY,
-                    day,
-                    amount: dailyExpense,
-                  })
-                }
-                onMouseMove={(e) =>
-                  dailyExpense > 0 &&
-                  setTooltip((prev) =>
-                    prev ? { ...prev, x: e.clientX, y: e.clientY } : null,
-                  )
-                }
-                onMouseLeave={() => setTooltip(null)}
-                style={dayStyle}
-                className={cn(
-                  "aspect-square rounded-xl flex flex-col items-center justify-center p-1 cursor-pointer relative transition-all duration-200 border border-transparent bg-transparent",
-                  dailyExpense === 0
-                    ? "bg-neutral-500/5 hover:bg-neutral-500/10 text-foreground"
-                    : "text-white font-extrabold",
-                  isSelected
-                    ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-(--card)"
-                    : "",
-                )}
-              >
-                <span
-                  className={cn(
-                    "text-[10px] leading-none",
-                    dailyExpense > 0
-                      ? "text-white font-bold"
-                      : "text-(--text-muted)",
-                  )}
-                >
-                  {day}
-                </span>
-              </button>
-            );
-          })}
         </div>
+        <span>Più</span>
+      </div>
 
-        {selectedDay && (
-          <div className="flex flex-col gap-1.5 bg-blue-500/5 border border-blue-500/10 rounded-2xl p-3 mt-1 select-none">
-            <div className="flex justify-between items-center w-full">
-              <span className="text-[10px] font-bold text-blue-500">
-                Spesa del {selectedDay} {MONTH_NAMES[currentMonth]}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedDay(null)}
-                className="text-[9px] text-(--text-muted) hover:text-foreground font-bold cursor-pointer bg-transparent border-0"
-              >
-                Mostra tutto il mese
-              </button>
-            </div>
-            <div className="text-xs font-black text-foreground">
+      {selectedDay && (
+        <div className="flex items-center justify-between gap-3 rounded-md bg-brand-soft p-3">
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground">
+              {selectedDay} {MONTH_NAMES[currentMonth]}
+            </span>
+            <span className="font-display text-lg font-bold tabular">
               {formatCurrency(
                 dailyExpensesMap[selectedDay] || 0,
                 displayCurrency,
               )}
-            </div>
+            </span>
           </div>
-        )}
-      </CardContent>
-
-      {mounted &&
-        tooltip &&
-        createPortal(
-          <div
-            className="fixed z-[9999] pointer-events-none bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-2.5 py-1.5 rounded-xl text-[9px] font-bold shadow-lg whitespace-nowrap"
-            style={{
-              left: tooltip.x,
-              top: tooltip.y,
-              transform: "translate(-50%, calc(-100% - 8px))",
-            }}
+          <button
+            type="button"
+            onClick={() => setSelectedDay(null)}
+            className="flex h-11 items-center gap-1.5 rounded-full bg-card px-4 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
           >
-            {tooltip.day} {MONTH_SHORT[currentMonth]}:{" "}
-            {formatCurrency(tooltip.amount, displayCurrency)}
-          </div>,
-          document.body,
-        )}
-    </Card>
+            <X className="size-4" aria-hidden />
+            Tutto il mese
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

@@ -22,7 +22,7 @@ export type SharedExpensePayload = {
 // ─── Reducer ────────────────────────────────────────────────────────────────
 
 export type FormState = {
-  step: "form" | "split";
+  step: "form" | "split" | "summary";
   shareType: "friend" | "group";
   desc: string;
   amount: string;

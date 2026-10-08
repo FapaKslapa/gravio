@@ -1,83 +1,147 @@
 "use client";
 
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
-import { formatCurrency } from "@/lib/utils";
+import { ArrowDownLeft, ArrowUpRight, Minus, PiggyBank } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type AnalyticsSummaryCardsProps = {
   totalIncome: number;
   totalExpense: number;
   netSavings: number;
   savingsRate: number;
+  prevIncome: number;
+  prevExpense: number;
+  prevSavings: number;
   displayCurrency: string;
 };
+
+function Delta({
+  current,
+  previous,
+  goodWhenUp,
+}: {
+  current: number;
+  previous: number;
+  goodWhenUp: boolean;
+}) {
+  if (previous === 0) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        Nessun confronto col mese scorso
+      </span>
+    );
+  }
+  const rounded = Math.round(((current - previous) / Math.abs(previous)) * 100);
+  if (rounded === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <Minus className="size-3" aria-hidden />
+        Invariato vs mese scorso
+      </span>
+    );
+  }
+  const up = rounded > 0;
+  const good = up === goodWhenUp;
+  return (
+    <span
+      className={cn(
+        "inline-flex flex-wrap items-center gap-x-1 text-xs font-semibold tabular",
+        good ? "text-income" : "text-expense",
+      )}
+    >
+      {up ? (
+        <ArrowUpRight className="size-3.5" aria-hidden />
+      ) : (
+        <ArrowDownLeft className="size-3.5" aria-hidden />
+      )}
+      {up ? "+" : ""}
+      {rounded}%
+      <span className="font-normal text-muted-foreground">vs mese scorso</span>
+    </span>
+  );
+}
 
 export function AnalyticsSummaryCards({
   totalIncome,
   totalExpense,
   netSavings,
   savingsRate,
+  prevIncome,
+  prevExpense,
+  prevSavings,
   displayCurrency,
 }: AnalyticsSummaryCardsProps) {
+  const positive = netSavings >= 0;
+
   return (
-    <div className="flex md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-1 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
-      <div className="snap-start shrink-0 w-[72vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Entrate totali"
-          value={formatCurrency(totalIncome, displayCurrency)}
-          icon={<ArrowDownRight className="rotate-90" size={20} />}
-          iconBgColor="bg-emerald-500/10"
-          iconColor="text-emerald-500"
-          delayIndex={0}
+    <section
+      aria-label="Riepilogo del mese"
+      className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3"
+    >
+      <div className="elevation-1 flex flex-col gap-3 rounded-lg bg-card p-4 md:p-5">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <span className="flex size-8 items-center justify-center rounded-full bg-income-soft text-income">
+            <ArrowDownLeft className="size-4" aria-hidden />
+          </span>
+          Entrate
+        </div>
+        <p className="num-display font-display text-xl font-bold tracking-tight md:text-2xl">
+          {formatCurrency(totalIncome, displayCurrency)}
+        </p>
+        <Delta current={totalIncome} previous={prevIncome} goodWhenUp />
+      </div>
+
+      <div className="elevation-1 flex flex-col gap-3 rounded-lg bg-card p-4 md:p-5">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <span className="flex size-8 items-center justify-center rounded-full bg-expense-soft text-expense">
+            <ArrowUpRight className="size-4" aria-hidden />
+          </span>
+          Uscite
+        </div>
+        <p className="num-display font-display text-xl font-bold tracking-tight md:text-2xl">
+          {formatCurrency(totalExpense, displayCurrency)}
+        </p>
+        <Delta
+          current={totalExpense}
+          previous={prevExpense}
+          goodWhenUp={false}
         />
       </div>
 
-      <div className="snap-start shrink-0 w-[72vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Uscite totali"
-          value={formatCurrency(totalExpense, displayCurrency)}
-          icon={<ArrowUpRight size={20} />}
-          iconBgColor="bg-rose-500/10"
-          iconColor="text-rose-500"
-          delayIndex={1}
-        />
+      <div className="elevation-1 col-span-2 flex flex-col gap-3 rounded-lg bg-card p-4 md:p-5 xl:col-span-1">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <span
+            className={cn(
+              "flex size-8 items-center justify-center rounded-full",
+              positive
+                ? "bg-income-soft text-income"
+                : "bg-expense-soft text-expense",
+            )}
+          >
+            <PiggyBank className="size-4" aria-hidden />
+          </span>
+          Risparmio
+          <span
+            className={cn(
+              "ml-auto rounded-full px-2.5 py-1 text-xs font-semibold tabular",
+              positive
+                ? "bg-income-soft text-income"
+                : "bg-expense-soft text-expense",
+            )}
+          >
+            {positive ? `Tasso ${savingsRate.toFixed(0)}%` : "In perdita"}
+          </span>
+        </div>
+        <p
+          className={cn(
+            "num-display font-display text-2xl font-bold tracking-tight md:text-3xl",
+            positive ? "text-income" : "text-expense",
+          )}
+        >
+          {positive ? "+" : ""}
+          {formatCurrency(netSavings, displayCurrency)}
+        </p>
+        <Delta current={netSavings} previous={prevSavings} goodWhenUp />
       </div>
-
-      <div className="snap-start shrink-0 w-[72vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Risparmio Netto"
-          value={formatCurrency(netSavings, displayCurrency)}
-          valueClassName={
-            netSavings >= 0 ? "text-emerald-500" : "text-rose-500"
-          }
-          icon={
-            netSavings >= 0 ? (
-              <TrendingUp size={20} />
-            ) : (
-              <TrendingDown size={20} />
-            )
-          }
-          iconBgColor={netSavings >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"}
-          iconColor={netSavings >= 0 ? "text-emerald-500" : "text-rose-500"}
-          delayIndex={2}
-        />
-      </div>
-
-      <div className="snap-start shrink-0 w-[72vw] md:w-auto scroll-ml-4">
-        <StatCard
-          title="Tasso Risparmio"
-          value={savingsRate > 0 ? `${savingsRate.toFixed(0)}%` : "0%"}
-          icon={<span className="font-bold text-xs select-none">%</span>}
-          iconBgColor="bg-blue-500/10"
-          iconColor="text-blue-500"
-          delayIndex={3}
-        />
-      </div>
-    </div>
+    </section>
   );
 }

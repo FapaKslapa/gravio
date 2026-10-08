@@ -1,26 +1,25 @@
-"use client";
-
-import { m } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 w-full select-none">
-      <div className="relative flex items-center justify-center">
-        <m.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="h-10 w-10 border-3 border-blue-500/25 border-t-blue-500 rounded-full"
-        />
-        <m.div
-          initial={{ opacity: 0.3, scale: 0.95 }}
-          animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.95, 1.05, 0.95] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="absolute h-4 w-4 bg-blue-500 rounded-full"
-        />
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="flex w-full flex-col gap-4"
+    >
+      <span className="sr-only">Caricamento in corso...</span>
+      <Skeleton className="h-8 w-48 rounded-md" />
+      <Skeleton className="h-40 w-full rounded-xl" />
+      <div className="grid grid-cols-2 gap-3">
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
       </div>
-      <p className="text-xs font-bold text-(--text-muted) tracking-wide">
-        Caricamento in corso...
-      </p>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+      </div>
     </div>
   );
 }

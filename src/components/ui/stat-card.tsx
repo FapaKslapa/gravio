@@ -1,7 +1,8 @@
 "use client";
 
-import { m } from "framer-motion";
+import { m } from "motion/react";
 import type { ReactNode } from "react";
+import { fadeUp } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type StatCardProps = {
@@ -21,33 +22,34 @@ export function StatCard({
   value,
   subtitle,
   icon,
-  iconBgColor = "bg-blue-500/10",
-  iconColor = "text-blue-500",
+  iconBgColor = "bg-brand-soft",
+  iconColor = "text-brand",
   className,
   valueClassName,
   delayIndex = 0,
 }: StatCardProps) {
+  const text = typeof value === "string" || typeof value === "number";
+  const len = text ? String(value).length : 0;
+
   return (
     <m.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.4,
-        delay: delayIndex * 0.08,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      custom={delayIndex}
       className={cn(
-        "border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-5 apple-widget flex flex-col justify-between select-none cursor-default",
+        "elevation-1 flex min-w-0 flex-col justify-between gap-4 rounded-lg bg-card p-4 text-card-foreground",
         className,
       )}
     >
-      <div className="flex justify-between items-center w-full">
-        <span className="text-xs text-(--text-muted) font-semibold">
+      <div className="flex w-full items-center justify-between gap-2">
+        <span className="truncate text-sm font-medium text-muted-foreground">
           {title}
         </span>
         <div
+          aria-hidden
           className={cn(
-            "p-1.5 rounded-lg shrink-0 flex items-center justify-center",
+            "flex size-8 shrink-0 items-center justify-center rounded-sm [&_svg]:size-4",
             iconBgColor,
             iconColor,
           )}
@@ -55,26 +57,24 @@ export function StatCard({
           {icon}
         </div>
       </div>
-      <div className="mt-4 w-full overflow-hidden">
-        {typeof value === "string" || typeof value === "number" ? (
-          <h3
+      <div className="w-full min-w-0">
+        {text ? (
+          <p
             className={cn(
-              "text-2xl font-black tracking-tight text-foreground truncate w-full",
-              String(value).length > 15 && "text-base",
-              String(value).length > 11 &&
-                String(value).length <= 15 &&
-                "text-lg",
+              "num-display w-full truncate text-2xl font-bold text-foreground",
+              len > 15 && "text-base",
+              len > 11 && len <= 15 && "text-lg",
               valueClassName,
             )}
             title={String(value)}
           >
             {value}
-          </h3>
+          </p>
         ) : (
           value
         )}
         {subtitle && (
-          <div className="text-[10px] text-(--text-muted) mt-1">{subtitle}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
         )}
       </div>
     </m.div>

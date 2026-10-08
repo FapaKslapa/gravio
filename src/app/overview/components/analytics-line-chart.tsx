@@ -3,7 +3,7 @@
 import dayjs from "dayjs";
 import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import { formatCurrency } from "@/lib/utils";
@@ -15,12 +15,11 @@ type MonthData = {
   savings: number;
 };
 
-const WIDTH = 500;
-const HEIGHT = 200;
-const PADDING_LEFT = 50;
-const PADDING_RIGHT = 20;
-const PADDING_TOP = 20;
-const PADDING_BOTTOM = 30;
+const HEIGHT = 220;
+const PADDING_LEFT = 44;
+const PADDING_RIGHT = 12;
+const PADDING_TOP = 12;
+const PADDING_BOTTOM = 28;
 
 function generateLinePath(pts: { x: number; y: number }[]) {
   if (pts.length === 0) return "";
@@ -31,11 +30,11 @@ function generateLinePath(pts: { x: number; y: number }[]) {
   );
 }
 
-function generateAreaPath(pts: { x: number; y: number }[]) {
+function generateAreaPath(pts: { x: number; y: number }[], width: number) {
   if (pts.length === 0) return "";
   const linePath = generateLinePath(pts);
   const firstX = pts[0]?.x ?? PADDING_LEFT;
-  const lastX = pts[pts.length - 1]?.x ?? WIDTH - PADDING_RIGHT;
+  const lastX = pts[pts.length - 1]?.x ?? width - PADDING_RIGHT;
   const baseY = HEIGHT - PADDING_BOTTOM;
   return `${linePath} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
 }
@@ -56,8 +55,19 @@ export function AnalyticsLineChart({
     null,
   );
   const mounted = useIsMounted();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(480);
 
-  const width = WIDTH;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(Math.max(240, Math.round(entry.contentRect.width)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const height = HEIGHT;
   const paddingLeft = PADDING_LEFT;
   const paddingRight = PADDING_RIGHT;
@@ -111,11 +121,17 @@ export function AnalyticsLineChart({
     setTooltipPos(null);
   };
 
+  const labelStep = width < 420 ? 2 : 1;
+
   return (
-    <>
+    <div ref={containerRef} className="w-full">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full overflow-visible"
+        width={width}
+        height={height}
+        className="block overflow-visible"
+        role="img"
+        aria-label="Entrate e spese degli ultimi 12 mesi"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleLeave}
         onTouchMove={handleTouchMove}
@@ -124,12 +140,12 @@ export function AnalyticsLineChart({
         <title>Trend Finanziario</title>
         <defs>
           <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34c759" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#34c759" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="var(--income)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--income)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ff3b30" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#ff3b30" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="var(--expense)" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="var(--expense)" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -137,24 +153,22 @@ export function AnalyticsLineChart({
           const y = paddingTop + ratio * chartHeight;
           const val = maxVal * (1 - ratio);
           return (
-            <g key={ratio} className="opacity-40 dark:opacity-20">
+            <g key={ratio}>
               <line
                 x1={paddingLeft}
                 y1={y}
                 x2={width - paddingRight}
                 y2={y}
                 stroke="currentColor"
-                strokeWidth={0.5}
-                strokeDasharray="4 4"
-                className="text-neutral-300 dark:text-zinc-700"
+                strokeWidth={1}
+                className="text-border"
               />
               <text
                 x={paddingLeft - 8}
-                y={y + 3}
+                y={y + 4}
                 textAnchor="end"
-                fontSize={8}
-                fontWeight="bold"
-                className="fill-neutral-400 dark:fill-zinc-500 font-mono"
+                fontSize={11}
+                className="fill-muted-foreground tabular"
               >
                 {val >= 1000
                   ? val >= 1000000
@@ -167,12 +181,12 @@ export function AnalyticsLineChart({
         })}
 
         <path
-          d={generateAreaPath(incomePoints)}
+          d={generateAreaPath(incomePoints, width)}
           fill="url(#incomeGrad)"
           stroke="none"
         />
         <path
-          d={generateAreaPath(expensePoints)}
+          d={generateAreaPath(expensePoints, width)}
           fill="url(#expenseGrad)"
           stroke="none"
         />
@@ -180,16 +194,17 @@ export function AnalyticsLineChart({
         <path
           d={generateLinePath(incomePoints)}
           fill="none"
-          stroke="#34c759"
-          strokeWidth={1.5}
+          stroke="var(--income)"
+          strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d={generateLinePath(expensePoints)}
           fill="none"
-          stroke="#ff3b30"
-          strokeWidth={1.5}
+          stroke="var(--expense)"
+          strokeWidth={2.5}
+          strokeDasharray="6 4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -199,14 +214,10 @@ export function AnalyticsLineChart({
             <circle
               cx={p.x}
               cy={p.y}
-              r={hoveredIndex === idx ? 3.5 : 2}
-              fill="#34c759"
-              stroke={
-                hoveredIndex === idx
-                  ? "rgba(52, 199, 89, 0.3)"
-                  : "rgba(255, 255, 255, 1)"
-              }
-              strokeWidth={hoveredIndex === idx ? 4 : 0.75}
+              r={hoveredIndex === idx ? 5 : 3}
+              fill="var(--income)"
+              stroke="var(--card)"
+              strokeWidth={hoveredIndex === idx ? 3 : 1.5}
               className="transition-all duration-150"
             />
           </g>
@@ -217,14 +228,10 @@ export function AnalyticsLineChart({
             <circle
               cx={p.x}
               cy={p.y}
-              r={hoveredIndex === idx ? 3.5 : 2}
-              fill="#ff3b30"
-              stroke={
-                hoveredIndex === idx
-                  ? "rgba(255, 59, 48, 0.3)"
-                  : "rgba(255, 255, 255, 1)"
-              }
-              strokeWidth={hoveredIndex === idx ? 4 : 0.75}
+              r={hoveredIndex === idx ? 5 : 3}
+              fill="var(--expense)"
+              stroke="var(--card)"
+              strokeWidth={hoveredIndex === idx ? 3 : 1.5}
               className="transition-all duration-150"
             />
           </g>
@@ -232,18 +239,16 @@ export function AnalyticsLineChart({
 
         {months.map((m, index) => {
           const x = paddingLeft + (index * chartWidth) / (months.length - 1);
-          const isMobileSkip = index % 2 !== 0;
+          const skip = index % labelStep !== 0;
+          if (skip) return null;
           return (
             <text
               key={m.label}
               x={x}
-              y={height - 8}
+              y={height - 6}
               textAnchor="middle"
-              fontSize={8}
-              fontWeight="bold"
-              className={`fill-neutral-500 dark:fill-zinc-400 font-sans uppercase tracking-wider ${
-                isMobileSkip ? "hidden sm:block" : ""
-              }`}
+              fontSize={11}
+              className="fill-muted-foreground"
             >
               {m.label}
             </text>
@@ -257,62 +262,54 @@ export function AnalyticsLineChart({
         months[hoveredIndex] &&
         createPortal(
           <div
-            className="fixed z-[9999] pointer-events-none bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-3 py-2 rounded-2xl text-[9px] font-bold shadow-xl flex flex-col gap-1 min-w-[150px]"
+            className="elevation-2 pointer-events-none fixed z-[9999] flex min-w-44 flex-col gap-1.5 rounded-md bg-popover px-3 py-2.5 text-xs text-popover-foreground"
             style={{
               left: tooltipPos.x,
               top: tooltipPos.y,
-              transform: "translate(-50%, calc(-100% - 10px))",
+              transform: "translate(-50%, calc(-100% - 12px))",
             }}
           >
-            <span className="opacity-80 uppercase text-[8px] tracking-wider font-extrabold text-neutral-400 dark:text-neutral-500">
+            <span className="font-semibold capitalize">
               {dayjs()
                 .subtract(11 - hoveredIndex, "month")
                 .format("MMMM YYYY")}
             </span>
-            <div className="flex flex-col gap-1 text-[10px] font-bold mt-1">
-              <div className="flex justify-between items-center gap-4 text-emerald-500 dark:text-emerald-600">
-                <div className="flex items-center gap-1">
-                  <ArrowDownLeft size={10} />
-                  <span>Entrate</span>
-                </div>
-                <span>
-                  {formatCurrency(months[hoveredIndex].income, displayCurrency)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center gap-4 text-rose-500 dark:text-rose-600">
-                <div className="flex items-center gap-1">
-                  <ArrowUpRight size={10} />
-                  <span>Spese</span>
-                </div>
-                <span>
-                  {formatCurrency(
-                    months[hoveredIndex].expense,
-                    displayCurrency,
-                  )}
-                </span>
-              </div>
-              <div className="border-t border-neutral-700 dark:border-neutral-200 pt-1 mt-1 flex justify-between items-center gap-4 text-white dark:text-neutral-900">
-                <div className="flex items-center gap-1">
-                  <TrendingUp size={10} className="text-blue-500" />
-                  <span>Risparmio</span>
-                </div>
-                <span
-                  className={
-                    months[hoveredIndex].savings >= 0
-                      ? "text-emerald-500 dark:text-emerald-600"
-                      : "text-rose-500 dark:text-rose-600"
-                  }
-                >
-                  {formatCurrency(
-                    months[hoveredIndex].savings,
-                    displayCurrency,
-                  )}
-                </span>
-              </div>
+            <div className="tabular flex items-center justify-between gap-4 text-income">
+              <span className="flex items-center gap-1">
+                <ArrowDownLeft className="size-3.5" aria-hidden="true" />
+                Entrate
+              </span>
+              <span className="font-semibold">
+                {formatCurrency(months[hoveredIndex].income, displayCurrency)}
+              </span>
+            </div>
+            <div className="tabular flex items-center justify-between gap-4 text-expense">
+              <span className="flex items-center gap-1">
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                Spese
+              </span>
+              <span className="font-semibold">
+                {formatCurrency(months[hoveredIndex].expense, displayCurrency)}
+              </span>
+            </div>
+            <div className="tabular flex items-center justify-between gap-4 border-t pt-1.5">
+              <span className="flex items-center gap-1">
+                <TrendingUp className="size-3.5" aria-hidden="true" />
+                Risparmio
+              </span>
+              <span
+                className={
+                  months[hoveredIndex].savings >= 0
+                    ? "font-semibold text-income"
+                    : "font-semibold text-expense"
+                }
+              >
+                {formatCurrency(months[hoveredIndex].savings, displayCurrency)}
+              </span>
             </div>
           </div>,
           document.body,
         )}
-    </>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { m } from "framer-motion";
 import { Settings } from "lucide-react";
+import { m } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

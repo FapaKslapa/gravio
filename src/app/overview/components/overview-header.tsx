@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import dayjs from "dayjs";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type OverviewHeaderProps = {
   userName: string;
@@ -14,28 +14,23 @@ export function OverviewHeader({
   onOpenQuickAdd,
 }: OverviewHeaderProps) {
   return (
-    <div className="flex justify-between items-end flex-wrap gap-4 select-none">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
-          Benvenuto, {userName || "Studente"}
-        </span>
-        <h2 className="text-2xl font-extrabold tracking-tight">
-          Panoramica Mensile
-        </h2>
-        <p className="text-(--text-muted) text-xs">
-          Mese corrente:{" "}
-          <span className="font-bold text-foreground capitalize">
-            {dayjs().format("MMMM YYYY")}
-          </span>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-2xl font-bold tracking-[-0.025em] text-balance">
+          Ciao{userName ? `, ${userName}` : ""}
+        </h1>
+        <p className="text-sm text-muted-foreground capitalize">
+          {dayjs().format("MMMM YYYY")}
         </p>
       </div>
 
       <Button
-        variant="outline"
-        className="font-bold text-xs bg-blue-500 text-white border-0 hover:opacity-90 rounded-xl px-4 py-2 flex items-center gap-1.5 cursor-pointer shadow-sm"
-        onPress={onOpenQuickAdd}
+        size="lg"
+        className="h-12 w-full rounded-full bg-brand px-6 text-base font-semibold text-brand-foreground hover:bg-brand/90 active:scale-[0.97] sm:w-auto"
+        onClick={onOpenQuickAdd}
       >
-        <Plus size={14} /> Spesa Rapida
+        <Plus data-icon="inline-start" />
+        Aggiungi spesa
       </Button>
     </div>
   );

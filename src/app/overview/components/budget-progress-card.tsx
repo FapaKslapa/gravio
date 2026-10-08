@@ -1,15 +1,29 @@
 "use client";
 
-import { Button, Card, CardContent } from "@heroui/react";
 import dayjs from "dayjs";
-import { m } from "framer-motion";
-import { AlertTriangle, CreditCard, Sliders, TrendingUp } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
-
-const cn = (...classes: (string | undefined | false | null)[]) =>
-  classes.filter(Boolean).join(" ");
+import {
+  AlertTriangle,
+  CheckCircle2,
+  OctagonAlert,
+  Settings2,
+  TrendingUp,
+} from "lucide-react";
+import { m } from "motion/react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { springs } from "@/lib/motion";
+import { cn, formatCurrency } from "@/lib/utils";
+import { StatsGrid } from "./stats-grid";
 
 type BudgetProgressCardProps = {
+  totalIncome: number;
   totalExpense: number;
   targetBudgetVal: number;
   maxBudgetVal: number;
@@ -18,6 +32,7 @@ type BudgetProgressCardProps = {
 };
 
 export function BudgetProgressCard({
+  totalIncome,
   totalExpense,
   targetBudgetVal,
   maxBudgetVal,
@@ -28,237 +43,191 @@ export function BudgetProgressCard({
   const daysInMonth = today.daysInMonth();
   const dayOfMonth = today.date();
   const daysRemaining = daysInMonth - dayOfMonth;
-
   const dailyAvg = dayOfMonth > 0 ? totalExpense / dayOfMonth : 0;
-
   const projectedMonthly = dailyAvg * daysInMonth;
 
-  const budgetProgressPercent =
-    maxBudgetVal > 0 ? Math.min((totalExpense / maxBudgetVal) * 100, 100) : 0;
+  const hasBudget = maxBudgetVal > 0 || targetBudgetVal > 0;
+  const limit = maxBudgetVal > 0 ? maxBudgetVal : targetBudgetVal;
+  const progress = limit > 0 ? Math.min((totalExpense / limit) * 100, 100) : 0;
+  const targetMarker =
+    targetBudgetVal > 0 && targetBudgetVal < limit
+      ? (targetBudgetVal / limit) * 100
+      : null;
 
-  const targetProgressPercent =
-    targetBudgetVal > 0
-      ? Math.min((totalExpense / targetBudgetVal) * 100, 100)
-      : 0;
+  const isOverMax = limit > 0 && totalExpense > limit;
+  const isOverTarget = targetBudgetVal > 0 && totalExpense > targetBudgetVal;
+  const remaining = limit - totalExpense;
 
-  const isOverTarget = totalExpense > targetBudgetVal;
-  const isOverMax = totalExpense > maxBudgetVal;
-  const isProjectedOverMax = projectedMonthly > maxBudgetVal;
-  const isProjectedOverTarget = projectedMonthly > targetBudgetVal;
-
-  const budgetColorClass = isOverMax
-    ? "stroke-red-500"
+  const status = isOverMax
+    ? {
+        label: "Oltre budget",
+        Icon: OctagonAlert,
+        chip: "bg-expense-soft text-expense",
+        bar: "bg-expense",
+      }
     : isOverTarget
-      ? "stroke-amber-500"
-      : "stroke-emerald-500";
+      ? {
+          label: "Attenzione",
+          Icon: AlertTriangle,
+          chip: "bg-warning/25 text-foreground",
+          bar: "bg-warning",
+        }
+      : {
+          label: "In linea",
+          Icon: CheckCircle2,
+          chip: "bg-income-soft text-income",
+          bar: "bg-income",
+        };
 
-  const budgetTextColor = isOverMax
-    ? "text-red-500"
-    : isOverTarget
-      ? "text-amber-500"
-      : "text-emerald-500";
-
-  const projectedColor = isProjectedOverMax
-    ? "text-red-400"
-    : isProjectedOverTarget
-      ? "text-amber-400"
-      : "text-emerald-400";
-
-  const remainingBudget = maxBudgetVal - totalExpense;
+  const projectedOver = limit > 0 && projectedMonthly > limit;
 
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-6 apple-widget h-full flex flex-col justify-between transition-all select-none relative overflow-hidden">
-      <div className="p-0 flex flex-row justify-between items-center pb-4 border-b border-(--card-border) mb-4 w-full">
-        <div className="flex gap-2.5 items-center">
-          <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl">
-            <CreditCard size={15} />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-xs">Budget Mensile</span>
-            <span className="text-[9px] text-(--text-muted)">
-              {daysRemaining} giorni rimanenti
-            </span>
-          </div>
-        </div>
-        <Button
-          isIconOnly
-          variant="ghost"
-          className="text-(--text-muted) border border-(--card-border) hover:bg-neutral-500/10 rounded-xl h-7 w-7 min-w-7 cursor-pointer flex items-center justify-center"
-          onPress={onOpenSettings}
-        >
-          <Sliders size={12} />
-        </Button>
-      </div>
-
-      {targetBudgetVal === 0 && maxBudgetVal === 0 ? (
-        <CardContent className="p-0 flex flex-col items-center justify-center text-center gap-4 py-8 flex-1">
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full animate-pulse">
-            <AlertTriangle size={24} />
-          </div>
-          <div className="flex flex-col gap-1 px-2">
-            <span className="font-extrabold text-sm text-foreground">
-              Limiti Budget non impostati
-            </span>
-            <span className="text-[10px] text-(--text-muted) max-w-[200px] leading-normal mx-auto font-medium">
-              Imposta un budget target e massimo per monitorare le tue spese
-              mensili e visualizzare i grafici di progresso.
-            </span>
-          </div>
-          <Button
-            onPress={onOpenSettings}
-            className="mt-2 bg-foreground text-background hover:opacity-90 text-[10px] font-extrabold rounded-xl h-8 px-4 border-0 cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            <Sliders size={11} />
-            Configura Budget
-          </Button>
-        </CardContent>
-      ) : (
-        <CardContent className="p-0 flex flex-col items-center justify-center gap-5 py-1">
-          <div className="relative w-32 h-32 flex items-center justify-center">
-            <svg
-              className="w-full h-full transform -rotate-90"
-              viewBox="0 0 128 128"
-            >
-              <title>Progresso Budget</title>
-              <circle
-                cx="64"
-                cy="64"
-                r="52"
-                className="stroke-neutral-200 dark:stroke-neutral-800"
-                strokeWidth="8"
-                fill="transparent"
-              />
-              {targetBudgetVal > 0 && targetBudgetVal <= maxBudgetVal && (
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="52"
-                  stroke="#10b981"
-                  strokeWidth="8"
-                  fill="transparent"
-                  strokeDasharray={`2 ${326.7 - 2}`}
-                  strokeDashoffset={
-                    -(326.7 * ((targetBudgetVal / maxBudgetVal) * 100)) / 100
-                  }
-                  opacity={0.5}
-                />
+    <Card className="elevation-2 h-full gap-6 rounded-xl p-5 ring-0 md:p-7">
+      <CardHeader className="px-0">
+        <CardTitle className="font-display text-base font-semibold">
+          Budget del mese
+        </CardTitle>
+        <CardDescription>
+          {daysRemaining === 0
+            ? "Ultimo giorno del mese"
+            : `${daysRemaining} giorni rimanenti`}
+        </CardDescription>
+        <CardAction className="flex items-center gap-2">
+          {hasBudget && (
+            <span
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold",
+                status.chip,
               )}
-              <m.circle
-                cx="64"
-                cy="64"
-                r="52"
-                className={budgetColorClass}
-                strokeWidth="8"
-                fill="transparent"
-                strokeDasharray="326.7"
-                initial={{ strokeDashoffset: 326.7 }}
-                animate={{
-                  strokeDashoffset:
-                    326.7 - (326.7 * budgetProgressPercent) / 100,
-                }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center">
-              <span
+            >
+              <status.Icon className="size-4" aria-hidden="true" />
+              {status.label}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 rounded-full"
+            onClick={onOpenSettings}
+            aria-label="Imposta budget"
+          >
+            <Settings2 />
+          </Button>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-6 px-0">
+        {hasBudget ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm text-muted-foreground">
+                {isOverMax ? "Hai superato il limite di" : "Ti restano"}
+              </p>
+              <p
                 className={cn(
-                  "text-lg font-black leading-none",
-                  budgetTextColor,
+                  "num-display tabular text-[clamp(2.25rem,11vw,3.5rem)] leading-none font-bold",
+                  isOverMax ? "text-expense" : "text-foreground",
                 )}
               >
-                {budgetProgressPercent.toFixed(0)}%
-              </span>
-              <span className="text-[8px] text-(--text-muted) uppercase tracking-wider font-extrabold mt-1">
-                del max
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full flex flex-col gap-1.5">
-            <div className="flex justify-between items-center text-xs font-bold px-1">
-              <span className="text-(--text-muted) text-[10px]">
-                Spesa attuale:
-              </span>
-              <span className={budgetTextColor}>
-                {formatCurrency(totalExpense, displayCurrency)}
-              </span>
+                {formatCurrency(Math.abs(remaining), displayCurrency)}
+              </p>
+              <p className="tabular text-sm text-muted-foreground">
+                {isOverMax
+                  ? `su un limite di ${formatCurrency(limit, displayCurrency)}`
+                  : `su ${formatCurrency(limit, displayCurrency)} di limite`}
+              </p>
             </div>
 
-            <div className="flex flex-col gap-1 px-1 pt-2 border-t border-(--card-border)">
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-(--text-muted) flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Target:
-                </span>
-                <span className="font-semibold">
-                  {formatCurrency(targetBudgetVal, displayCurrency)}
-                </span>
-              </div>
-              <div className="h-1 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+            <div className="flex flex-col gap-2">
+              <div
+                className="relative h-3.5 w-full rounded-full bg-muted"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(progress)}
+                aria-label="Budget speso"
+              >
                 <m.div
-                  className={cn(
-                    "h-full rounded-full",
-                    isOverTarget ? "bg-amber-500" : "bg-emerald-500",
-                  )}
+                  className={cn("h-full rounded-full", status.bar)}
                   initial={{ width: 0 }}
-                  animate={{
-                    width: `${Math.min(targetProgressPercent, 100)}%`,
-                  }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  animate={{ width: `${progress}%` }}
+                  transition={springs.gentle}
                 />
+                {targetMarker !== null && (
+                  <span
+                    className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground/60"
+                    style={{ left: `${targetMarker}%` }}
+                    aria-hidden="true"
+                  />
+                )}
               </div>
-            </div>
-
-            <div className="flex justify-between items-center text-[10px] px-1">
-              <span className="text-(--text-muted) flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                Limite max:
-              </span>
-              <span className="font-semibold">
-                {formatCurrency(maxBudgetVal, displayCurrency)}
-              </span>
-            </div>
-
-            {!isOverMax && (
-              <div className="flex justify-between items-center text-[10px] px-1 py-1.5 bg-neutral-500/5 rounded-xl mt-1">
-                <span className="text-(--text-muted)">Rimasto:</span>
-                <span className="font-black text-emerald-500">
-                  {formatCurrency(
-                    Math.max(remainingBudget, 0),
-                    displayCurrency,
-                  )}
+              <div className="tabular flex justify-between gap-3 text-xs text-muted-foreground">
+                <span>
+                  Speso {formatCurrency(totalExpense, displayCurrency)} (
+                  {progress.toFixed(0)}%)
                 </span>
+                {targetMarker !== null && (
+                  <span>
+                    Obiettivo {formatCurrency(targetBudgetVal, displayCurrency)}
+                  </span>
+                )}
               </div>
-            )}
-
-            {isOverMax && (
-              <div className="flex items-center gap-1.5 text-[9px] font-bold text-red-500 bg-red-500/5 border border-red-500/15 rounded-xl px-2.5 py-2 mt-1">
-                <AlertTriangle size={11} />
-                Limite massimo superato di{" "}
-                {formatCurrency(Math.abs(remainingBudget), displayCurrency)}
-              </div>
-            )}
-
-            <div className="flex justify-between items-center text-[10px] px-1 border-t border-(--card-border) pt-2 mt-1">
-              <span className="text-(--text-muted) flex items-center gap-1">
-                <TrendingUp size={10} className={projectedColor} />
-                Proiezione fine mese:
-              </span>
-              <span className={cn("font-bold text-[10px]", projectedColor)}>
-                {formatCurrency(projectedMonthly, displayCurrency)}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-[10px] px-1 text-(--text-muted)">
-              <span>Media giornaliera:</span>
-              <span className="font-semibold">
-                {formatCurrency(dailyAvg, displayCurrency)}/giorno
-              </span>
             </div>
           </div>
-        </CardContent>
-      )}
+        ) : (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-sm text-muted-foreground">Spese del mese</p>
+            <p className="num-display tabular text-[clamp(2.25rem,11vw,3.5rem)] leading-none font-bold">
+              {formatCurrency(totalExpense, displayCurrency)}
+            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Imposta un budget per vedere quanto ti resta ogni giorno.
+            </p>
+            <Button className="h-11 rounded-full px-5" onClick={onOpenSettings}>
+              <Settings2 data-icon="inline-start" />
+              Imposta budget
+            </Button>
+          </div>
+        )}
+
+        <StatsGrid
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          displayCurrency={displayCurrency}
+        />
+
+        {hasBudget && (
+          <dl className="tabular grid grid-cols-2 gap-3 text-sm">
+            <div className="flex flex-col gap-0.5">
+              <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <TrendingUp className="size-4" aria-hidden="true" />
+                Proiezione fine mese
+              </dt>
+              <dd
+                className={cn(
+                  "font-semibold",
+                  projectedOver ? "text-expense" : "text-foreground",
+                )}
+              >
+                {formatCurrency(projectedMonthly, displayCurrency)}
+                {projectedOver && (
+                  <span className="ml-1.5 text-xs font-medium">
+                    oltre il limite
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-xs text-muted-foreground">
+                Media giornaliera
+              </dt>
+              <dd className="font-semibold">
+                {formatCurrency(dailyAvg, displayCurrency)}
+              </dd>
+            </div>
+          </dl>
+        )}
+      </CardContent>
     </Card>
   );
 }

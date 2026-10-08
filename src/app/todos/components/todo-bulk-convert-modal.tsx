@@ -1,14 +1,17 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import type React from "react";
-import { useReducer, useState } from "react";
+import { useReducer } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
 import { CategorySelect } from "@/components/ui/category-select";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { CustomDatePicker } from "@/components/ui/custom-datepicker";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 
 type TodoItem = {
   id: string;
@@ -87,8 +90,7 @@ function TodoBulkConvertForm({
       if (item.estimatedAmount) {
         const amt = parseFloat(item.estimatedAmount);
         const cur = item.estimatedCurrency || "EUR";
-        const converted = convertCurrency(amt, cur, displayCurrency);
-        estTotal += converted;
+        estTotal += convertCurrency(amt, cur, displayCurrency);
       }
     }
 
@@ -115,11 +117,14 @@ function TodoBulkConvertForm({
     isSubmitting,
   } = state;
 
+  const setField = (field: keyof FormState, value: unknown) =>
+    dispatch({ type: "SET_FIELD", field, value });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTodos.length === 0 || !txAmount || isSubmitting) return;
 
-    dispatch({ type: "SET_FIELD", field: "isSubmitting", value: true });
+    setField("isSubmitting", true);
     try {
       await onConvertBulk({
         todoIds: selectedTodos.map((t) => t.id),
@@ -133,164 +138,111 @@ function TodoBulkConvertForm({
     } catch (err) {
       console.error(err);
     } finally {
-      dispatch({ type: "SET_FIELD", field: "isSubmitting", value: false });
+      setField("isSubmitting", false);
     }
   };
 
+  const showConverted =
+    !!txAmount &&
+    !Number.isNaN(parseFloat(txAmount)) &&
+    txCurrency !== displayCurrency;
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <m.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-(--card-solid) border border-(--card-border) w-full max-w-[420px] rounded-3xl p-6 shadow-2xl text-foreground max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-center pb-4 border-b border-(--card-border) mb-4">
-          <div className="flex flex-col">
-            <h3 className="font-extrabold text-base">Importazione di Massa</h3>
-            <span className="text-[10px] text-(--text-muted) font-semibold mt-0.5">
-              Importa {selectedTodos.length} articoli come un'unica spesa
-            </span>
+    <form onSubmit={handleSubmit}>
+      <FieldGroup>
+        <div className="flex max-h-28 flex-col gap-2 overflow-y-auto rounded-lg bg-muted px-3.5 py-3">
+          <p className="text-xs text-muted-foreground">
+            <span className="tabular">{selectedTodos.length}</span> articoli
+            selezionati
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedTodos.map((todo) => (
+              <span
+                key={todo.id}
+                className="inline-flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs font-medium"
+              >
+                <Check className="size-3 text-income" strokeWidth={3} />
+                {todo.title}
+              </span>
+            ))}
           </div>
-          <button
-            type="button"
-            aria-label="Chiudi"
-            className="text-(--text-muted) rounded-lg hover:bg-neutral-500/10 h-7 w-7 border-0 cursor-pointer bg-transparent flex items-center justify-center transition-all"
-            onClick={onClose}
-          >
-            <X size={15} />
-          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col bg-neutral-500/5 p-3 rounded-2xl border border-(--card-border) text-xs gap-1.5 max-h-[100px] overflow-y-auto scrollbar-none">
-            <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider">
-              Articoli selezionati ({selectedTodos.length})
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedTodos.map((todo) => (
-                <span
-                  key={todo.id}
-                  className="px-2 py-0.5 bg-neutral-500/10 rounded-lg text-[10px] font-bold flex items-center gap-1 border border-(--card-border)"
-                >
-                  <Check size={8} className="text-emerald-500 stroke-[3]" />
-                  {todo.title}
-                </span>
-              ))}
-            </div>
-          </div>
+        <Field>
+          <FieldLabel htmlFor="bulk-description">
+            Descrizione transazione
+          </FieldLabel>
+          <Input
+            id="bulk-description"
+            value={txDescription}
+            onChange={(e) => setField("txDescription", e.target.value)}
+            placeholder="Es. Spesa settimanale al supermercato"
+            required
+            className="h-11 text-base md:text-sm"
+          />
+        </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-              Descrizione Transazione
-            </span>
-            <input
-              type="text"
-              aria-label="Descrizione transazione"
-              value={txDescription}
-              onChange={(e) =>
-                dispatch({
-                  type: "SET_FIELD",
-                  field: "txDescription",
-                  value: e.target.value,
-                })
-              }
-              placeholder="Es. Spesa settimanale al supermercato"
+        <div className="grid grid-cols-3 gap-2">
+          <Field className="col-span-2">
+            <FieldLabel>Prezzo totale</FieldLabel>
+            <MoneyInput
+              value={txAmount}
+              onChange={(val) => setField("txAmount", val)}
+              currency={txCurrency}
               required
-              className="text-xs text-foreground bg-neutral-500/5 dark:bg-zinc-800/30 border border-(--card-border) focus:border-blue-500/50 h-10 px-3.5 rounded-xl outline-none font-semibold transition-all"
             />
+          </Field>
+          <Field>
+            <FieldLabel>Valuta</FieldLabel>
+            <CurrencySelect
+              value={txCurrency}
+              onChange={(val) => setField("txCurrency", val)}
+            />
+          </Field>
+        </div>
+
+        {showConverted && (
+          <div className="flex justify-between rounded-lg bg-brand-soft px-3.5 py-2.5 text-sm font-semibold text-brand">
+            <span>Totale convertito</span>
+            <span className="tabular">
+              {convertCurrency(
+                parseFloat(txAmount),
+                txCurrency,
+                displayCurrency,
+              ).toFixed(2)}{" "}
+              {displayCurrency}
+            </span>
           </div>
+        )}
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2 flex flex-col gap-1.5">
-              <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-                Prezzo Totale
-              </span>
-              <MoneyInput
-                value={txAmount}
-                onChange={(val) =>
-                  dispatch({ type: "SET_FIELD", field: "txAmount", value: val })
-                }
-                currency={txCurrency}
-                required
-              />
-            </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel>Categoria</FieldLabel>
+            <CategorySelect
+              value={txCategoryId}
+              onChange={(val) => setField("txCategoryId", val)}
+              categories={categories}
+              triggerClassName="h-11 text-sm"
+            />
+          </Field>
+          <Field>
+            <FieldLabel>Data della spesa</FieldLabel>
+            <CustomDatePicker
+              value={txDate}
+              onChange={(val) => setField("txDate", val)}
+            />
+          </Field>
+        </div>
 
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-                Valuta
-              </span>
-              <CurrencySelect
-                value={txCurrency}
-                onChange={(val) =>
-                  dispatch({
-                    type: "SET_FIELD",
-                    field: "txCurrency",
-                    value: val,
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          {txAmount &&
-            !Number.isNaN(parseFloat(txAmount)) &&
-            txCurrency !== displayCurrency && (
-              <div className="py-2 px-3 bg-blue-500/5 border border-blue-500/10 rounded-xl text-[10px] text-blue-500 font-bold flex justify-between">
-                <span>Totale convertito:</span>
-                <span>
-                  {convertCurrency(
-                    parseFloat(txAmount),
-                    txCurrency,
-                    displayCurrency,
-                  ).toFixed(2)}{" "}
-                  {displayCurrency}
-                </span>
-              </div>
-            )}
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-                Categoria Spesa
-              </span>
-              <CategorySelect
-                value={txCategoryId}
-                onChange={(val) =>
-                  dispatch({
-                    type: "SET_FIELD",
-                    field: "txCategoryId",
-                    value: val,
-                  })
-                }
-                categories={categories}
-                triggerClassName="h-10 text-xs"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-                Data Spesa
-              </span>
-              <CustomDatePicker
-                value={txDate}
-                onChange={(val) =>
-                  dispatch({ type: "SET_FIELD", field: "txDate", value: val })
-                }
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting || !txAmount}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs h-11 rounded-xl cursor-pointer mt-2 shadow-sm border-0 w-full disabled:opacity-50 flex items-center justify-center transition-all"
-          >
-            {isSubmitting ? "Importazione..." : "Conferma Spesa Cumulativa"}
-          </button>
-        </form>
-      </m.div>
-    </div>
+        <Button
+          type="submit"
+          disabled={isSubmitting || !txAmount}
+          className="h-12 w-full rounded-full text-sm font-semibold"
+        >
+          {isSubmitting ? "Importazione..." : "Conferma spesa cumulativa"}
+        </Button>
+      </FieldGroup>
+    </form>
   );
 }
 
@@ -304,17 +256,20 @@ export function TodoBulkConvertModal({
   const { convertCurrency, displayCurrency } = useDashboard();
 
   return (
-    <AnimatePresence>
-      {isOpen && selectedTodos.length > 0 && (
-        <TodoBulkConvertForm
-          selectedTodos={selectedTodos}
-          categories={categories}
-          onClose={onClose}
-          onConvertBulk={onConvertBulk}
-          displayCurrency={displayCurrency}
-          convertCurrency={convertCurrency}
-        />
-      )}
-    </AnimatePresence>
+    <ResponsiveSheet
+      open={isOpen && selectedTodos.length > 0}
+      onOpenChange={(open) => !open && onClose()}
+      title="Importazione di massa"
+      description="Registra gli articoli selezionati come un'unica spesa."
+    >
+      <TodoBulkConvertForm
+        selectedTodos={selectedTodos}
+        categories={categories}
+        onClose={onClose}
+        onConvertBulk={onConvertBulk}
+        displayCurrency={displayCurrency}
+        convertCurrency={convertCurrency}
+      />
+    </ResponsiveSheet>
   );
 }

@@ -1,10 +1,21 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { m } from "framer-motion";
+import { FolderPlus, ShoppingBasket } from "lucide-react";
+import { m } from "motion/react";
 import { useMemo, useReducer, useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
-import { LoadingState } from "@/components/ui/loading-state";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fadeUp } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { TodoForm } from "./components/todo-form";
 import { TodoHeader } from "./components/todo-header";
@@ -202,10 +213,10 @@ function useTodoView() {
     estimatedAmount?: number;
     estimatedCurrency?: string;
   }) => {
-    if (!activeListId) return;
+    if (!actualActiveListId) return;
 
     await createTodoMutation.mutateAsync({
-      todoListId: activeListId,
+      todoListId: actualActiveListId,
       title: todo.title,
       notes: todo.notes,
       categoryId: todo.categoryId,
@@ -347,68 +358,95 @@ export default function TodosView() {
   } = useTodoView();
 
   if (isCategoriesLoading || isListsLoading) {
-    return <LoadingState />;
+    return (
+      <div className="flex flex-col gap-5" aria-busy="true">
+        <Skeleton className="h-11 w-full rounded-full" />
+        <Skeleton className="h-11 w-3/4 rounded-full" />
+        <Skeleton className="h-14 w-full rounded-xl" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+      </div>
+    );
   }
 
+  const lists = listsData || [];
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <TodoHeader onNewList={() => setIsNewListOpen(true)} />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {lists.length === 0 ? (
+        <Empty className="border py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ShoppingBasket />
+            </EmptyMedia>
+            <EmptyTitle>Nessuna lista</EmptyTitle>
+            <EmptyDescription>
+              Crea la prima lista per segnare cosa comprare e importarlo poi
+              come spesa.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              type="button"
+              onClick={() => setIsNewListOpen(true)}
+              className="h-11 rounded-full bg-brand px-5 text-brand-foreground hover:bg-brand/90"
+            >
+              <FolderPlus />
+              Crea lista
+            </Button>
+          </EmptyContent>
+        </Empty>
+      ) : (
         <m.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="md:col-span-1"
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 items-start gap-5 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-8 xl:grid-cols-[17rem_minmax(0,1fr)]"
         >
-          <TodoLists
-            lists={listsData || []}
-            activeListId={actualActiveListId}
-            onSelectActiveList={handleSelectActiveList}
-            onDeleteList={setListToDelete}
-          />
-        </m.div>
+          <div className="md:sticky md:top-6">
+            <TodoLists
+              lists={lists}
+              activeListId={actualActiveListId}
+              onSelectActiveList={handleSelectActiveList}
+            />
+          </div>
 
-        <m.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="md:col-span-3 flex flex-col gap-4"
-        >
-          {actualActiveListId ? (
-            <>
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 -mx-4 bg-background/90 px-4 py-2 backdrop-blur-md md:static md:mx-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
               <TodoForm
+                key={actualActiveListId}
                 activeListId={actualActiveListId}
                 listName={activeListName}
                 categories={categoriesData || []}
                 onAddTodo={handleCreateTodo}
               />
-
-              <TodoItems
-                todos={todosData || []}
-                categories={categoriesData || []}
-                onToggleTodo={handleToggleTodo}
-                onDeleteTodo={setTodoToDelete}
-                onImportTodo={setImportingTodo}
-                isSelectionMode={isSelectionMode}
-                selectedTodoIds={selectedTodoIds}
-                onToggleSelectTodo={handleToggleSelectTodo}
-                onToggleAllSelectTodos={handleToggleAllSelectTodos}
-                onStartSelectionMode={() => setIsSelectionMode(true)}
-                onCancelSelectionMode={() => {
-                  setIsSelectionMode(false);
-                  setSelectedTodoIds([]);
-                }}
-                onTriggerBulkImport={() => setIsBulkImportOpen(true)}
-              />
-            </>
-          ) : (
-            <div className="text-center py-12 text-xs text-(--text-muted) font-medium bg-(--card-solid) border border-(--card-border) rounded-2xl shadow-sm">
-              Nessuna lista selezionata. Selezionane o creane una.
             </div>
-          )}
+
+            <TodoItems
+              listName={activeListName}
+              canDeleteList={lists.length > 1}
+              onDeleteList={() => setListToDelete(actualActiveListId)}
+              todos={todosData || []}
+              categories={categoriesData || []}
+              onToggleTodo={handleToggleTodo}
+              onDeleteTodo={setTodoToDelete}
+              onImportTodo={setImportingTodo}
+              isSelectionMode={isSelectionMode}
+              selectedTodoIds={selectedTodoIds}
+              onToggleSelectTodo={handleToggleSelectTodo}
+              onToggleAllSelectTodos={handleToggleAllSelectTodos}
+              onStartSelectionMode={() => setIsSelectionMode(true)}
+              onCancelSelectionMode={() => {
+                setIsSelectionMode(false);
+                setSelectedTodoIds([]);
+              }}
+              onTriggerBulkImport={() => setIsBulkImportOpen(true)}
+            />
+          </div>
         </m.div>
-      </div>
+      )}
 
       <TodoModalsContainer
         isNewListOpen={isNewListOpen}

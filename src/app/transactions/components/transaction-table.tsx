@@ -1,50 +1,25 @@
 "use client";
 
-import { Button, Card } from "@heroui/react";
 import dayjs from "dayjs";
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowUpDown,
-  ChevronDown,
-  ChevronUp,
-  Edit3,
-  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
-
-type Category = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
-
-type SharedInfo = {
-  id: string;
-  payerId: string;
-  borrowerId: string;
-  borrowerName: string;
-  borrowerEmail: string;
-  splitAmountNok: string;
-  settled: boolean;
-  isBorrowed: boolean;
-  isPaidByMe: boolean;
-};
-
-type Transaction = {
-  id: string;
-  userId: string;
-  categoryId: string | null;
-  description: string | null;
-  type: "expense" | "income";
-  amount: string;
-  amountNok: string;
-  amountEur: string;
-  currency: string;
-  date: string | Date;
-  payerName: string | null;
-  payerEmail: string | null;
-  sharedInfo: SharedInfo | null;
-};
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  AmountBlock,
+  type Category,
+  CategoryTile,
+  FALLBACK_CATEGORY_COLOR,
+  type Transaction,
+  TransactionActionsMenu,
+  TransactionsEmpty,
+} from "./transaction-list-timeline";
 
 type SortFieldType = "date" | "description" | "category" | "type" | "amount";
 
@@ -71,67 +46,63 @@ function SortHeader({
   sortField,
   sortDirection,
   onSortChange,
+  align = "start",
 }: {
   field: SortFieldType;
   label: string;
   sortField: SortFieldType;
   sortDirection: "asc" | "desc";
   onSortChange: (f: SortFieldType) => void;
+  align?: "start" | "end";
 }) {
   const isCurrent = sortField === field;
+  const Icon = isCurrent
+    ? sortDirection === "asc"
+      ? ArrowUp
+      : ArrowDown
+    : ArrowUpDown;
   return (
-    <button
-      type="button"
-      onClick={() => onSortChange(field)}
-      className="flex items-center gap-1 hover:text-foreground transition-colors font-bold uppercase tracking-wider text-[10px] cursor-pointer border-0 bg-transparent"
+    <th
+      scope="col"
+      aria-sort={
+        isCurrent
+          ? sortDirection === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+      className={cn("px-3 py-1", align === "end" && "text-right")}
     >
-      {label}
-      {isCurrent ? (
-        sortDirection === "asc" ? (
-          <ChevronUp size={11} className="text-blue-500" />
-        ) : (
-          <ChevronDown size={11} className="text-blue-500" />
-        )
-      ) : (
-        <ArrowUpDown size={10} className="text-neutral-500 opacity-60" />
-      )}
-    </button>
+      <button
+        type="button"
+        onClick={() => onSortChange(field)}
+        className={cn(
+          "-mx-2 inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2",
+          isCurrent ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        {label}
+        <Icon
+          aria-hidden="true"
+          className={cn("size-3.5", !isCurrent && "opacity-50")}
+        />
+      </button>
+    </th>
   );
 }
 
-function AmountCell({
-  tx,
-  displayCurrency,
-  convertCurrency,
-}: {
-  tx: Transaction;
-  displayCurrency: string;
-  convertCurrency: (amount: number, from: string, to: string) => number;
-}) {
-  const isExpense = tx.type === "expense";
-
-  const displayAmount = tx.sharedInfo
-    ? (() => {
-        const splitNok = parseFloat(tx.sharedInfo.splitAmountNok);
-        const totalNok = parseFloat(tx.amountNok);
-        const myNok = tx.sharedInfo.isBorrowed ? splitNok : totalNok - splitNok;
-        return convertCurrency(myNok, "NOK", displayCurrency);
-      })()
-    : convertCurrency(parseFloat(tx.amountEur), "EUR", displayCurrency);
-
-  const showHint = tx.currency !== displayCurrency;
-
+function TypeBadge({ type }: { type: "expense" | "income" }) {
   return (
-    <div className="flex flex-col">
-      <span className={isExpense ? "text-foreground" : "text-emerald-500"}>
-        {isExpense ? "-" : "+"} {formatCurrency(displayAmount, displayCurrency)}
-      </span>
-      {showHint && (
-        <span className="text-[8px] text-(--text-muted) font-medium mt-0.5">
-          {tx.amount} {tx.currency}
-        </span>
+    <Badge
+      variant="secondary"
+      className={cn(
+        type === "expense"
+          ? "bg-expense-soft text-expense"
+          : "bg-income-soft text-income",
       )}
-    </div>
+    >
+      {type === "expense" ? "Spesa" : "Entrata"}
+    </Badge>
   );
 }
 
@@ -149,192 +120,167 @@ export function TransactionTable({
   onDeleteClick,
   onEditClick,
 }: TransactionTableProps) {
+  if (totalItems === 0 && transactions.length === 0) {
+    return <TransactionsEmpty />;
+  }
+
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
   const startItem =
     totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
-
   const sortProps = { sortField, sortDirection, onSortChange };
 
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-4 apple-widget transition-all">
-      <div className="overflow-x-auto w-full">
-        <table className="w-full text-left border-collapse text-xs select-none">
+    <div className="elevation-1 overflow-hidden rounded-lg bg-card">
+      <div className="hidden md:block">
+        <table className="w-full border-collapse text-left text-sm">
+          <caption className="sr-only">Elenco transazioni</caption>
           <thead>
-            <tr className="border-b border-(--card-border) bg-neutral-500/5 text-(--text-muted)">
-              <th className="p-3">
-                <SortHeader field="date" label="Data" {...sortProps} />
-              </th>
-              <th className="p-3">
-                <SortHeader
-                  field="description"
-                  label="Descrizione"
-                  {...sortProps}
-                />
-              </th>
-              <th className="p-3">
-                <SortHeader field="category" label="Categoria" {...sortProps} />
-              </th>
-              <th className="p-3">
-                <SortHeader field="type" label="Tipo" {...sortProps} />
-              </th>
-              <th className="p-3">
-                <SortHeader field="amount" label="Importo" {...sortProps} />
-              </th>
-              <th className="p-3 text-right font-bold uppercase tracking-wider text-[10px]">
-                Azioni
+            <tr className="border-b bg-muted/40">
+              <SortHeader field="date" label="Data" {...sortProps} />
+              <SortHeader
+                field="description"
+                label="Descrizione"
+                {...sortProps}
+              />
+              <SortHeader field="category" label="Categoria" {...sortProps} />
+              <SortHeader field="type" label="Tipo" {...sortProps} />
+              <SortHeader
+                field="amount"
+                label="Importo"
+                align="end"
+                {...sortProps}
+              />
+              <th scope="col" className="w-14 px-3">
+                <span className="sr-only">Azioni</span>
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y">
             {transactions.map((tx) => {
               const cat = categories.find((c) => c.id === tx.categoryId);
-              const isExpense = tx.type === "expense";
-
               return (
-                <tr
-                  key={tx.id}
-                  className="border-b border-(--card-border) last:border-0"
-                >
-                  {}
-                  <td className="p-3 whitespace-nowrap text-(--text-muted) font-medium">
+                <tr key={tx.id} className="transition-colors hover:bg-muted/40">
+                  <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                     {dayjs(tx.date).format("DD/MM/YYYY")}
                   </td>
-
-                  {}
-                  <td className="p-3 font-bold text-foreground max-w-[150px]">
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate">
-                          {tx.description || "Transazione"}
-                        </span>
-                        {tx.sharedInfo && (
-                          <span
-                            className={cn(
-                              "text-[8px] font-black px-1.5 py-0.5 rounded-md shrink-0",
-                              tx.sharedInfo.isBorrowed
-                                ? "bg-rose-500/10 text-rose-500 border border-rose-500/15"
-                                : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/15",
-                            )}
-                          >
-                            Split
-                          </span>
-                        )}
-                      </div>
-                      {tx.sharedInfo && (
-                        <span className="text-[8px] text-(--text-muted) font-normal mt-0.5">
-                          {tx.sharedInfo.isBorrowed
-                            ? `Da ${tx.payerName || "Amico"}`
-                            : `Con ${tx.sharedInfo.borrowerName}`}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  {}
-                  <td className="p-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: cat ? cat.color : "#8E8E93" }}
-                      />
-                      <span className="text-foreground font-semibold text-xs">
-                        {cat ? cat.name : "Generale"}
+                  <td className="max-w-64 px-3 py-2.5">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium text-foreground">
+                        {tx.description || "Transazione"}
                       </span>
+                      {tx.sharedInfo && (
+                        <span className="truncate text-xs text-muted-foreground">
+                          {tx.sharedInfo.isBorrowed
+                            ? `Split da ${tx.payerName || "Amico"}`
+                            : `Split con ${tx.sharedInfo.borrowerName}`}
+                        </span>
+                      )}
                     </div>
                   </td>
-
-                  {}
-                  <td className="p-3 whitespace-nowrap">
-                    <span
-                      className={cn(
-                        "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
-                        isExpense
-                          ? "bg-rose-500/10 text-rose-500 border border-rose-500/15"
-                          : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/15",
-                      )}
-                    >
-                      {isExpense ? "Spesa" : "Guadagno"}
+                  <td className="whitespace-nowrap px-3 py-2.5">
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor:
+                            cat?.color ?? FALLBACK_CATEGORY_COLOR,
+                        }}
+                      />
+                      {cat ? cat.name : "Generale"}
                     </span>
                   </td>
-
-                  {}
-                  <td className="p-3 font-extrabold whitespace-nowrap">
-                    <AmountCell
+                  <td className="whitespace-nowrap px-3 py-2.5">
+                    <TypeBadge type={tx.type} />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <AmountBlock
                       tx={tx}
                       displayCurrency={displayCurrency}
                       convertCurrency={convertCurrency}
                     />
                   </td>
-
-                  {}
-                  <td className="p-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        isIconOnly
-                        variant="ghost"
-                        className="text-blue-500 hover:bg-blue-500/15 rounded-lg border-0 h-8 w-8 cursor-pointer"
-                        onPress={() => onEditClick(tx)}
-                      >
-                        <Edit3 size={12} />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        variant="ghost"
-                        className="text-rose-500 hover:bg-rose-500/15 rounded-lg border-0 h-8 w-8 cursor-pointer"
-                        onPress={() => onDeleteClick(tx.id)}
-                      >
-                        <Trash2 size={12} />
-                      </Button>
-                    </div>
+                  <td className="px-2 py-1 text-right">
+                    <TransactionActionsMenu
+                      tx={tx}
+                      onEdit={onEditClick}
+                      onDelete={onDeleteClick}
+                    />
                   </td>
                 </tr>
               );
             })}
-
-            {totalItems === 0 && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="text-center py-12 text-xs text-(--text-muted) font-medium"
-                >
-                  Nessuna transazione corrisponde ai criteri impostati.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
 
-      {}
-      {totalItems > 0 && (
-        <div className="flex items-center justify-between pt-4 border-t border-(--card-border) mt-4">
-          <span className="text-[10px] text-(--text-muted) font-semibold uppercase tracking-wider pl-1">
-            {startItem}–{endItem} di {totalItems}
+      <ul className="divide-y md:hidden">
+        {transactions.map((tx) => {
+          const cat = categories.find((c) => c.id === tx.categoryId);
+          return (
+            <li key={tx.id} className="flex items-center gap-1 pr-1">
+              <button
+                type="button"
+                onClick={() => onEditClick(tx)}
+                className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pl-3 pr-2 text-left outline-none focus-visible:bg-muted/60"
+              >
+                <CategoryTile category={cat} />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-medium">
+                    {tx.description || "Transazione"}
+                  </span>
+                  <span className="tabular truncate text-xs text-muted-foreground">
+                    {dayjs(tx.date).format("DD/MM/YYYY")} ·{" "}
+                    {cat ? cat.name : "Generale"}
+                  </span>
+                </span>
+                <AmountBlock
+                  tx={tx}
+                  displayCurrency={displayCurrency}
+                  convertCurrency={convertCurrency}
+                />
+              </button>
+              <TransactionActionsMenu
+                tx={tx}
+                onEdit={onEditClick}
+                onDelete={onDeleteClick}
+              />
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
+        <span className="tabular text-xs text-muted-foreground">
+          {startItem}–{endItem} di {totalItems}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11 md:size-9"
+            disabled={currentPage === 1}
+            onClick={() => onChangePage(currentPage - 1)}
+            aria-label="Pagina precedente"
+          >
+            <ChevronLeft />
+          </Button>
+          <span className="tabular min-w-12 text-center text-xs font-medium">
+            {currentPage} / {totalPages}
           </span>
-          <div className="flex gap-2 items-center">
-            <button
-              type="button"
-              disabled={currentPage === 1}
-              onClick={() => onChangePage(currentPage - 1)}
-              className="px-3 py-1.5 rounded-xl border border-(--card-border) bg-(--card) hover:bg-neutral-500/10 text-[10px] font-black uppercase tracking-wider text-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-            >
-              ←
-            </button>
-            <span className="text-[10px] font-black px-2 text-foreground">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={currentPage === totalPages}
-              onClick={() => onChangePage(currentPage + 1)}
-              className="px-3 py-1.5 rounded-xl border border-(--card-border) bg-(--card) hover:bg-neutral-500/10 text-[10px] font-black uppercase tracking-wider text-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-            >
-              →
-            </button>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11 md:size-9"
+            disabled={currentPage === totalPages}
+            onClick={() => onChangePage(currentPage + 1)}
+            aria-label="Pagina successiva"
+          >
+            <ChevronRight />
+          </Button>
         </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
 }

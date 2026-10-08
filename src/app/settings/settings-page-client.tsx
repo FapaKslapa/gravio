@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnimatePresence, m } from "framer-motion";
+import { AnimatePresence, m } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -11,15 +11,17 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { toast } from "sonner";
 import { useDashboard } from "@/components/dashboard-layout";
 import { authClient } from "@/lib/auth-client";
+import { springs } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { BudgetTab } from "./components/budget-tab";
 import { GeneralTab } from "./components/general-tab";
 import { NotificationsTab } from "./components/notifications-tab";
 import { ProfileTab } from "./components/profile-tab";
 import { SettingsHeader } from "./components/settings-header";
-import { SettingsTabs, type Tab } from "./components/settings-tabs";
+import { SECTIONS, SettingsNav, type Tab } from "./components/settings-tabs";
 
 const handleLogout = async () => {
   await authClient.signOut({
@@ -90,6 +92,9 @@ export function SettingsPageClient() {
 
   const [activeTab, setActiveTab] = useState<Tab>(
     rawTab && VALID_TABS.includes(rawTab) ? rawTab : "general",
+  );
+  const [mobileOpen, setMobileOpen] = useState(
+    Boolean(rawTab && VALID_TABS.includes(rawTab)),
   );
 
   const [formState, dispatch] = useReducer(
@@ -239,7 +244,7 @@ export function SettingsPageClient() {
       }
       dispatch({ type: "SET_FIELD", field: "catBudgets", value: budgetMap });
     }
-  }, [categoryBudgetsData, toDisplayCurrency, dispatch]);
+  }, [categoryBudgetsData, toDisplayCurrency]);
 
   const prevSettingsRef = useRef<typeof settings | null>(null);
   if (settings !== prevSettingsRef.current) {
@@ -310,84 +315,116 @@ export function SettingsPageClient() {
       }
 
       refetchSettings();
+      toast.success("Impostazioni salvate");
       router.push("/");
     } catch (err) {
       console.error(err);
+      toast.error("Non è stato possibile salvare le impostazioni. Riprova.");
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleBack = () => {
+    if (mobileOpen && window.matchMedia("(max-width: 767px)").matches) {
+      setMobileOpen(false);
+    } else {
+      router.back();
+    }
+  };
+
+  const selectTab = (tab: Tab) => {
+    setActiveTab(tab);
+    setMobileOpen(true);
+  };
+
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl">
-      {/* Header */}
-      <SettingsHeader onSave={handleSave} isSaving={isSaving} />
+    <div className="flex w-full max-w-5xl flex-col gap-6">
+      <SettingsHeader
+        title={mobileOpen ? SECTIONS[activeTab].title : "Impostazioni"}
+        onBack={handleBack}
+        onSave={handleSave}
+        isSaving={isSaving}
+      />
 
-      {/* Horizontal tab bar */}
-      <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="grid gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start md:gap-8">
+        <div className={mobileOpen ? "hidden md:block" : "block"}>
+          <SettingsNav
+            activeTab={activeTab}
+            highlight
+            onSelect={selectTab}
+            user={user}
+            profileImage={profileImage}
+          />
+        </div>
 
-      {/* Tab content */}
-      <AnimatePresence mode="wait">
-        <m.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {activeTab === "general" && (
-            <GeneralTab
-              preferredCurrency={preferredCurrency}
-              setPreferredCurrency={setPreferredCurrency}
-              theme={theme}
-              changeTheme={changeTheme}
-              accent={accent}
-              changeAccent={changeAccent}
-            />
-          )}
+        <div className={mobileOpen ? "block" : "hidden md:block"}>
+          <h2 className="mb-4 hidden font-display text-xl font-bold tracking-tight md:block">
+            {SECTIONS[activeTab].title}
+          </h2>
+          <AnimatePresence mode="wait" initial={false}>
+            <m.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={springs.smooth}
+            >
+              {activeTab === "general" && (
+                <GeneralTab
+                  preferredCurrency={preferredCurrency}
+                  setPreferredCurrency={setPreferredCurrency}
+                  theme={theme}
+                  changeTheme={changeTheme}
+                  accent={accent}
+                  changeAccent={changeAccent}
+                />
+              )}
 
-          {activeTab === "budget" && (
-            <BudgetTab
-              targetBudget={targetBudget}
-              setTargetBudget={setTargetBudget}
-              maxBudget={maxBudget}
-              setMaxBudget={setMaxBudget}
-              displayCurrency={displayCurrency}
-              exchangeRate={exchangeRate}
-              categories={categoriesData ?? []}
-              isCategoriesLoading={isCategoriesLoading}
-              catBudgets={catBudgets}
-              setCatBudgets={setCatBudgets}
-            />
-          )}
+              {activeTab === "budget" && (
+                <BudgetTab
+                  targetBudget={targetBudget}
+                  setTargetBudget={setTargetBudget}
+                  maxBudget={maxBudget}
+                  setMaxBudget={setMaxBudget}
+                  displayCurrency={displayCurrency}
+                  exchangeRate={exchangeRate}
+                  categories={categoriesData ?? []}
+                  isCategoriesLoading={isCategoriesLoading}
+                  catBudgets={catBudgets}
+                  setCatBudgets={setCatBudgets}
+                />
+              )}
 
-          {activeTab === "profile" && (
-            <ProfileTab
-              profileName={profileName}
-              setProfileName={setProfileName}
-              profileImage={profileImage}
-              setProfileImage={setProfileImage}
-              user={user}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              handleLogout={handleLogout}
-            />
-          )}
+              {activeTab === "profile" && (
+                <ProfileTab
+                  profileName={profileName}
+                  setProfileName={setProfileName}
+                  profileImage={profileImage}
+                  setProfileImage={setProfileImage}
+                  user={user}
+                  fileInputRef={fileInputRef}
+                  handleFileChange={handleFileChange}
+                  handleLogout={handleLogout}
+                />
+              )}
 
-          {activeTab === "notifications" && (
-            <NotificationsTab
-              notifyBudget80={notifyBudget80}
-              setNotifyBudget80={setNotifyBudget80}
-              notifyRecurrentApplied={notifyRecurrentApplied}
-              setNotifyRecurrentApplied={setNotifyRecurrentApplied}
-              notifyFriendActions={notifyFriendActions}
-              setNotifyFriendActions={setNotifyFriendActions}
-              pushNotificationPermission={pushNotificationPermission}
-              onPermissionChange={handlePermissionChange}
-            />
-          )}
-        </m.div>
-      </AnimatePresence>
+              {activeTab === "notifications" && (
+                <NotificationsTab
+                  notifyBudget80={notifyBudget80}
+                  setNotifyBudget80={setNotifyBudget80}
+                  notifyRecurrentApplied={notifyRecurrentApplied}
+                  setNotifyRecurrentApplied={setNotifyRecurrentApplied}
+                  notifyFriendActions={notifyFriendActions}
+                  setNotifyFriendActions={setNotifyFriendActions}
+                  pushNotificationPermission={pushNotificationPermission}
+                  onPermissionChange={handlePermissionChange}
+                />
+              )}
+            </m.div>
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

@@ -11,7 +11,7 @@ Regole ferree
 - Form con shadcn `Field`/`FieldGroup`/`FieldLabel`; `Input`, `Select`, `Switch`, `Tabs`, `Badge`, `Skeleton`, `Empty` per stati vuoti, `sonner` (`toast`) per feedback.
 - Mobile first (390px) poi md/xl. Target tocco >=44px, testo >=11px, contrasto >=4.5:1, focus visibile, `aria-label` sui pulsanti icona, significato mai solo colore.
 - Numeri/importi: classe `tabular` o `num-display`, importi via `formatCurrency`. Icone lucide, mai emoji.
-- Animazioni con `m` da framer-motion (LazyMotion domMax gia' attivo) usando `springs`/`fadeUp` da `@/lib/motion`; una sola entrata coordinata per schermata, stagger limitato. Niente gsap.
+- Animazioni con `m` da motion (LazyMotion domMax gia' attivo) usando `springs`/`fadeUp` da `@/lib/motion`; una sola entrata coordinata per schermata, stagger limitato. Niente gsap.
 - Non cambiare logica dati, query tRPC, schemi, testi di dominio. Cambia struttura visiva, composizione, interazione.
 - Stile codice: come il resto (biome, doppi apici, nessun commento superfluo).
 - Report finale (max 15 righe): file toccati, cosa e' cambiato, modifiche condivise richieste, problemi aperti.

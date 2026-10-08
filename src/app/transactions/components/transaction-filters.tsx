@@ -1,10 +1,13 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { Search, X } from "lucide-react";
-import { CategorySelect } from "@/components/ui/category-select";
-import { CustomDatePicker } from "@/components/ui/custom-datepicker";
-import { CustomSelect } from "@/components/ui/custom-select";
+import dayjs from "dayjs";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { cn } from "@/lib/utils";
+import { FALLBACK_CATEGORY_COLOR } from "./transaction-list-timeline";
 
 type Category = {
   id: string;
@@ -13,19 +16,47 @@ type Category = {
   color: string;
 };
 
+type FilterTypeValue = "" | "expense" | "income";
+
 type TransactionFiltersProps = {
   filterText: string;
   setFilterText: (v: string) => void;
   filterCategoryId: string;
   setFilterCategoryId: (v: string) => void;
-  filterType: "" | "expense" | "income";
-  setFilterType: (v: "" | "expense" | "income") => void;
+  filterType: FilterTypeValue;
+  setFilterType: (v: FilterTypeValue) => void;
   filterStartDate: string;
   setFilterStartDate: (v: string) => void;
   filterEndDate: string;
   setFilterEndDate: (v: string) => void;
   categories: Category[];
 };
+
+const TYPE_OPTIONS: { value: FilterTypeValue; label: string }[] = [
+  { value: "", label: "Tutte" },
+  { value: "expense", label: "Spese" },
+  { value: "income", label: "Entrate" },
+];
+
+function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onRemove}
+      aria-label={`Rimuovi filtro ${label}`}
+      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft pl-3 pr-2.5 text-xs font-medium text-foreground outline-none transition-colors hover:bg-brand-soft/70 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97]"
+    >
+      {label}
+      <X aria-hidden="true" className="size-3.5" />
+    </button>
+  );
+}
 
 export function TransactionFilters({
   filterText,
@@ -40,14 +71,18 @@ export function TransactionFilters({
   setFilterEndDate,
   categories,
 }: TransactionFiltersProps) {
-  const hasActiveFilters =
-    filterText ||
-    filterCategoryId ||
-    filterType ||
-    filterStartDate ||
-    filterEndDate;
+  const [open, setOpen] = useState(false);
 
-  const handleResetFilters = () => {
+  const activeCategory = categories.find((c) => c.id === filterCategoryId);
+  const sheetFilterCount = [
+    filterCategoryId,
+    filterType,
+    filterStartDate,
+    filterEndDate,
+  ].filter(Boolean).length;
+  const hasAny = sheetFilterCount > 0 || !!filterText;
+
+  const resetAll = () => {
     setFilterText("");
     setFilterCategoryId("");
     setFilterType("");
@@ -55,110 +90,217 @@ export function TransactionFilters({
     setFilterEndDate("");
   };
 
+  const dateChip = (iso: string, prefix: string) =>
+    `${prefix} ${dayjs(iso).format("D MMM YYYY")}`;
+
   return (
-    <div className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-5 apple-widget transition-all select-none overflow-visible relative z-20 flex flex-col gap-4">
-      <div className="flex flex-wrap gap-3 w-full">
-        <div className="flex-1 min-w-[200px]">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-            Cerca
-          </span>
-          <div className="bg-neutral-500/5 dark:bg-zinc-800/30 focus-within:bg-neutral-500/10 dark:focus-within:bg-zinc-800/50 h-9 px-2.5 rounded-xl flex items-center gap-1.5 border-0 w-full mt-1 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200">
-            <Search size={13} className="text-neutral-500 shrink-0" />
-            <input
-              type="text"
-              aria-label="Cerca transazione"
-              placeholder="Cerca descrizione o importo..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              className="text-xs text-foreground flex-1 bg-transparent border-0 outline-none w-full min-w-0 placeholder:text-(--text-muted)"
-            />
-            {filterText && (
-              <button
-                type="button"
-                onClick={() => setFilterText("")}
-                aria-label="Cancella testo"
-                className="flex items-center bg-transparent border-0 cursor-pointer p-0.5 text-neutral-500 hover:text-foreground transition-colors shrink-0"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            type="search"
+            aria-label="Cerca transazione"
+            placeholder="Cerca descrizione o importo"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            className="h-11 rounded-full bg-card pl-10 pr-10 text-base"
+          />
+          {filterText && (
+            <button
+              type="button"
+              onClick={() => setFilterText("")}
+              aria-label="Cancella ricerca"
+              className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          )}
         </div>
 
-        <div className="min-w-[150px]">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-            Categoria
-          </span>
-          <div className="mt-1">
-            <CategorySelect
-              value={filterCategoryId}
-              onChange={setFilterCategoryId}
-              categories={categories}
-              generalLabel="Tutte le categorie"
-              triggerClassName="h-9"
-            />
-          </div>
-        </div>
-
-        <div className="min-w-[120px]">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-            Tipo
-          </span>
-          <div className="mt-1">
-            <CustomSelect
-              value={filterType}
-              onChange={(val: string) =>
-                setFilterType(val as "" | "expense" | "income")
-              }
-              placeholder="Spese & Guadagni"
-              triggerClassName="h-9"
-              options={[
-                { value: "", label: "Spese & Guadagni" },
-                { value: "expense", label: "Solo Spese" },
-                { value: "income", label: "Solo Guadagni" },
-              ]}
-            />
-          </div>
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => setOpen(true)}
+          aria-label={
+            sheetFilterCount > 0
+              ? `Filtri, ${sheetFilterCount} attivi`
+              : "Filtri"
+          }
+          className="elevation-1 relative h-11 shrink-0 gap-2 rounded-full bg-card px-4 active:scale-[0.97]"
+        >
+          <SlidersHorizontal />
+          <span className="hidden sm:inline">Filtri</span>
+          {sheetFilterCount > 0 && (
+            <span className="tabular flex size-5 items-center justify-center rounded-full bg-brand text-[11px] font-semibold text-brand-foreground">
+              {sheetFilterCount}
+            </span>
+          )}
+        </Button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 w-full border-t border-(--card-border) pt-3">
-        <div className="flex-1 min-w-[140px]">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-            Da data (Dal)
-          </span>
-          <div className="mt-1">
-            <CustomDatePicker
-              value={filterStartDate}
-              onChange={setFilterStartDate}
-              triggerClassName="h-9"
+      {sheetFilterCount > 0 && (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:flex-wrap md:px-0">
+          {filterType && (
+            <FilterChip
+              label={filterType === "expense" ? "Spese" : "Entrate"}
+              onRemove={() => setFilterType("")}
             />
-          </div>
-        </div>
-
-        <div className="flex-1 min-w-[140px]">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider ml-1">
-            A data (Al)
-          </span>
-          <div className="mt-1">
-            <CustomDatePicker
-              value={filterEndDate}
-              onChange={setFilterEndDate}
-              triggerClassName="h-9"
+          )}
+          {activeCategory && (
+            <FilterChip
+              label={activeCategory.name}
+              onRemove={() => setFilterCategoryId("")}
             />
-          </div>
-        </div>
-
-        {hasActiveFilters && (
+          )}
+          {filterStartDate && (
+            <FilterChip
+              label={dateChip(filterStartDate, "Dal")}
+              onRemove={() => setFilterStartDate("")}
+            />
+          )}
+          {filterEndDate && (
+            <FilterChip
+              label={dateChip(filterEndDate, "Al")}
+              onRemove={() => setFilterEndDate("")}
+            />
+          )}
           <Button
             variant="ghost"
-            className="text-rose-500 hover:bg-rose-500/10 text-xs font-bold rounded-xl h-9 px-3 cursor-pointer flex items-center gap-1 border-0"
-            onPress={handleResetFilters}
+            onClick={resetAll}
+            className="h-9 shrink-0 rounded-full px-3 text-xs text-muted-foreground"
           >
-            <X size={12} /> Cancella Filtri
+            Azzera filtri
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+
+      <ResponsiveSheet
+        open={open}
+        onOpenChange={setOpen}
+        title="Filtri"
+        description="Restringi l'elenco delle transazioni"
+        className="sm:max-w-md"
+      >
+        <div className="flex flex-col gap-6 pb-2">
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-semibold">Tipo</legend>
+            <div className="flex gap-1 rounded-full bg-muted p-1">
+              {TYPE_OPTIONS.map((opt) => {
+                const active = filterType === opt.value;
+                return (
+                  <button
+                    key={opt.value || "all"}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setFilterType(opt.value)}
+                    className={cn(
+                      "h-11 flex-1 rounded-full text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                      active
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-semibold">Categoria</legend>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                aria-pressed={filterCategoryId === ""}
+                onClick={() => setFilterCategoryId("")}
+                className={cn(
+                  "h-10 rounded-full border px-4 text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                  filterCategoryId === ""
+                    ? "border-transparent bg-brand text-brand-foreground"
+                    : "bg-card text-foreground hover:bg-muted",
+                )}
+              >
+                Tutte
+              </button>
+              {categories.map((cat) => {
+                const active = filterCategoryId === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setFilterCategoryId(active ? "" : cat.id)}
+                    className={cn(
+                      "inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                      active
+                        ? "border-transparent bg-brand text-brand-foreground"
+                        : "bg-card text-foreground hover:bg-muted",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-2.5 rounded-full ring-1 ring-background"
+                      style={{
+                        backgroundColor: cat.color || FALLBACK_CATEGORY_COLOR,
+                      }}
+                    />
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-semibold">Periodo</legend>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+                <label htmlFor="filter-start-date">Dal</label>
+                <Input
+                  id="filter-start-date"
+                  type="date"
+                  value={filterStartDate}
+                  max={filterEndDate || undefined}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  className="tabular h-11 text-foreground"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+                <label htmlFor="filter-end-date">Al</label>
+                <Input
+                  id="filter-end-date"
+                  type="date"
+                  value={filterEndDate}
+                  min={filterStartDate || undefined}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  className="tabular h-11 text-foreground"
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="h-11 flex-1 rounded-full"
+              disabled={!hasAny}
+              onClick={resetAll}
+            >
+              Azzera
+            </Button>
+            <Button
+              className="h-11 flex-1 rounded-full bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={() => setOpen(false)}
+            >
+              Mostra risultati
+            </Button>
+          </div>
+        </div>
+      </ResponsiveSheet>
     </div>
   );
 }

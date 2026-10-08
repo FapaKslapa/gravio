@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import { domMax, LazyMotion } from "framer-motion";
+import { domMax, LazyMotion } from "motion/react";
 import { useState } from "react";
 import superjson from "superjson";
 import type { AppRouter } from "@/server/routers/_app";

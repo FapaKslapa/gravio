@@ -1,15 +1,22 @@
 "use client";
 
+import { m } from "motion/react";
+import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type ActiveMobileTab = "friends" | "groups" | "manage";
+type ActiveTab = "friends" | "groups";
 
 interface MobileTabBarProps {
-  activeTab: ActiveMobileTab;
-  onTabChange: (tab: ActiveMobileTab) => void;
+  activeTab: ActiveTab;
+  onTabChange: (tab: ActiveTab) => void;
   pendingCount: number;
   hidden?: boolean;
 }
+
+const TABS: { id: ActiveTab; label: string }[] = [
+  { id: "friends", label: "Amici" },
+  { id: "groups", label: "Gruppi" },
+];
 
 export function MobileTabBar({
   activeTab,
@@ -17,37 +24,50 @@ export function MobileTabBar({
   pendingCount,
   hidden,
 }: MobileTabBarProps) {
+  if (hidden) return null;
+
   return (
     <div
-      className={cn(
-        "flex md:hidden rounded-[1.25rem] bg-neutral-500/5 dark:bg-zinc-800/20 border border-(--card-border) p-1 w-full shrink-0 select-none",
-        hidden && "hidden",
-      )}
+      role="tablist"
+      aria-label="Amici o gruppi"
+      className="flex w-full shrink-0 rounded-full bg-muted p-1"
     >
-      {(["friends", "groups", "manage"] as ActiveMobileTab[]).map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          onClick={() => onTabChange(tab)}
-          className={cn(
-            "flex-1 py-2 text-xs font-extrabold rounded-[0.9rem] transition-all border-0 cursor-pointer bg-transparent flex items-center justify-center gap-1",
-            activeTab === tab
-              ? "bg-foreground text-background shadow-sm"
-              : "text-(--text-muted) hover:text-foreground",
-          )}
-        >
-          {tab === "friends" && "Amici"}
-          {tab === "groups" && "Gruppi"}
-          {tab === "manage" && (
-            <>
-              Gestisci
-              {pendingCount > 0 && (
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-              )}
-            </>
-          )}
-        </button>
-      ))}
+      {TABS.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onTabChange(tab.id)}
+            className={cn(
+              "relative flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+              isActive
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {isActive && (
+              <m.span
+                layoutId="friends-tab-pill"
+                transition={springs.snappy}
+                className="absolute inset-0 rounded-full bg-card elevation-1"
+              />
+            )}
+            <span className="relative">{tab.label}</span>
+            {tab.id === "friends" && pendingCount > 0 && (
+              <span
+                role="img"
+                aria-label={`${pendingCount} richieste pendenti`}
+                className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-bold text-brand-foreground"
+              >
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

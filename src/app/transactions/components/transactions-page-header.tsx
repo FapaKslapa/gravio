@@ -1,6 +1,13 @@
-import { Button } from "@heroui/react";
-import { m } from "framer-motion";
-import { FileSpreadsheet, Plus } from "lucide-react";
+"use client";
+
+import { EllipsisVertical, FileSpreadsheet, Plus, Tags } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TransactionsPageHeaderProps {
   onNewTransaction: () => void;
@@ -14,54 +21,47 @@ export function TransactionsPageHeader({
   onManageCategories,
 }: TransactionsPageHeaderProps) {
   return (
-    <m.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-row justify-between items-center gap-4 select-none mb-4 w-full"
-    >
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider hidden md:inline">
-          Gestione Spese
-        </span>
-        <h2 className="text-lg md:text-2xl font-black tracking-tight">
+    <header className="flex w-full items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-col">
+        <h1 className="font-display text-2xl font-bold tracking-[-0.025em]">
           Transazioni
-        </h2>
-        <p className="text-(--text-muted) text-xs hidden md:block">
+        </h1>
+        <p className="hidden text-sm text-muted-foreground md:block">
           Visualizza, filtra o importa le tue spese ed entrate
         </p>
       </div>
 
-      <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <Button
-          variant="outline"
-          className="font-bold text-xs bg-blue-500 text-white border-0 hover:opacity-90 rounded-xl h-9 md:h-10 px-2.5 md:px-4 flex items-center justify-center gap-1 cursor-pointer shadow-sm"
-          onPress={onNewTransaction}
+          onClick={onNewTransaction}
+          className="h-11 gap-1.5 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90 active:scale-[0.97]"
         >
-          <Plus size={13} />
-          <span className="hidden sm:inline">Nuova Transazione</span>
+          <Plus />
+          <span className="hidden sm:inline">Nuova transazione</span>
           <span className="sm:hidden">Nuova</span>
         </Button>
 
-        <Button
-          variant="outline"
-          className="font-semibold text-xs border-(--card-border) hover:bg-neutral-500/10 rounded-xl h-9 md:h-10 px-2.5 md:px-3 flex items-center justify-center gap-1.5 cursor-pointer text-foreground bg-(--card)"
-          onPress={onImportCsv}
-        >
-          <FileSpreadsheet size={13} className="text-emerald-500" />
-          <span className="hidden sm:inline">Importa CSV</span>
-          <span className="sm:hidden">CSV</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          className="font-semibold text-xs border-(--card-border) hover:bg-neutral-500/10 rounded-xl h-9 md:h-10 px-2.5 md:px-3 flex items-center justify-center gap-1.5 cursor-pointer text-foreground bg-(--card)"
-          onPress={onManageCategories}
-        >
-          <span className="hidden sm:inline">Gestisci Categorie</span>
-          <span className="sm:hidden">Categorie</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-11 rounded-full"
+              aria-label="Altre azioni"
+            >
+              <EllipsisVertical />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-48">
+            <DropdownMenuItem onSelect={onImportCsv}>
+              <FileSpreadsheet /> Importa CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onManageCategories}>
+              <Tags /> Gestisci categorie
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </m.div>
+    </header>
   );
 }

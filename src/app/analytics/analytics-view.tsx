@@ -1,34 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { m } from "framer-motion";
+import { m } from "motion/react";
 import { useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { LoadingState } from "@/components/ui/loading-state";
+import { fadeUp } from "@/lib/motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { AnalyticsHeader } from "./components/analytics-header";
 import { AnalyticsSummaryCards } from "./components/analytics-summary-cards";
 import { CategoryBreakdown } from "./components/category-breakdown";
-import { ExpenseTrendCard } from "./components/expense-trend-card";
-import { IncomeTrendCard } from "./components/income-trend-card";
+import { MONTH_SHORT } from "./components/months";
 import { RecentLogs } from "./components/recent-logs";
-import { SavingsTrendCard } from "./components/savings-trend-card";
 import { SpendingCalendarCard } from "./components/spending-calendar-card";
-
-const MONTH_SHORT = [
-  "Gen",
-  "Feb",
-  "Mar",
-  "Apr",
-  "Mag",
-  "Giu",
-  "Lug",
-  "Ago",
-  "Set",
-  "Ott",
-  "Nov",
-  "Dic",
-];
+import { TrendCard } from "./components/trend-card";
 
 export default function AnalyticsView() {
   const { displayCurrency, convertCurrency } = useDashboard();
@@ -161,6 +146,11 @@ export default function AnalyticsView() {
     });
   }
 
+  const prevMonthData = last6MonthsData[last6MonthsData.length - 2];
+  const prevIncome = prevMonthData?.income ?? 0;
+  const prevExpense = prevMonthData?.expense ?? 0;
+  const prevSavings = prevMonthData?.savings ?? 0;
+
   const timelineTransactions = selectedDay
     ? monthTransactions.filter(
         (t) => new Date(t.date).getDate() === selectedDay,
@@ -195,12 +185,12 @@ export default function AnalyticsView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto px-4 py-3 pb-24 md:pb-12 text-foreground">
-      <m.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      >
+    <m.div
+      initial="hidden"
+      animate="show"
+      className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-3 pb-28 text-foreground md:gap-6 md:px-8 md:pb-12"
+    >
+      <m.div variants={fadeUp} custom={0}>
         <AnalyticsHeader
           currentMonth={currentMonth}
           currentYear={currentYear}
@@ -210,103 +200,55 @@ export default function AnalyticsView() {
         />
       </m.div>
 
-      <AnalyticsSummaryCards
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        netSavings={netSavings}
-        savingsRate={savingsRate}
-        displayCurrency={displayCurrency}
-      />
+      <m.div variants={fadeUp} custom={1}>
+        <AnalyticsSummaryCards
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          netSavings={netSavings}
+          savingsRate={savingsRate}
+          prevIncome={prevIncome}
+          prevExpense={prevExpense}
+          prevSavings={prevSavings}
+          displayCurrency={displayCurrency}
+        />
+      </m.div>
 
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-2 md:gap-6 w-max md:w-auto">
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[420px] md:w-auto md:shrink md:h-full"
-          >
-            <SavingsTrendCard
-              trendData={last6MonthsData}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[420px] md:w-auto md:shrink md:h-full"
-          >
-            <CategoryBreakdown
-              categoryExpenses={categoryExpenses}
-              totalExpense={totalExpense}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-12">
+        <m.div variants={fadeUp} custom={2} className="xl:col-span-7">
+          <TrendCard
+            trendData={last6MonthsData}
+            displayCurrency={displayCurrency}
+          />
+        </m.div>
+        <m.div variants={fadeUp} custom={3} className="xl:col-span-5">
+          <CategoryBreakdown
+            categoryExpenses={categoryExpenses}
+            totalExpense={totalExpense}
+            displayCurrency={displayCurrency}
+          />
+        </m.div>
+        <m.div variants={fadeUp} custom={4} className="xl:col-span-5">
+          <SpendingCalendarCard
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            dailyExpensesMap={dailyExpensesMap}
+            maxDailyExpense={maxDailyExpense}
+            selectedDay={selectedDay}
+            setSelectedDay={setSelectedDay}
+            displayCurrency={displayCurrency}
+          />
+        </m.div>
+        <m.div variants={fadeUp} custom={5} className="xl:col-span-7">
+          <RecentLogs
+            key={`${currentYear}-${currentMonth}-${selectedDay}`}
+            sortedTimeline={sortedTimeline}
+            categories={categories}
+            displayCurrency={displayCurrency}
+            convertCurrency={convertCurrency}
+            selectedDay={selectedDay}
+          />
+        </m.div>
       </div>
-
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-2 md:gap-6 w-max md:w-auto">
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.29, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[310px] md:w-auto md:shrink md:h-full"
-          >
-            <ExpenseTrendCard
-              trendData={last6MonthsData}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 h-[310px] md:w-auto md:shrink md:h-full"
-          >
-            <IncomeTrendCard
-              trendData={last6MonthsData}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 md:pb-0 md:overflow-visible md:snap-none">
-        <div className="flex gap-4 md:grid md:grid-cols-2 md:gap-6 w-max md:w-auto">
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.43, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 md:w-auto md:shrink md:h-full"
-          >
-            <SpendingCalendarCard
-              currentMonth={currentMonth}
-              currentYear={currentYear}
-              dailyExpensesMap={dailyExpensesMap}
-              maxDailyExpense={maxDailyExpense}
-              selectedDay={selectedDay}
-              setSelectedDay={setSelectedDay}
-              displayCurrency={displayCurrency}
-            />
-          </m.div>
-
-          <m.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[85vw] snap-start shrink-0 md:w-auto md:shrink md:h-full"
-          >
-            <RecentLogs
-              sortedTimeline={sortedTimeline}
-              categories={categories}
-              displayCurrency={displayCurrency}
-              convertCurrency={convertCurrency}
-            />
-          </m.div>
-        </div>
-      </div>
-    </div>
+    </m.div>
   );
 }

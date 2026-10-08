@@ -1,10 +1,11 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { DialogHeader } from "./shared-expense/dialog-header";
+import { AnimatePresence } from "motion/react";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { SharedExpenseFormStep } from "./shared-expense/form-step";
 import { SharedExpenseSplitStep } from "./shared-expense/split-step";
+import { StepHeader } from "./shared-expense/step-header";
+import { SharedExpenseSummaryStep } from "./shared-expense/summary-step";
 import type {
   Friend,
   Group,
@@ -32,6 +33,12 @@ type Props = {
   defaultFriendId?: string;
 };
 
+const STEP_DESCRIPTION = {
+  form: "Importo, chi ha pagato e con chi dividere.",
+  split: "Scegli come ripartire la spesa.",
+  summary: "Controlla le quote prima di salvare.",
+} as const;
+
 export function SharedExpenseDialog({
   isOpen,
   onClose,
@@ -42,32 +49,7 @@ export function SharedExpenseDialog({
   defaultGroupId,
   defaultFriendId,
 }: Props) {
-  const {
-    state,
-    set,
-    displayCurrency,
-    convertCurrency,
-    parsedAmount,
-    amountNok,
-    selectedFriend,
-    selectedGroup,
-    myNok,
-    friendNok,
-    myPct,
-    friendPct,
-    checkedCount,
-    groupShareNok,
-    customIsExact,
-    customDifference,
-    canSave,
-    handleClose,
-    handleToggleGroupSplitMode,
-    handleToggleMember,
-    handleChangeCustomSplit,
-    handleSave,
-    splitSummaryLabel,
-    currentUserId,
-  } = useSharedExpenseForm({
+  const form = useSharedExpenseForm({
     isOpen,
     onClose,
     friends,
@@ -77,99 +59,89 @@ export function SharedExpenseDialog({
     defaultGroupId,
     defaultFriendId,
   });
+  const { state, set } = form;
+  const payerName = form.currentUser.name;
+  const payerImage = form.currentUser.image;
+
+  const handleBack = () =>
+    set({ step: state.step === "summary" ? "split" : "form" });
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={handleClose}
-          />
-          <m.div
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.97 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative bg-(--card-solid) border border-(--card-border) w-full md:max-w-[520px] rounded-t-[2rem] md:rounded-[2rem] shadow-2xl text-foreground z-10 flex flex-col max-h-[92dvh] md:max-h-[88vh] mx-0 md:mx-4"
-          >
-            {/* Header */}
-            <DialogHeader
-              step={state.step}
-              shareType={state.shareType}
-              selectedGroupName={selectedGroup?.name}
-              selectedFriendName={selectedFriend?.user.name}
-              onBack={() => set({ step: "form" })}
-              onClose={handleClose}
+    <ResponsiveSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) form.handleClose();
+      }}
+      title="Spesa condivisa"
+      description={STEP_DESCRIPTION[state.step]}
+      className="sm:max-w-lg"
+    >
+      <div className="flex flex-col gap-6 pb-2">
+        <StepHeader step={state.step} onBack={handleBack} />
+        <AnimatePresence mode="wait">
+          {state.step === "form" ? (
+            <SharedExpenseFormStep
+              key="form"
+              state={state}
+              set={set}
+              friends={friends}
+              groups={groups}
+              displayCurrency={form.displayCurrency}
+              convertCurrency={form.convertCurrency}
+              parsedAmount={form.parsedAmount}
+              payerName={payerName}
+              payerImage={payerImage}
+              onNext={() => set({ step: "split" })}
             />
-
-            {/* Progress bar */}
-            <div className="flex items-center gap-2 px-6 pt-3 shrink-0">
-              <div className="h-1 flex-1 rounded-full bg-blue-500" />
-              <div
-                className={cn(
-                  "h-1 flex-1 rounded-full transition-all duration-300",
-                  state.step === "split" ? "bg-blue-500" : "bg-(--card-border)",
-                )}
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
-                {/* ── FORM STEP ──────────────────────────────────────── */}
-                {state.step === "form" ? (
-                  <SharedExpenseFormStep
-                    state={state}
-                    set={set}
-                    friends={friends}
-                    groups={groups}
-                    displayCurrency={displayCurrency}
-                    convertCurrency={convertCurrency}
-                    parsedAmount={parsedAmount}
-                    amountNok={amountNok}
-                    groupShareNok={groupShareNok}
-                    splitSummaryLabel={splitSummaryLabel}
-                    myNok={myNok}
-                    friendNok={friendNok}
-                    canSave={canSave}
-                    handleClose={handleClose}
-                    handleSave={handleSave}
-                  />
-                ) : (
-                  /* ── SPLIT STEP ─────────────────────────────────────── */
-                  <SharedExpenseSplitStep
-                    state={state}
-                    set={set}
-                    selectedFriend={selectedFriend}
-                    selectedGroup={selectedGroup}
-                    currentUserId={currentUserId}
-                    amountNok={amountNok}
-                    groupShareNok={groupShareNok}
-                    parsedAmount={parsedAmount}
-                    displayCurrency={displayCurrency}
-                    convertCurrency={convertCurrency}
-                    myNok={myNok}
-                    friendNok={friendNok}
-                    myPct={myPct}
-                    friendPct={friendPct}
-                    checkedCount={checkedCount}
-                    customIsExact={customIsExact}
-                    customDifference={customDifference}
-                    onToggleGroupSplitMode={handleToggleGroupSplitMode}
-                    onToggleMember={handleToggleMember}
-                    onChangeCustomSplit={handleChangeCustomSplit}
-                    handleSave={handleSave}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+          ) : state.step === "split" ? (
+            <SharedExpenseSplitStep
+              key="split"
+              state={state}
+              set={set}
+              selectedFriend={form.selectedFriend}
+              selectedGroup={form.selectedGroup}
+              currentUserId={form.currentUserId}
+              payerName={payerName}
+              payerImage={payerImage}
+              amountNok={form.amountNok}
+              groupShareNok={form.groupShareNok}
+              displayCurrency={form.displayCurrency}
+              convertCurrency={form.convertCurrency}
+              myNok={form.myNok}
+              friendNok={form.friendNok}
+              myPct={form.myPct}
+              friendPct={form.friendPct}
+              checkedCount={form.checkedCount}
+              customIsExact={form.customIsExact}
+              customDifference={form.customDifference}
+              onToggleGroupSplitMode={form.handleToggleGroupSplitMode}
+              onToggleMember={form.handleToggleMember}
+              onChangeCustomSplit={form.handleChangeCustomSplit}
+            />
+          ) : (
+            <SharedExpenseSummaryStep
+              key="summary"
+              state={state}
+              selectedFriend={form.selectedFriend}
+              selectedGroup={form.selectedGroup}
+              checkedMemberIdsSet={form.checkedMemberIdsSet}
+              currentUserId={form.currentUserId}
+              payerName={payerName}
+              payerImage={payerImage}
+              parsedAmount={form.parsedAmount}
+              groupShareNok={form.groupShareNok}
+              myNok={form.myNok}
+              friendNok={form.friendNok}
+              splitSummaryLabel={form.splitSummaryLabel}
+              displayCurrency={form.displayCurrency}
+              convertCurrency={form.convertCurrency}
+              canSave={form.canSave}
+              isSaving={form.isSaving}
+              onSave={form.handleSave}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </ResponsiveSheet>
   );
 }

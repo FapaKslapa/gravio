@@ -1,10 +1,26 @@
 "use client";
 
-import { Button, Card, CardContent } from "@heroui/react";
-import { m } from "framer-motion";
-import { AlertTriangle, FolderHeart, Sliders } from "lucide-react";
+import { FolderHeart, Settings2 } from "lucide-react";
+import { m } from "motion/react";
 import { CategoryIcon } from "@/components/icon-helper";
-import { formatCurrency } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { springs } from "@/lib/motion";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type CategoryBudgetInfo = {
   id: string;
@@ -36,6 +52,7 @@ type CategoryBudgetsCardProps = {
   displayCurrency: string;
   convertCurrency: (val: number, from: string, to: string) => number;
   onOpenSettings: () => void;
+  className?: string;
 };
 
 export function CategoryBudgetsCard({
@@ -45,14 +62,15 @@ export function CategoryBudgetsCard({
   displayCurrency,
   convertCurrency,
   onOpenSettings,
+  className,
 }: CategoryBudgetsCardProps) {
   const activeBudgets = categoryBudgets.filter((b) => parseFloat(b.amount) > 0);
 
   const budgetItems = activeBudgets.map((budget) => {
     const category = categories.find((c) => c.id === budget.categoryId);
     const categoryName = category?.name || "Sconosciuta";
-    const categoryIcon = category?.icon || "📂";
-    const categoryColor = category?.color || "#3b82f6";
+    const categoryIcon = category?.icon || "Sparkles";
+    const categoryColor = category?.color || "var(--brand)";
 
     const spentInNok = transactions
       .filter((t) => t.type === "expense" && t.categoryId === budget.categoryId)
@@ -71,18 +89,16 @@ export function CategoryBudgetsCard({
     const isOver = spentVal > budgetVal;
     const isWarning = spentVal >= budgetVal * 0.8 && spentVal <= budgetVal;
 
-    let barColor = "bg-blue-500";
-    let textColor = "text-blue-500";
-    if (isOver) {
-      barColor = "bg-red-500";
-      textColor = "text-red-500";
-    } else if (isWarning) {
-      barColor = "bg-amber-500";
-      textColor = "text-amber-500";
-    } else {
-      barColor = "bg-emerald-500";
-      textColor = "text-emerald-500";
-    }
+    const barColor = isOver
+      ? "bg-expense"
+      : isWarning
+        ? "bg-warning"
+        : "bg-income";
+    const stateLabel = isOver
+      ? "Limite superato"
+      : isWarning
+        ? "Quasi al limite"
+        : null;
 
     return {
       id: budget.id,
@@ -94,104 +110,111 @@ export function CategoryBudgetsCard({
       percentage,
       progressPercent,
       barColor,
-      textColor,
+      stateLabel,
     };
   });
 
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-6 apple-widget h-full flex flex-col justify-between transition-all select-none relative overflow-hidden">
-      <div className="p-0 flex flex-row justify-between items-center pb-4 border-b border-(--card-border) mb-4 w-full">
-        <div className="flex gap-2.5 items-center">
-          <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-xl">
-            <FolderHeart size={15} />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-xs">Budget Categorie</span>
-            <span className="text-[9px] text-(--text-muted)">
-              Limiti mensili per categoria
-            </span>
-          </div>
-        </div>
-        <Button
-          isIconOnly
-          variant="ghost"
-          className="text-(--text-muted) border border-(--card-border) hover:bg-neutral-500/10 rounded-xl h-7 w-7 min-w-7 cursor-pointer flex items-center justify-center"
-          onPress={onOpenSettings}
-        >
-          <Sliders size={12} />
-        </Button>
-      </div>
-
-      {budgetItems.length === 0 ? (
-        <CardContent className="p-0 flex flex-col items-center justify-center text-center gap-4 py-4 flex-1">
-          <div className="p-4 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-full">
-            <AlertTriangle size={24} />
-          </div>
-          <div className="flex flex-col gap-1 px-2">
-            <span className="font-extrabold text-sm text-foreground">
-              Nessun budget di categoria
-            </span>
-            <span className="text-[10px] text-(--text-muted) max-w-[200px] leading-normal mx-auto font-medium">
-              Imposta limiti di budget per singole categorie per monitorare al
-              meglio le tue abitudini.
-            </span>
-          </div>
+    <Card className={cn("elevation-1 h-full rounded-lg ring-0", className)}>
+      <CardHeader>
+        <CardTitle className="font-display text-base font-semibold">
+          Budget per categoria
+        </CardTitle>
+        <CardAction>
           <Button
-            onPress={onOpenSettings}
-            className="bg-foreground text-background hover:opacity-90 text-[10px] font-extrabold rounded-xl h-8 px-4 border-0 cursor-pointer flex items-center justify-center gap-1.5"
+            variant="ghost"
+            size="icon"
+            className="size-11 rounded-full"
+            onClick={onOpenSettings}
+            aria-label="Imposta budget per categoria"
           >
-            <Sliders size={11} />
-            Imposta limiti
+            <Settings2 />
           </Button>
-        </CardContent>
-      ) : (
-        <CardContent className="p-0 flex flex-col gap-4 overflow-y-auto max-h-[220px] pr-1 scrollbar-none flex-1">
-          {budgetItems.map((item) => (
-            <div key={item.id} className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-xs font-semibold">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-white shrink-0"
-                    style={{ backgroundColor: item.categoryColor || "#3b82f6" }}
-                  >
-                    <CategoryIcon
-                      name={item.categoryIcon || "Sparkles"}
-                      size={11}
-                    />
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col">
+        {budgetItems.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FolderHeart />
+              </EmptyMedia>
+              <EmptyTitle>Nessun budget di categoria</EmptyTitle>
+              <EmptyDescription>
+                Imposta limiti per singole categorie per monitorare meglio le
+                tue abitudini.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button
+                className="h-11 rounded-full px-5"
+                onClick={onOpenSettings}
+              >
+                <Settings2 data-icon="inline-start" />
+                Imposta limiti
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <ul className="flex max-h-[22rem] flex-col gap-4 overflow-y-auto">
+            {budgetItems.map((item) => (
+              <li key={item.id} className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md"
+                      style={{
+                        backgroundColor: `color-mix(in oklch, ${item.categoryColor} 15%, transparent)`,
+                        color: item.categoryColor,
+                      }}
+                    >
+                      <CategoryIcon name={item.categoryIcon} size={16} />
+                    </span>
+                    <span className="truncate text-sm font-semibold">
+                      {item.categoryName}
+                    </span>
                   </div>
-                  <span className="text-[11px] font-bold">
-                    {item.categoryName}
+                  <span className="tabular shrink-0 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(item.spentVal, displayCurrency)}
+                    </span>{" "}
+                    / {formatCurrency(item.budgetVal, displayCurrency)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-(--text-muted)">
-                    {formatCurrency(item.spentVal, displayCurrency)} di
-                  </span>
-                  <span className="text-[10px] font-bold">
-                    {formatCurrency(item.budgetVal, displayCurrency)}
-                  </span>
+                <div
+                  className="h-2.5 w-full rounded-full bg-muted"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(item.progressPercent)}
+                  aria-label={`${item.categoryName}: ${item.percentage.toFixed(0)}% del budget`}
+                >
+                  <m.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.progressPercent}%` }}
+                    transition={springs.gentle}
+                    className={cn("h-full rounded-full", item.barColor)}
+                  />
                 </div>
-              </div>
-              <div className="relative w-full h-2 bg-neutral-100 dark:bg-zinc-800/40 rounded-full overflow-hidden border border-(--card-border)/20">
-                <m.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${item.progressPercent}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`h-full rounded-full ${item.barColor}`}
-                />
-              </div>
-              <div className="flex justify-between items-center text-[9px] text-(--text-muted)">
-                <span>{item.percentage.toFixed(0)}% del budget</span>
-                {item.percentage >= 100 && (
-                  <span className="text-red-500 font-bold">
-                    Limite superato
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      )}
+                <div className="tabular flex justify-between text-xs text-muted-foreground">
+                  <span>{item.percentage.toFixed(0)}% del budget</span>
+                  {item.stateLabel && (
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        item.stateLabel === "Limite superato" && "text-expense",
+                      )}
+                    >
+                      {item.stateLabel}
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
     </Card>
   );
 }

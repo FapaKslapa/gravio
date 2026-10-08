@@ -1,12 +1,17 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
 import type React from "react";
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
 import { CategorySelect } from "@/components/ui/category-select";
 import { CurrencySelect } from "@/components/ui/currency-select";
+import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
+import { springs } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 type Category = {
   id: string;
@@ -34,18 +39,19 @@ type FormState = {
   todoEstAmount: string;
   todoEstCurrency: string;
   isSubmitting: boolean;
+  showDetails: boolean;
 };
 
 type FormAction =
   | { type: "SET_FIELD"; field: keyof FormState; value: any }
-  | { type: "RESET"; payload: FormState };
+  | { type: "RESET"; payload: Partial<FormState> };
 
 function formReducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
     case "RESET":
-      return action.payload;
+      return { ...state, ...action.payload };
     default:
       return state;
   }
@@ -58,12 +64,14 @@ export function TodoForm({
   onAddTodo,
 }: TodoFormProps) {
   const { displayCurrency } = useDashboard();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [state, dispatch] = useReducer(formReducer, null, () => ({
     todoTitle: "",
     todoCategoryId: "",
     todoEstAmount: "",
     todoEstCurrency: displayCurrency,
     isSubmitting: false,
+    showDetails: false,
   }));
 
   const {
@@ -72,27 +80,23 @@ export function TodoForm({
     todoEstAmount,
     todoEstCurrency,
     isSubmitting,
+    showDetails,
   } = state;
-  const todoNotes = "";
 
-  const setTodoTitle = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "todoTitle", value: val });
-  const setTodoCategoryId = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "todoCategoryId", value: val });
-  const setTodoEstAmount = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "todoEstAmount", value: val });
-  const setTodoEstCurrency = (val: string) =>
-    dispatch({ type: "SET_FIELD", field: "todoEstCurrency", value: val });
+  const setField = (field: keyof FormState, value: unknown) =>
+    dispatch({ type: "SET_FIELD", field, value });
+
+  const hasDetails = !!todoCategoryId || !!todoEstAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!todoTitle || !activeListId || isSubmitting) return;
+    if (!todoTitle.trim() || !activeListId || isSubmitting) return;
 
-    dispatch({ type: "SET_FIELD", field: "isSubmitting", value: true });
+    setField("isSubmitting", true);
     try {
       await onAddTodo({
-        title: todoTitle,
-        notes: todoNotes,
+        title: todoTitle.trim(),
+        notes: "",
         categoryId: todoCategoryId || null,
         estimatedAmount: todoEstAmount ? parseFloat(todoEstAmount) : undefined,
         estimatedCurrency: todoEstAmount ? todoEstCurrency : undefined,
@@ -105,75 +109,99 @@ export function TodoForm({
           todoCategoryId: "",
           todoEstAmount: "",
           todoEstCurrency: displayCurrency,
-          isSubmitting: false,
         },
       });
+      inputRef.current?.focus();
     } catch (err) {
       console.error(err);
     } finally {
-      dispatch({ type: "SET_FIELD", field: "isSubmitting", value: false });
+      setField("isSubmitting", false);
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-2 p-2 bg-(--card) border border-(--card-border) rounded-2xl shadow-(--card-shadow) relative z-20"
+      className="flex flex-col gap-2 rounded-xl bg-card p-2 elevation-2"
     >
-      <div className="flex items-center gap-2 flex-1">
-        <input
+      <div className="flex items-center gap-1.5">
+        <Input
+          ref={inputRef}
           type="text"
+          enterKeyHint="send"
+          autoComplete="off"
           aria-label="Articolo da aggiungere"
-          placeholder={`Aggiungi articolo a "${listName}"...`}
+          placeholder={`Aggiungi a ${listName}`}
           value={todoTitle}
-          onChange={(e) => setTodoTitle(e.target.value)}
-          required
-          className="text-xs text-foreground flex-1 min-w-0 bg-neutral-500/5 dark:bg-zinc-800/30 border border-(--card-border) focus:border-blue-500/50 h-10 px-3.5 rounded-xl outline-none font-semibold placeholder:font-normal transition-all"
+          onChange={(e) => setField("todoTitle", e.target.value)}
+          className="h-12 min-w-0 flex-1 border-0 bg-transparent px-3 text-base font-medium shadow-none focus-visible:ring-0 md:text-base dark:bg-transparent"
         />
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          aria-label="Categoria e prezzo stimato"
+          aria-expanded={showDetails}
+          onClick={() => setField("showDetails", !showDetails)}
+          className={cn(
+            "relative size-11 shrink-0 rounded-full text-muted-foreground",
+            showDetails && "bg-muted text-foreground",
+          )}
+        >
+          <SlidersHorizontal />
+          {hasDetails && !showDetails && (
+            <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-brand" />
+          )}
+        </Button>
+        <Button
           type="submit"
           aria-label="Aggiungi articolo"
           disabled={isSubmitting || !todoTitle.trim()}
-          className="flex sm:hidden bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white h-10 w-10 rounded-xl cursor-pointer transition-all border-0 shadow-sm shrink-0 items-center justify-center"
+          className="size-11 shrink-0 rounded-full bg-brand text-brand-foreground hover:bg-brand/90"
         >
-          {isSubmitting ? "..." : <Plus size={15} />}
-        </button>
+          <Plus className="size-5" />
+        </Button>
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto">
-        <div className="flex-1 sm:w-[130px] sm:shrink-0">
-          <CategorySelect
-            value={todoCategoryId}
-            onChange={setTodoCategoryId}
-            categories={categories}
-            triggerClassName="h-10 text-xs w-full"
-          />
-        </div>
-        <div className="w-[110px] sm:w-[150px] shrink-0">
-          <MoneyInput
-            value={todoEstAmount}
-            onChange={setTodoEstAmount}
-            currency={todoEstCurrency}
-            placeholder="0.00"
-            className="h-10 border border-(--card-border) bg-neutral-500/5 dark:bg-zinc-800/30"
-            inputClassName="text-xs font-bold"
-          />
-        </div>
-        <div className="w-[60px] sm:w-[70px] shrink-0">
-          <CurrencySelect
-            value={todoEstCurrency}
-            onChange={setTodoEstCurrency}
-            triggerClassName="h-10 text-[11px] font-bold w-full"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isSubmitting || !todoTitle.trim()}
-          className="hidden sm:flex bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white h-10 w-10 rounded-xl cursor-pointer transition-all border-0 shadow-sm shrink-0 items-center justify-center"
-        >
-          {isSubmitting ? "..." : <Plus size={15} />}
-        </button>
-      </div>
+      <AnimatePresence initial={false}>
+        {showDetails && (
+          <m.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={springs.smooth}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-2 px-1 pt-1 pb-1 sm:flex-row">
+              <div className="sm:w-48">
+                <CategorySelect
+                  value={todoCategoryId}
+                  onChange={(v) => setField("todoCategoryId", v)}
+                  categories={categories}
+                  triggerClassName="h-11 w-full text-sm"
+                />
+              </div>
+              <div className="flex flex-1 items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <MoneyInput
+                    value={todoEstAmount}
+                    onChange={(v) => setField("todoEstAmount", v)}
+                    currency={todoEstCurrency}
+                    placeholder="Prezzo stimato"
+                    inputClassName="tabular text-sm font-semibold"
+                  />
+                </div>
+                <div className="w-20 shrink-0">
+                  <CurrencySelect
+                    value={todoEstCurrency}
+                    onChange={(v) => setField("todoEstCurrency", v)}
+                    triggerClassName="h-11 w-full text-sm font-semibold"
+                  />
+                </div>
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
     </form>
   );
 }

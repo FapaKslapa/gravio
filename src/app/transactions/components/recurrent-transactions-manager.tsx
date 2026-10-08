@@ -1,9 +1,18 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CalendarDays, Plus } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 import { RecurrentTransactionCard } from "./recurrent-transaction-card";
 import { RecurrentTransactionDrawer } from "./recurrent-transaction-drawer";
@@ -77,24 +86,29 @@ export function RecurrentTransactionsManager({
     await deleteMutation.mutateAsync({ id });
   };
 
+  const rowProps = {
+    onToggleStatus: handleToggleStatus,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    isDeletePending: deleteMutation.isPending,
+  };
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-black text-foreground">
-            Pianificatore Ricorrenti
-          </h3>
-          <p className="text-[10px] text-(--text-muted)">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col">
+          <h2 className="text-base font-semibold">Transazioni ricorrenti</h2>
+          <p className="text-xs text-muted-foreground">
             Gestisci le tue entrate e spese ripetute nel tempo
           </p>
         </div>
         <Button
           variant="outline"
-          className="h-8 text-[10px] font-bold bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white border-0 rounded-xl px-3 flex items-center gap-1.5 cursor-pointer transition-all"
-          onPress={() => setIsFormOpen(true)}
+          className="h-11 shrink-0 gap-1.5 rounded-full px-4 active:scale-[0.97]"
+          onClick={() => setIsFormOpen(true)}
         >
-          <Plus size={12} />
-          <span>Nuova Ricorrente</span>
+          <Plus />
+          Nuova ricorrente
         </Button>
       </div>
 
@@ -109,78 +123,97 @@ export function RecurrentTransactionsManager({
         onSubmitSuccess={() => refetchList()}
       />
 
-      <div className="bg-(--card) border border-(--card-border) rounded-[2rem] p-5 shadow-sm">
-        {isListLoading ? (
-          <div className="text-center py-8 text-(--text-muted) text-xs font-bold">
-            Caricamento pianificatore...
-          </div>
-        ) : listData && listData.length > 0 ? (
-          <>
-            <div className="hidden md:block overflow-x-auto scrollbar-none">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-(--card-border) text-[9px] text-(--text-muted) font-bold uppercase tracking-wider">
-                    <th className="pb-3 pl-2">Descrizione</th>
-                    <th className="pb-3">Tipo</th>
-                    <th className="pb-3">Stato</th>
-                    <th className="pb-3">Importo</th>
-                    <th className="pb-3">Frequenza</th>
-                    <th className="pb-3">Scadenza</th>
-                    <th className="pb-3">Prossima Esecuzione</th>
-                    <th className="pb-3 text-right pr-2">Azioni</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-(--card-border)/50 text-xs">
-                  {listData.map((rt) => {
-                    const category = categories.find(
-                      (c) => c.id === rt.categoryId,
-                    );
-                    return (
-                      <RecurrentTransactionRow
-                        key={rt.id}
-                        rt={rt}
-                        category={category}
-                        onToggleStatus={handleToggleStatus}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        isDeletePending={deleteMutation.isPending}
-                      />
-                    );
-                  })}
-                </tbody>
-              </table>
+      {isListLoading ? (
+        <div className="elevation-1 flex flex-col gap-3 rounded-lg bg-card p-4">
+          {["a", "b", "c"].map((k) => (
+            <div key={k} className="flex items-center gap-3">
+              <Skeleton className="size-10 rounded-md" />
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-4 w-16" />
             </div>
+          ))}
+        </div>
+      ) : listData && listData.length > 0 ? (
+        <div className="elevation-1 overflow-hidden rounded-lg bg-card">
+          <table className="hidden w-full border-collapse text-left text-sm md:table">
+            <caption className="sr-only">Transazioni ricorrenti</caption>
+            <thead>
+              <tr className="border-b bg-muted/40 text-xs font-semibold text-muted-foreground">
+                <th scope="col" className="px-3 py-3">
+                  Descrizione
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Tipo
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Stato
+                </th>
+                <th scope="col" className="px-3 py-3 text-right">
+                  Importo
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Frequenza
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Scadenza
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Prossima esecuzione
+                </th>
+                <th scope="col" className="w-14 px-3">
+                  <span className="sr-only">Azioni</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {listData.map((rt) => (
+                <RecurrentTransactionRow
+                  key={rt.id}
+                  rt={rt}
+                  category={categories.find((c) => c.id === rt.categoryId)}
+                  {...rowProps}
+                />
+              ))}
+            </tbody>
+          </table>
 
-            <div className="block md:hidden flex flex-col gap-4">
-              {listData.map((rt) => {
-                const category = categories.find((c) => c.id === rt.categoryId);
-                return (
-                  <RecurrentTransactionCard
-                    key={rt.id}
-                    rt={rt}
-                    category={category}
-                    onToggleStatus={handleToggleStatus}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    isDeletePending={deleteMutation.isPending}
-                  />
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-(--text-muted)">
-            <CalendarDays size={24} className="mb-2 opacity-40" />
-            <span className="text-[11px] font-bold">
-              Nessuna regola ricorrente attiva
-            </span>
-            <p className="text-[9px] opacity-75 max-w-[200px] mt-1">
+          <ul className="divide-y md:hidden">
+            {listData.map((rt) => (
+              <RecurrentTransactionCard
+                key={rt.id}
+                rt={rt}
+                category={categories.find((c) => c.id === rt.categoryId)}
+                {...rowProps}
+              />
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <Empty className="border py-14">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <CalendarDays />
+            </EmptyMedia>
+            <EmptyTitle>Nessuna regola ricorrente attiva</EmptyTitle>
+            <EmptyDescription>
               Crea una regola per automatizzare l'inserimento di stipendi,
               abbonamenti o affitto.
-            </p>
-          </div>
-        )}
-      </div>
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              className="h-11 gap-1.5 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90"
+              onClick={() => setIsFormOpen(true)}
+            >
+              <Plus />
+              Nuova ricorrente
+            </Button>
+          </EmptyContent>
+        </Empty>
+      )}
     </div>
   );
 }

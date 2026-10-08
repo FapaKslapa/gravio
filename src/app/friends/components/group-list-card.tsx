@@ -1,7 +1,17 @@
 "use client";
 
-import { Button, Card, CardContent } from "@heroui/react";
-import { Folder, FolderPlus } from "lucide-react";
+import { ChevronRight, FolderPlus, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 
 type GroupMember = {
@@ -34,73 +44,85 @@ export function GroupListCard({
   onClearFriend,
   onOpenCreateGroup,
 }: GroupListCardProps) {
+  if (groups.length === 0) {
+    return (
+      <Card className="elevation-1">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Users />
+            </EmptyMedia>
+            <EmptyTitle>Nessun gruppo creato</EmptyTitle>
+            <EmptyDescription>
+              Dividi le spese con più amici creando un gruppo.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              onClick={onOpenCreateGroup}
+              className="h-11 gap-1.5 rounded-full bg-brand px-5 font-semibold text-brand-foreground hover:bg-brand/90"
+            >
+              <FolderPlus />
+              Crea gruppo
+            </Button>
+          </EmptyContent>
+        </Empty>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-5 rounded-[2rem]">
-      <div className="p-0 flex flex-row justify-between items-center pb-4 border-b border-(--card-border) mb-4 w-full">
-        <div className="flex gap-2.5 items-center">
-          <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-xl">
-            <Folder size={15} />
-          </div>
-          <span className="font-bold text-xs">Le mie Cartelle</span>
-        </div>
+    <Card className="gap-0 p-0 elevation-1">
+      <div className="flex items-center justify-between px-4 py-3">
+        <h2 className="text-base font-semibold">Gruppi</h2>
         <Button
-          isIconOnly
           variant="ghost"
-          className="h-7 w-7 text-blue-500 hover:bg-blue-500/10 border-0 rounded-xl cursor-pointer flex items-center justify-center"
-          onPress={onOpenCreateGroup}
+          className="h-11 gap-1.5 rounded-full px-3 font-semibold text-brand"
+          onClick={onOpenCreateGroup}
         >
-          <FolderPlus size={14} />
+          <FolderPlus />
+          Nuovo gruppo
         </Button>
       </div>
-
-      <CardContent className="p-0 flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
-        {groups.length === 0 ? (
-          <span className="text-[10px] text-(--text-muted) font-semibold pl-1 py-1">
-            Nessuna cartella creata. Dividi le spese con più amici creando un
-            gruppo.
-          </span>
-        ) : (
-          groups.map((group) => {
-            const isSelected = selectedGroupId === group.id;
-            return (
+      <ul className="flex flex-col border-t">
+        {groups.map((group) => {
+          const isSelected = selectedGroupId === group.id;
+          return (
+            <li key={group.id} className="not-last:border-b">
               <button
                 type="button"
-                key={group.id}
+                aria-current={isSelected ? "true" : undefined}
                 onClick={() => {
                   onSelectGroup(group);
                   onClearFriend();
                 }}
                 className={cn(
-                  "flex justify-between items-center px-3.5 py-3 rounded-2xl border transition-all cursor-pointer text-left w-full bg-transparent outline-none",
-                  isSelected
-                    ? "bg-blue-500 text-white border-transparent shadow-md shadow-blue-500/15"
-                    : "bg-neutral-500/5 border-(--card-border) hover:bg-neutral-500/10 text-foreground",
+                  "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+                  isSelected && "bg-brand-soft hover:bg-brand-soft",
                 )}
               >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <Folder
-                    size={14}
-                    className={isSelected ? "text-white" : "text-blue-500"}
-                  />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold truncate leading-none mb-0.5">
-                      {group.name}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-[8px] font-semibold",
-                        isSelected ? "text-white/85" : "text-(--text-muted)",
-                      )}
-                    >
-                      {group.members.length} membri
-                    </span>
-                  </div>
+                <Avatar className="size-10">
+                  <AvatarFallback className="bg-brand-soft text-brand">
+                    <Users className="size-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">
+                    {group.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {group.members.length} membri
+                  </span>
                 </div>
+                <ChevronRight
+                  aria-hidden
+                  className="size-4 shrink-0 text-muted-foreground"
+                />
               </button>
-            );
-          })
-        )}
-      </CardContent>
+            </li>
+          );
+        })}
+      </ul>
     </Card>
   );
 }

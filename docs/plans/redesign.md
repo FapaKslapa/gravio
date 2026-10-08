@@ -1,7 +1,7 @@
 # Gravio redesign: piano a fasi
 
 Branch: sviluppo e commit solo su `development`; release solo su `main`.
-Riferimento: `~/WebstormProjects/uniapplication` (shadcn + radix + vaul, framer-motion springs, pill nav, elevation hairline, OKLCH tokens) ma colorato.
+Riferimento: `~/WebstormProjects/uniapplication` (shadcn + radix + vaul, motion springs, pill nav, elevation hairline, OKLCH tokens) ma colorato.
 Decisioni: accento vivace + colore per categoria; HeroUI rimosso del tutto; mobile = drawer, desktop = dialog.
 Verifica a fine fase: `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm build`, controllo visivo 390px e 1280px.
 
@@ -42,7 +42,7 @@ Tutte le dipendenze all'ultima versione (next 16.4, react 19.3, ts 7, ecc.). Not
 
 ## Fase 8 - Rifinitura e rilascio
 - `impeccable audit`, `polish`, `adapt`, `harden` (stati vuoti, errori, i18n, offline), detector, a11y, performance.
-- Rimozione di framer-motion duplicati/gsap/heroui non usati, pulizia lint.
+- Rimozione di motion duplicati/gsap/heroui non usati, pulizia lint.
 - Valutazione migrazione hosting a OpenNext.
 - Release: merge `development` -> `main`, changeset, tag.
 

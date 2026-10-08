@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { User, Users } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type Props = {
   shareType: "friend" | "group";
@@ -14,31 +15,32 @@ export function ShareTypeToggle({
   onSelectGroup,
 }: Props) {
   return (
-    <div className="flex rounded-xl bg-neutral-100 dark:bg-zinc-800/30 p-1 w-full select-none">
-      <button
-        type="button"
-        onClick={onSelectFriend}
-        className={cn(
-          "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer bg-transparent",
-          shareType === "friend"
-            ? "bg-foreground text-background shadow-sm"
-            : "text-(--text-muted)",
-        )}
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      spacing={0}
+      value={shareType}
+      onValueChange={(v) => {
+        if (v === "friend") onSelectFriend();
+        else if (v === "group") onSelectGroup();
+      }}
+      aria-label="Con chi dividere"
+      className="w-full"
+    >
+      <ToggleGroupItem
+        value="friend"
+        className="h-11 flex-1 data-[state=on]:bg-brand-soft data-[state=on]:text-brand"
       >
-        Singolo Amico
-      </button>
-      <button
-        type="button"
-        onClick={onSelectGroup}
-        className={cn(
-          "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer bg-transparent",
-          shareType === "group"
-            ? "bg-foreground text-background shadow-sm"
-            : "text-(--text-muted)",
-        )}
+        <User data-icon="inline-start" />
+        Amico
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="group"
+        className="h-11 flex-1 data-[state=on]:bg-brand-soft data-[state=on]:text-brand"
       >
-        Gruppo / Cartella
-      </button>
-    </div>
+        <Users data-icon="inline-start" />
+        Gruppo
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
 }

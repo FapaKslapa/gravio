@@ -1,16 +1,17 @@
 "use client";
 
-import { m } from "framer-motion";
-import { useReducer, useState } from "react";
+import { useReducer } from "react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { LoadingState } from "@/components/ui/loading-state";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CategoriesModal } from "./components/categories-modal";
 import { CsvImportModal } from "./components/csv-import-modal";
 import { TransactionFilters } from "./components/transaction-filters";
 import { TransactionModal } from "./components/transaction-modal";
 import { TransactionsContentGrid } from "./components/transactions-content-grid";
-import { TransactionsMobileTabs } from "./components/transactions-mobile-tabs";
+import {
+  type MobileTab,
+  TransactionsMobileTabs,
+} from "./components/transactions-mobile-tabs";
 import { TransactionsPageHeader } from "./components/transactions-page-header";
 import type {
   NormalizedTransaction,
@@ -27,7 +28,7 @@ type UIState = {
   viewMode: ViewMode;
   sortField: SortField;
   sortDirection: "asc" | "desc";
-  activeMobileTab: "list" | "summary" | "filters";
+  activeMobileTab: MobileTab;
   isTxModalOpen: boolean;
   isCatManageOpen: boolean;
   isCsvModalOpen: boolean;
@@ -49,6 +50,23 @@ function uiReducer(state: UIState, action: UIAction): UIState {
     default:
       return state;
   }
+}
+
+function TransactionsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Caricamento in corso</span>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-11 w-28 rounded-full" />
+      </div>
+      <Skeleton className="h-13 w-full rounded-full md:max-w-md" />
+      <Skeleton className="h-11 w-full rounded-full" />
+      {["a", "b", "c", "d", "e"].map((k) => (
+        <Skeleton key={k} className="h-16 w-full rounded-lg" />
+      ))}
+    </div>
+  );
 }
 
 export default function TransactionsView() {
@@ -108,7 +126,7 @@ export default function TransactionsView() {
       dispatch({ type: "SET_FIELD", field: "sortDirection", value: val });
     }
   };
-  const setActiveMobileTab = (val: "list" | "summary" | "filters") =>
+  const setActiveMobileTab = (val: MobileTab) =>
     dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
   const setIsTxModalOpen = (val: boolean) =>
     dispatch({ type: "SET_FIELD", field: "isTxModalOpen", value: val });
@@ -165,30 +183,24 @@ export default function TransactionsView() {
   };
 
   if (isLoading) {
-    return <LoadingState />;
+    return <TransactionsSkeleton />;
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 md:gap-5">
       <TransactionsPageHeader
         onNewTransaction={() => setIsTxModalOpen(true)}
         onImportCsv={() => setIsCsvModalOpen(true)}
         onManageCategories={() => setIsCatManageOpen(true)}
       />
 
-      <TransactionsMobileTabs
-        activeTab={activeMobileTab}
-        onTabChange={setActiveMobileTab}
-        hasActiveFilters={filters.hasActiveFilters}
+      <TransactionsViewModeSwitcher
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
       {viewMode !== "recurrent" && (
-        <m.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className={cn(activeMobileTab !== "filters" && "hidden lg:block")}
-        >
+        <>
           <TransactionFilters
             filterText={filters.filterText}
             setFilterText={filters.handleFilterText}
@@ -202,14 +214,13 @@ export default function TransactionsView() {
             setFilterEndDate={filters.handleFilterEnd}
             categories={categories}
           />
-        </m.div>
-      )}
 
-      <TransactionsViewModeSwitcher
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        activeMobileTab={activeMobileTab}
-      />
+          <TransactionsMobileTabs
+            activeTab={activeMobileTab}
+            onTabChange={setActiveMobileTab}
+          />
+        </>
+      )}
 
       <TransactionsContentGrid
         viewMode={viewMode}

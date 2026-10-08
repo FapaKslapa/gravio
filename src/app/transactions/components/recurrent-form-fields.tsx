@@ -1,20 +1,26 @@
 "use client";
 
 import {
-  ArrowLeftRight,
-  CalendarDays,
-  Tag,
-  TrendingDown,
-  TrendingUp,
-  Type,
-  Wallet,
-} from "lucide-react";
-import { CategorySelect } from "@/components/ui/category-select";
-import { CurrencySelect } from "@/components/ui/currency-select";
-import { CustomDatePicker } from "@/components/ui/custom-datepicker";
-import { CustomSelect } from "@/components/ui/custom-select";
-import { MoneyInput } from "@/components/ui/money-input";
-import { cn } from "@/lib/utils";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  TxAmountHero,
+  TxCategoryChips,
+  TxCurrencySelect,
+  TxTypeSegment,
+} from "@/components/ui/tx-form-parts";
 
 type CategoryOption = {
   id: string;
@@ -23,20 +29,14 @@ type CategoryOption = {
   color: string;
 };
 
-function FieldLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="flex items-center gap-1.5 text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-1.5">
-      <Icon size={11} className="opacity-60" />
-      {children}
-    </span>
-  );
-}
+type Frequency = "daily" | "weekly" | "monthly" | "yearly";
+
+const FREQUENCIES: { value: Frequency; label: string }[] = [
+  { value: "daily", label: "Giornaliero" },
+  { value: "weekly", label: "Settimanale" },
+  { value: "monthly", label: "Mensile" },
+  { value: "yearly", label: "Annuale" },
+];
 
 type RecurrentFormFieldsProps = {
   description: string;
@@ -49,13 +49,14 @@ type RecurrentFormFieldsProps = {
   setCategoryId: (v: string) => void;
   type: "expense" | "income";
   setType: (v: "expense" | "income") => void;
-  frequency: "daily" | "weekly" | "monthly" | "yearly";
-  setFrequency: (v: "daily" | "weekly" | "monthly" | "yearly") => void;
+  frequency: Frequency;
+  setFrequency: (v: Frequency) => void;
   startDate: string;
   setStartDate: (v: string) => void;
   endDate: string;
   setEndDate: (v: string) => void;
   categories: CategoryOption[];
+  showErrors?: boolean;
 };
 
 export function RecurrentFormFields({
@@ -76,119 +77,112 @@ export function RecurrentFormFields({
   endDate,
   setEndDate,
   categories,
+  showErrors = false,
 }: RecurrentFormFieldsProps) {
+  const amountInvalid = showErrors && !(parseFloat(amount) > 0);
+  const descInvalid = showErrors && !description.trim();
+
   return (
-    <div className="flex-1 overflow-y-auto px-6 pt-5 pb-5 flex flex-col gap-4">
-      {/* Descrizione */}
-      <div>
-        <FieldLabel icon={Type}>Descrizione</FieldLabel>
-        <div className="bg-neutral-500/5 dark:bg-zinc-800/30 focus-within:bg-neutral-500/10 h-11 px-3 rounded-xl flex items-center border border-(--card-border) w-full focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-          <input
-            type="text"
-            aria-label="Descrizione transazione ricorrente"
-            required
-            placeholder="Es. Stipendio, Affitto, Netflix..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="text-sm text-foreground flex-1 bg-transparent border-0 outline-none w-full font-semibold placeholder:font-normal placeholder:text-(--text-muted)"
-          />
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      <TxTypeSegment value={type} onChange={setType} pillId="rec-type" />
 
-      {/* Frequenza e Tipo in Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div>
-          <FieldLabel icon={CalendarDays}>Frequenza</FieldLabel>
-          <CustomSelect
-            value={frequency}
-            onChange={(val) => setFrequency(val as typeof frequency)}
-            options={[
-              { value: "daily", label: "Giornaliero" },
-              { value: "weekly", label: "Settimanale" },
-              { value: "monthly", label: "Mensile" },
-              { value: "yearly", label: "Annuale" },
-            ]}
-          />
-        </div>
-
-        <div>
-          <FieldLabel icon={Tag}>Tipo regola</FieldLabel>
-          <div className="relative flex p-1 bg-neutral-500/5 rounded-xl border border-(--card-border) h-11 overflow-hidden select-none">
-            <div
-              className={cn(
-                "absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-lg transition-all duration-300 shadow-sm",
-                type === "expense"
-                  ? "left-1 bg-rose-500"
-                  : "left-[calc(50%+2px)] bg-emerald-500",
-              )}
-            />
-            <button
-              type="button"
-              onClick={() => setType("expense")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1 text-[11px] font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-                type === "expense" ? "text-white" : "text-(--text-muted)",
-              )}
-            >
-              <TrendingDown size={11} /> Spesa
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("income")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1 text-[11px] font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-                type === "income" ? "text-white" : "text-(--text-muted)",
-              )}
-            >
-              <TrendingUp size={11} /> Entrata
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Categoria */}
-      <div>
-        <FieldLabel icon={Tag}>Categoria</FieldLabel>
-        <CategorySelect
-          value={categoryId}
-          onChange={setCategoryId}
-          categories={categories}
+      <Field data-invalid={amountInvalid || undefined}>
+        <FieldLabel htmlFor="rec-amount" className="sr-only">
+          Importo
+        </FieldLabel>
+        <TxAmountHero
+          id="rec-amount"
+          value={amount}
+          onChange={setAmount}
+          currency={currency}
+          type={type}
+          invalid={amountInvalid}
         />
-      </div>
+        {amountInvalid && (
+          <FieldError className="text-center">
+            Inserisci un importo maggiore di zero.
+          </FieldError>
+        )}
+      </Field>
 
-      {/* Date Inizio e Fine in Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div>
-          <FieldLabel icon={CalendarDays}>Data Inizio</FieldLabel>
-          <CustomDatePicker value={startDate} onChange={setStartDate} />
-        </div>
-
-        <div>
-          <FieldLabel icon={CalendarDays}>Data Fine (Opzionale)</FieldLabel>
-          <CustomDatePicker
-            value={endDate}
-            onChange={setEndDate}
-            placeholder="Senza fine"
+      <FieldGroup>
+        <Field data-invalid={descInvalid || undefined}>
+          <FieldLabel htmlFor="rec-desc">Descrizione</FieldLabel>
+          <Input
+            id="rec-desc"
+            className="h-11"
+            placeholder="Es. Stipendio, Affitto, Netflix"
+            value={description}
+            aria-invalid={descInvalid || undefined}
+            onChange={(e) => setDescription(e.target.value)}
           />
-        </div>
-      </div>
+          {descInvalid && <FieldError>Aggiungi una descrizione.</FieldError>}
+        </Field>
 
-      {/* Importo e Valuta in Grid */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="col-span-2">
-          <FieldLabel icon={Wallet}>Importo</FieldLabel>
-          <MoneyInput
-            value={amount}
-            onChange={setAmount}
-            currency={currency}
-            required
+        <Field>
+          <FieldLabel>Categoria</FieldLabel>
+          <TxCategoryChips
+            categories={categories}
+            value={categoryId}
+            onChange={setCategoryId}
           />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor="rec-frequency">Frequenza</FieldLabel>
+            <Select
+              value={frequency}
+              onValueChange={(v) => setFrequency(v as Frequency)}
+            >
+              <SelectTrigger id="rec-frequency" className="h-11 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectGroup>
+                  {FREQUENCIES.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>
+                      {f.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="rec-currency">Valuta</FieldLabel>
+            <TxCurrencySelect
+              id="rec-currency"
+              value={currency}
+              onChange={setCurrency}
+            />
+          </Field>
         </div>
-        <div>
-          <FieldLabel icon={ArrowLeftRight}>Valuta</FieldLabel>
-          <CurrencySelect value={currency} onChange={setCurrency} />
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor="rec-start">Inizio</FieldLabel>
+            <Input
+              id="rec-start"
+              type="date"
+              className="h-11"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="rec-end">Fine (opzionale)</FieldLabel>
+            <Input
+              id="rec-end"
+              type="date"
+              className="h-11"
+              value={endDate}
+              min={startDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </Field>
         </div>
-      </div>
+      </FieldGroup>
     </div>
   );
 }

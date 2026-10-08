@@ -1,9 +1,8 @@
-import { m } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { CategoryTotalsCard } from "./category-totals-card";
 import { RecurrentTransactionsManager } from "./recurrent-transactions-manager";
 import { TransactionListTimeline } from "./transaction-list-timeline";
 import { TransactionTable } from "./transaction-table";
+import type { MobileTab } from "./transactions-mobile-tabs";
 import type {
   NormalizedTransaction,
   SortField,
@@ -22,7 +21,7 @@ type CategoryTotal = {
 
 interface TransactionsContentGridProps {
   viewMode: ViewMode;
-  activeMobileTab: "list" | "summary" | "filters";
+  activeMobileTab: MobileTab;
   groupedTx: { date: string; list: NormalizedTransaction[] }[];
   paginatedTxList: NormalizedTransaction[];
   totalItems: number;
@@ -57,22 +56,16 @@ export function TransactionsContentGrid({
   onDeleteClick,
   onEditClick,
 }: TransactionsContentGridProps) {
+  if (viewMode === "recurrent") {
+    return <RecurrentTransactionsManager categories={categories} />;
+  }
+
+  const showList = activeMobileTab === "list";
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-      <m.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(
-          viewMode === "recurrent"
-            ? "lg:col-span-4 flex flex-col gap-6"
-            : "lg:col-span-3 flex flex-col gap-6",
-          activeMobileTab !== "list" && "hidden lg:flex",
-        )}
-      >
-        {viewMode === "recurrent" ? (
-          <RecurrentTransactionsManager categories={categories} />
-        ) : viewMode === "timeline" ? (
+    <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className={showList ? "block" : "hidden xl:block"}>
+        {viewMode === "timeline" ? (
           <TransactionListTimeline
             groupedTx={groupedTx}
             categories={categories}
@@ -97,25 +90,21 @@ export function TransactionsContentGrid({
             onEditClick={(tx) => onEditClick(tx as NormalizedTransaction)}
           />
         )}
-      </m.div>
+      </div>
 
-      {viewMode !== "recurrent" && (
-        <m.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className={cn(
-            "lg:col-span-1",
-            activeMobileTab !== "summary" && "hidden lg:block",
-          )}
-        >
-          <CategoryTotalsCard
-            categoryTotals={categoryTotals}
-            displayCurrency={displayCurrency}
-            convertCurrency={convertCurrency}
-          />
-        </m.div>
-      )}
+      <aside
+        className={
+          showList
+            ? "hidden xl:sticky xl:top-6 xl:block"
+            : "block xl:sticky xl:top-6"
+        }
+      >
+        <CategoryTotalsCard
+          categoryTotals={categoryTotals}
+          displayCurrency={displayCurrency}
+          convertCurrency={convertCurrency}
+        />
+      </aside>
     </div>
   );
 }

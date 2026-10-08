@@ -1,8 +1,10 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
-import { X } from "lucide-react";
 import type React from "react";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 
 type NewListModalProps = {
   isOpen: boolean;
@@ -20,55 +22,35 @@ export function NewListModal({
   onSubmit,
 }: NewListModalProps) {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
-          <m.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="bg-(--card-solid) border border-(--card-border) w-full max-w-[340px] rounded-3xl p-6 shadow-2xl text-foreground"
+    <ResponsiveSheet
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Nuova lista"
+      description="Dai un nome alla lista, per esempio il negozio o l'occasione."
+    >
+      <form onSubmit={onSubmit}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="new-list-name">Nome lista</FieldLabel>
+            <Input
+              id="new-list-name"
+              placeholder="es. Regali di Natale, Spesa settimanale"
+              value={name}
+              onChange={(e) => onChangeName(e.target.value)}
+              required
+              autoFocus
+              className="h-12 text-base md:text-sm"
+            />
+          </Field>
+          <Button
+            type="submit"
+            disabled={!name.trim()}
+            className="h-12 w-full rounded-full text-sm font-semibold"
           >
-            <div className="flex justify-between items-center pb-4 border-b border-(--card-border) mb-4">
-              <h3 className="font-extrabold text-base">Crea Nuova Lista</h3>
-              <button
-                type="button"
-                aria-label="Chiudi"
-                className="text-(--text-muted) rounded-lg hover:bg-neutral-500/10 h-7 w-7 border-0 cursor-pointer bg-transparent flex items-center justify-center transition-all"
-                onClick={onClose}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form onSubmit={onSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider ml-1">
-                  Nome Lista
-                </span>
-                <div className="bg-neutral-500/5 dark:bg-zinc-800/30 focus-within:bg-neutral-500/10 dark:focus-within:bg-zinc-800/50 h-11 px-3 rounded-xl flex items-center border border-(--card-border) w-full focus-within:ring-2 focus-within:ring-blue-500/30 dark:focus-within:ring-blue-500/20 transition-all duration-300">
-                  <input
-                    type="text"
-                    aria-label="Nome lista"
-                    placeholder="es. Regali di Natale, Spesa Rema"
-                    value={name}
-                    onChange={(e) => onChangeName(e.target.value)}
-                    required
-                    className="text-xs text-foreground flex-1 bg-transparent border-0 outline-none w-full placeholder:text-(--text-muted)"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="bg-foreground text-background font-semibold text-xs h-11 rounded-xl cursor-pointer hover:opacity-90 mt-2 shadow-sm border-0 w-full"
-              >
-                Crea Lista
-              </button>
-            </form>
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+            Crea lista
+          </Button>
+        </FieldGroup>
+      </form>
+    </ResponsiveSheet>
   );
 }

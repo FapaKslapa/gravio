@@ -1,7 +1,8 @@
 "use client";
 
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import type React from "react";
+import { cn } from "@/lib/utils";
 
 type CsvUploadZoneProps = {
   csvFile: File | null;
@@ -10,27 +11,41 @@ type CsvUploadZoneProps = {
 
 export function CsvUploadZone({ csvFile, onChange }: CsvUploadZoneProps) {
   return (
-    <div className="border-2 border-dashed border-(--card-border) rounded-2xl p-6 flex flex-col items-center justify-center gap-2 bg-neutral-500/5 text-center relative">
-      <FileSpreadsheet size={32} className="text-emerald-500 mb-1" />
+    <div
+      className={cn(
+        "relative flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 text-center transition-colors focus-within:ring-3 focus-within:ring-ring/50 hover:bg-muted/50",
+        csvFile ? "border-income bg-income-soft" : "border-border bg-muted/30",
+      )}
+    >
+      <span className="flex size-12 items-center justify-center rounded-full bg-card text-brand elevation-1">
+        {csvFile ? (
+          <FileSpreadsheet className="size-6" aria-hidden />
+        ) : (
+          <Upload className="size-6" aria-hidden />
+        )}
+      </span>
       {csvFile ? (
-        <span className="text-xs font-bold truncate max-w-full text-emerald-500">
-          {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
-        </span>
+        <p className="max-w-full truncate text-sm font-semibold">
+          {csvFile.name}
+          <span className="tabular ml-2 font-normal text-muted-foreground">
+            {(csvFile.size / 1024).toFixed(1)} KB
+          </span>
+        </p>
       ) : (
         <>
-          <span className="text-xs font-bold">
-            Trascina qui il file CSV o clicca per caricarlo
-          </span>
-          <span className="text-[10px] text-(--text-muted)">
-            Usa separatore virgola (,) o punto e virgola (;)
-          </span>
+          <p className="text-sm font-semibold">
+            Trascina qui il file CSV o tocca per caricarlo
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Separatore virgola (,) o punto e virgola (;)
+          </p>
         </>
       )}
       <input
         type="file"
         aria-label="Carica file CSV"
         accept=".csv"
-        className="absolute inset-0 opacity-0 cursor-pointer"
+        className="absolute inset-0 cursor-pointer opacity-0"
         onChange={onChange}
       />
     </div>

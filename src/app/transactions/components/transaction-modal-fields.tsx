@@ -1,47 +1,26 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
+import { ArrowRight, Plus } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
+import { Button } from "@/components/ui/button";
 import {
-  ArrowLeftRight,
-  CalendarDays,
-  Tag,
-  TrendingDown,
-  TrendingUp,
-  Type,
-  Wallet,
-} from "lucide-react";
-import type React from "react";
-import { CategoryIcon } from "@/components/icon-helper";
-import { CategorySelect } from "@/components/ui/category-select";
-import { CurrencySelect } from "@/components/ui/currency-select";
-import { CustomDatePicker } from "@/components/ui/custom-datepicker";
-import { MoneyInput } from "@/components/ui/money-input";
-import { APPLE_COLORS, CURATED_ICONS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  TxAmountHero,
+  TxCategoryChips,
+  TxCurrencySelect,
+  TxTypeSegment,
+} from "@/components/ui/tx-form-parts";
+import { fadeUp } from "@/lib/motion";
+import { CategoryColorPicker, CategoryIconPicker } from "./category-form-panel";
 
 type Category = { id: string; name: string; icon: string; color: string };
 
-// ---------------------------------------------------------------------------
-// FieldLabel
-// ---------------------------------------------------------------------------
-function FieldLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="flex items-center gap-1.5 text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-1.5">
-      <Icon size={11} className="opacity-60" />
-      {children}
-    </span>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// TransactionTypeToggle
-// ---------------------------------------------------------------------------
 export function TransactionTypeToggle({
   value,
   onChange,
@@ -50,46 +29,91 @@ export function TransactionTypeToggle({
   onChange: (v: "expense" | "income") => void;
 }) {
   return (
-    <div>
-      <FieldLabel icon={Tag}>Tipo operazione</FieldLabel>
-      <div className="relative flex p-1 bg-neutral-500/5 rounded-xl border border-(--card-border) h-11 overflow-hidden select-none">
-        <div
-          className={cn(
-            "absolute top-1 bottom-1 w-[calc(50%-6px)] rounded-lg transition-all duration-300 shadow-sm",
-            value === "expense"
-              ? "left-1 bg-rose-500"
-              : "left-[calc(50%+2px)] bg-emerald-500",
-          )}
-        />
-        <button
-          type="button"
-          onClick={() => onChange("expense")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 text-xs font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-            value === "expense" ? "text-white" : "text-(--text-muted)",
-          )}
-        >
-          <TrendingDown size={12} /> Spesa
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange("income")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 text-xs font-bold z-10 transition-colors cursor-pointer border-0 bg-transparent",
-            value === "income" ? "text-white" : "text-(--text-muted)",
-          )}
-        >
-          <TrendingUp size={12} /> Guadagno
-        </button>
-      </div>
-    </div>
+    <TxTypeSegment
+      value={value}
+      onChange={onChange}
+      incomeLabel="Guadagno"
+      pillId="tx-modal-type"
+    />
   );
 }
 
-// ---------------------------------------------------------------------------
-// DescriptionField
-// ---------------------------------------------------------------------------
+export function AmountField({
+  amount,
+  currency,
+  type,
+  invalid,
+  onChange,
+}: {
+  amount: string;
+  currency: string;
+  type: "expense" | "income";
+  invalid: boolean;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field data-invalid={invalid || undefined}>
+      <FieldLabel htmlFor="tx-amount" className="sr-only">
+        Importo
+      </FieldLabel>
+      <TxAmountHero
+        id="tx-amount"
+        value={amount}
+        onChange={onChange}
+        currency={currency}
+        type={type}
+        invalid={invalid}
+      />
+      {invalid && (
+        <FieldError className="text-center">
+          Inserisci un importo maggiore di zero.
+        </FieldError>
+      )}
+    </Field>
+  );
+}
+
+export function CurrencyField({
+  currency,
+  onChange,
+}: {
+  currency: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field>
+      <FieldLabel htmlFor="tx-currency">Valuta</FieldLabel>
+      <TxCurrencySelect id="tx-currency" value={currency} onChange={onChange} />
+    </Field>
+  );
+}
+
 export function DescriptionField({
+  value,
+  invalid,
+  onChange,
+}: {
+  value: string;
+  invalid: boolean;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field data-invalid={invalid || undefined}>
+      <FieldLabel htmlFor="tx-desc">Descrizione</FieldLabel>
+      <Input
+        id="tx-desc"
+        className="h-11"
+        placeholder="Es. Cena, Stipendio, Affitto"
+        value={value}
+        aria-invalid={invalid || undefined}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {invalid && <FieldError>Aggiungi una descrizione.</FieldError>}
+    </Field>
+  );
+}
+
+export function DateField({
   value,
   onChange,
 }: {
@@ -97,59 +121,19 @@ export function DescriptionField({
   onChange: (v: string) => void;
 }) {
   return (
-    <div>
-      <FieldLabel icon={Type}>Descrizione</FieldLabel>
-      <div className="bg-neutral-500/5 dark:bg-zinc-800/30 focus-within:bg-neutral-500/10 h-11 px-3 rounded-xl flex items-center border border-(--card-border) w-full focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-        <input
-          type="text"
-          aria-label="Descrizione transazione"
-          placeholder="Es. Cena, Stipendio, Affitto, Supermercato..."
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required
-          className="text-sm text-foreground flex-1 bg-transparent border-0 outline-none w-full font-semibold placeholder:font-normal placeholder:text-(--text-muted)"
-        />
-      </div>
-    </div>
+    <Field>
+      <FieldLabel htmlFor="tx-date">Data</FieldLabel>
+      <Input
+        id="tx-date"
+        type="date"
+        className="h-11"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </Field>
   );
 }
 
-// ---------------------------------------------------------------------------
-// AmountCurrencyRow
-// ---------------------------------------------------------------------------
-export function AmountCurrencyRow({
-  amount,
-  currency,
-  onAmountChange,
-  onCurrencyChange,
-}: {
-  amount: string;
-  currency: string;
-  onAmountChange: (v: string) => void;
-  onCurrencyChange: (v: string) => void;
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-2.5">
-      <div className="col-span-2">
-        <FieldLabel icon={Wallet}>Importo</FieldLabel>
-        <MoneyInput
-          value={amount}
-          onChange={onAmountChange}
-          currency={currency}
-          required
-        />
-      </div>
-      <div>
-        <FieldLabel icon={ArrowLeftRight}>Valuta</FieldLabel>
-        <CurrencySelect value={currency} onChange={onCurrencyChange} />
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ConversionBadge
-// ---------------------------------------------------------------------------
 export function ConversionBadge({
   parsedAmount,
   convertedAmount,
@@ -162,27 +146,24 @@ export function ConversionBadge({
   targetCurrency: string;
 }) {
   return (
-    <div className="flex items-center justify-between px-3 py-2.5 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-      <div className="flex items-center gap-2 text-[11px] font-semibold text-(--text-muted)">
-        <ArrowLeftRight size={11} className="text-blue-500" />
-        Conversione stimata
-      </div>
-      <div className="flex items-center gap-1.5 text-xs font-black">
-        <span className="text-(--text-muted)">
-          {parsedAmount.toFixed(2)} {sourceCurrency}
-        </span>
-        <span className="text-neutral-400">→</span>
-        <span className="text-blue-500">
-          {convertedAmount.toFixed(2)} {targetCurrency}
-        </span>
-      </div>
-    </div>
+    <m.p
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      className="tabular flex items-center justify-center gap-2 text-sm text-muted-foreground"
+    >
+      <span>
+        {parsedAmount.toFixed(2)} {sourceCurrency}
+      </span>
+      <ArrowRight className="size-3.5" aria-hidden />
+      <span className="font-semibold text-foreground">
+        {convertedAmount.toFixed(2)} {targetCurrency}
+      </span>
+      <span className="sr-only">conversione stimata</span>
+    </m.p>
   );
 }
 
-// ---------------------------------------------------------------------------
-// CategorySection
-// ---------------------------------------------------------------------------
 export function CategorySection({
   categoryId,
   categories,
@@ -211,132 +192,98 @@ export function CategorySection({
   onCreateCategory: () => void;
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <FieldLabel icon={Tag}>Categoria</FieldLabel>
-        <button
+    <Field>
+      <div className="flex items-center justify-between">
+        <FieldLabel>Categoria</FieldLabel>
+        <Button
           type="button"
-          className="text-[10px] text-blue-500 font-bold hover:underline cursor-pointer border-0 bg-transparent -mt-1.5"
+          variant="ghost"
+          className="h-11 px-3 text-brand"
           onClick={onToggleInlineCat}
         >
-          {isInlineCatOpen ? "Indietro" : "Crea nuova"}
-        </button>
+          {!isInlineCatOpen && <Plus data-icon="inline-start" />}
+          {isInlineCatOpen ? "Indietro" : "Nuova"}
+        </Button>
       </div>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         {isInlineCatOpen ? (
           <m.div
-            key="cat-creator"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex flex-col gap-3 p-3.5 bg-neutral-500/5 border border-(--card-border) rounded-2xl overflow-hidden"
+            key="creator"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-3"
           >
-            <div className="bg-(--card-solid) h-10 px-3 rounded-xl flex items-center border border-(--card-border) w-full focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-              <input
-                type="text"
-                aria-label="Nome categoria"
-                placeholder="Nome categoria"
+            <Field data-invalid={undefined}>
+              <FieldLabel htmlFor="tx-new-cat">Nome categoria</FieldLabel>
+              <Input
+                id="tx-new-cat"
+                className="h-11"
+                placeholder="Es. Palestra"
                 value={newCatName}
                 onChange={(e) => onNewCatNameChange(e.target.value)}
-                className="text-sm text-foreground flex-1 bg-transparent border-0 outline-none w-full placeholder:text-(--text-muted)"
               />
-            </div>
-            <div>
-              <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider block mb-1.5">
-                Colore
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {APPLE_COLORS.map((col) => (
-                  <button
-                    type="button"
-                    aria-label={`Seleziona colore ${col}`}
-                    key={col}
-                    className={cn(
-                      "w-5 h-5 rounded-full cursor-pointer transition-all border-2",
-                      newCatColor === col
-                        ? "border-foreground scale-110 shadow"
-                        : "border-transparent",
-                    )}
-                    style={{ backgroundColor: col }}
-                    onClick={() => onNewCatColorChange(col)}
-                  />
-                ))}
-              </div>
-            </div>
-            <div>
-              <span className="text-[9px] text-(--text-muted) font-bold uppercase tracking-wider block mb-1.5">
-                Icona
-              </span>
-              <div className="flex flex-wrap gap-1.5 bg-(--card-solid) p-2 rounded-xl border border-(--card-border) max-h-[72px] overflow-y-auto">
-                {CURATED_ICONS.map((ico) => (
-                  <button
-                    type="button"
-                    key={ico}
-                    className={cn(
-                      "p-1 rounded-lg cursor-pointer transition-all",
-                      newCatIcon === ico
-                        ? "bg-blue-500 text-white"
-                        : "text-foreground hover:bg-neutral-500/10",
-                    )}
-                    onClick={() => onNewCatIconChange(ico)}
-                    aria-label={`Seleziona icona ${ico}`}
-                  >
-                    <CategoryIcon name={ico} size={14} />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button
+            </Field>
+            <CategoryColorPicker
+              value={newCatColor}
+              onChange={onNewCatColorChange}
+            />
+            <CategoryIconPicker
+              value={newCatIcon}
+              color={newCatColor}
+              onChange={onNewCatIconChange}
+            />
+            <Button
               type="button"
-              className="bg-blue-500 text-white text-[10px] font-bold border-0 h-8 rounded-xl cursor-pointer hover:opacity-90 w-full flex items-center justify-center transition-all"
+              disabled={!newCatName.trim()}
+              className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
               onClick={onCreateCategory}
             >
-              Crea Categoria
-            </button>
+              Crea categoria
+            </Button>
+            <FieldDescription>
+              La nuova categoria viene selezionata automaticamente.
+            </FieldDescription>
           </m.div>
         ) : (
-          <CategorySelect
-            value={categoryId}
-            onChange={onCategoryChange}
-            categories={categories}
-          />
+          <m.div
+            key="chips"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <TxCategoryChips
+              categories={categories}
+              value={categoryId}
+              onChange={onCategoryChange}
+            />
+          </m.div>
         )}
       </AnimatePresence>
-    </div>
+    </Field>
   );
 }
 
-// ---------------------------------------------------------------------------
-// DateField
-// ---------------------------------------------------------------------------
-export function DateField({
-  value,
-  onChange,
+export function SubmitButton({
+  isSubmitting,
+  type,
 }: {
-  value: string;
-  onChange: (v: string) => void;
+  isSubmitting: boolean;
+  type: "expense" | "income";
 }) {
   return (
-    <div>
-      <FieldLabel icon={CalendarDays}>Data</FieldLabel>
-      <CustomDatePicker value={value} onChange={onChange} />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// SubmitButton
-// ---------------------------------------------------------------------------
-export function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
-  return (
-    <div className="px-6 pb-5 pt-3 border-t border-(--card-border) shrink-0 bg-(--card-solid) md:rounded-b-3xl">
-      <button
+    <div className="sticky bottom-0 -mx-4 border-t bg-popover px-4 pb-1 pt-3 md:-mx-0 md:px-0">
+      <Button
         type="submit"
         disabled={isSubmitting}
-        className="bg-foreground text-background font-bold text-sm h-12 rounded-xl cursor-pointer hover:opacity-90 shadow-sm w-full border-0 disabled:opacity-50 flex items-center justify-center transition-all"
+        className={
+          type === "expense"
+            ? "h-12 w-full bg-expense text-white hover:bg-expense/90"
+            : "h-12 w-full bg-income text-white hover:bg-income/90"
+        }
       >
-        {isSubmitting ? "Salvataggio..." : "Salva Transazione"}
-      </button>
+        {isSubmitting ? "Salvataggio..." : "Salva transazione"}
+      </Button>
     </div>
   );
 }

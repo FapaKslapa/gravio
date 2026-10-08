@@ -1,7 +1,8 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type GroupMember = {
@@ -20,27 +21,27 @@ export function GroupMemberList({
   currentUserId,
 }: GroupMemberListProps) {
   return (
-    <div className="mb-5">
-      <h4 className="text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-        <Users size={12} className="opacity-60" />
-        Membri del Gruppo
-      </h4>
-      <div className="flex flex-wrap gap-2">
-        {members.map((m: GroupMember) => (
-          <div
-            key={m.id}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-500/5 border border-(--card-border) text-xs font-semibold"
+    <section aria-label="Membri del gruppo" className="border-t px-4 py-4">
+      <h3 className="mb-3 text-base font-semibold">Membri</h3>
+      <ul className="flex flex-wrap gap-2">
+        {members.map((member: GroupMember) => (
+          <li
+            key={member.id}
+            className="flex items-center gap-2 rounded-full bg-muted py-1 pr-3 pl-1 text-sm font-medium"
           >
-            <div className="w-4 h-4 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center text-[8px] font-black shrink-0">
-              {m.name.slice(0, 2).toUpperCase()}
-            </div>
+            <Avatar size="sm">
+              <AvatarFallback className="bg-brand-soft text-[11px] font-semibold text-brand">
+                {member.name.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <span>
-              {m.name} {m.id === currentUserId && "(Tu)"}
+              {member.name}
+              {member.id === currentUserId && " (tu)"}
             </span>
-          </div>
+          </li>
         ))}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 
@@ -70,17 +71,16 @@ export function GroupSettlementProposals({
   onSettle,
 }: GroupSettlementProposalsProps) {
   return (
-    <div className="mb-5 border-t border-(--card-border)/50 pt-4">
-      <h4 className="text-[10px] text-(--text-muted) font-black uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-        <span className="text-blue-500">✦</span>
-        Debiti Semplificati (Algoritmo Splitwise)
-      </h4>
+    <section aria-label="Saldi da regolare" className="border-t">
+      <h3 className="px-4 pt-4 pb-2 text-base font-semibold">
+        Saldi da regolare
+      </h3>
       {isProposalsLoading ? (
-        <div className="text-[10px] text-(--text-muted)">
-          Calcolo liquidazioni ottimali...
-        </div>
+        <p className="px-4 pb-4 text-sm text-muted-foreground">
+          Calcolo dei saldi in corso...
+        </p>
       ) : proposals && proposals.length > 0 ? (
-        <div className="flex flex-col gap-2">
+        <ul className="flex flex-col pb-2">
           {proposals.map((p: GroupSettlementProposal) => {
             const isFromMe = p.fromUser.id === currentUserId;
             const isToMe = p.toUser.id === currentUserId;
@@ -88,31 +88,32 @@ export function GroupSettlementProposals({
             const targetFriendId = isFromMe ? p.toUser.id : p.fromUser.id;
 
             return (
-              <div
+              <li
                 key={`${p.fromUser.id}-${p.toUser.id}-${p.amountNok}`}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-100/5 dark:bg-zinc-800/10 border border-(--card-border)/40 rounded-2xl p-3"
+                className="flex items-center justify-between gap-3 px-4 py-2"
               >
-                <div className="flex items-center gap-2 text-xs flex-wrap">
-                  <span
-                    className={cn(
-                      "font-bold",
-                      isFromMe ? "text-rose-500" : "text-foreground",
-                    )}
-                  >
-                    {p.fromUser.name} {isFromMe && "(Tu)"}
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="flex flex-wrap items-center gap-x-1.5 text-sm">
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        isFromMe && "text-expense",
+                      )}
+                    >
+                      {isFromMe ? "Tu" : p.fromUser.name}
+                    </span>
+                    <ArrowRight
+                      aria-label="deve dare a"
+                      role="img"
+                      className="size-3.5 text-muted-foreground"
+                    />
+                    <span
+                      className={cn("font-semibold", isToMe && "text-income")}
+                    >
+                      {isToMe ? "Te" : p.toUser.name}
+                    </span>
                   </span>
-                  <span className="text-[10px] text-(--text-muted)">
-                    deve dare a
-                  </span>
-                  <span
-                    className={cn(
-                      "font-bold",
-                      isToMe ? "text-emerald-500" : "text-foreground",
-                    )}
-                  >
-                    {p.toUser.name} {isToMe && "(Tu)"}
-                  </span>
-                  <span className="text-xs font-black text-blue-500 ml-1">
+                  <span className="tabular text-sm font-bold">
                     {formatCurrency(
                       convertCurrency(p.amountNok, "NOK", displayCurrency),
                       displayCurrency,
@@ -122,24 +123,24 @@ export function GroupSettlementProposals({
                 {canSettle && (
                   <Button
                     variant="outline"
-                    className="h-7 text-[9px] font-bold bg-neutral-500/10 hover:bg-blue-500 hover:text-white rounded-lg px-3 shrink-0 cursor-pointer border-0 transition-all self-end sm:self-auto"
-                    onPress={() => onSettle(targetFriendId)}
-                    isDisabled={isSettlingId !== null}
+                    className="h-11 shrink-0 rounded-full px-4 font-semibold"
+                    onClick={() => onSettle(targetFriendId)}
+                    disabled={isSettlingId !== null}
                   >
                     {isSettlingId === targetFriendId
                       ? "Salvataggio..."
                       : "Salda"}
                   </Button>
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       ) : (
-        <p className="text-[10px] text-(--text-muted) italic pl-1">
-          Tutti i debiti in questo gruppo sono saldati!
+        <p className="px-4 pb-4 text-sm text-muted-foreground">
+          Tutti i debiti in questo gruppo sono saldati.
         </p>
       )}
-    </div>
+    </section>
   );
 }

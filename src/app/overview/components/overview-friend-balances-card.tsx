@@ -1,13 +1,33 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowUpRight, Check, Users } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check } from "lucide-react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 import { cn, formatCurrency } from "@/lib/utils";
 
-export function OverviewFriendBalancesCard() {
+export function OverviewFriendBalancesCard({
+  className,
+}: {
+  className?: string;
+}) {
   const { displayCurrency, convertCurrency } = useDashboard();
   const trpc = useTRPC();
   const { data: balanceData, isLoading: isBalanceLoading } = useQuery(
@@ -16,10 +36,17 @@ export function OverviewFriendBalancesCard() {
 
   if (isBalanceLoading) {
     return (
-      <Card className="border border-(--card-border) bg-(--card-solid) shadow-xl p-6 rounded-[2rem] h-full flex flex-col justify-center items-center">
-        <span className="text-xs text-(--text-muted) font-bold">
-          Caricamento bilancio...
-        </span>
+      <Card className={cn("elevation-1 h-full rounded-lg ring-0", className)}>
+        <CardHeader>
+          <CardTitle className="font-display text-base font-semibold">
+            Saldi con gli amici
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -46,105 +73,105 @@ export function OverviewFriendBalancesCard() {
   const netBalance = totalCredit - totalDebit;
 
   return (
-    <Card className="border border-(--card-border) bg-(--card-solid) shadow-xl p-6 rounded-[2rem] select-none w-full h-full flex flex-col justify-between">
-      <CardHeader className="p-0 pb-4 border-b border-(--card-border) mb-4 flex flex-col items-start gap-1">
-        <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-sans">
-          <Users size={14} className="text-blue-500" />
-          Bilancio Amici
-        </h4>
-        <p className="text-[10px] text-(--text-muted)">
-          Riepilogo dei debiti e crediti con i tuoi contatti
-        </p>
+    <Card className={cn("elevation-1 h-full rounded-lg ring-0", className)}>
+      <CardHeader>
+        <CardTitle className="font-display text-base font-semibold">
+          Saldi con gli amici
+        </CardTitle>
+        <CardDescription>Debiti e crediti in sospeso</CardDescription>
       </CardHeader>
 
-      <CardContent className="p-0 flex-1 flex flex-col gap-4 overflow-hidden">
-        <div className="grid grid-cols-2 gap-3.5 bg-neutral-500/5 dark:bg-zinc-800/10 border border-(--card-border)/40 p-3 rounded-2xl">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] text-(--text-muted) font-black uppercase tracking-wider flex items-center gap-0.5">
-              <ArrowDownLeft size={10} className="text-emerald-500" /> Ti Devono
-            </span>
-            <span className="text-xs font-black text-emerald-500">
+      <CardContent className="flex flex-1 flex-col gap-4">
+        <dl className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1 rounded-lg bg-income-soft p-3">
+            <dt className="flex items-center gap-1.5 text-xs font-semibold text-income">
+              <ArrowDownLeft className="size-4" aria-hidden="true" />
+              Ti devono
+            </dt>
+            <dd className="num-display tabular truncate text-lg font-bold text-income">
               {formatCurrency(totalCredit, displayCurrency)}
-            </span>
+            </dd>
           </div>
-          <div className="flex flex-col gap-0.5 items-end">
-            <span className="text-[8px] text-(--text-muted) font-black uppercase tracking-wider flex items-center gap-0.5">
-              Devi Dare <ArrowUpRight size={10} className="text-rose-500" />
-            </span>
-            <span className="text-xs font-black text-rose-500">
+          <div className="flex flex-col gap-1 rounded-lg bg-expense-soft p-3">
+            <dt className="flex items-center gap-1.5 text-xs font-semibold text-expense">
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+              Devi dare
+            </dt>
+            <dd className="num-display tabular truncate text-lg font-bold text-expense">
               {formatCurrency(totalDebit, displayCurrency)}
-            </span>
+            </dd>
           </div>
-        </div>
+        </dl>
 
-        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2.5 max-h-[140px] scrollbar-none">
-          {convertedItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center text-(--text-muted) h-full">
-              <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-1.5">
-                <Check size={14} />
-              </div>
-              <span className="text-[10px] font-bold">Tutto in pari!</span>
-              <p className="text-[8px] opacity-70 mt-0.5">
+        {convertedItems.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Check />
+              </EmptyMedia>
+              <EmptyTitle>Tutto in pari</EmptyTitle>
+              <EmptyDescription>
                 Non hai debiti o crediti in sospeso con i tuoi amici.
-              </p>
-            </div>
-          ) : (
-            convertedItems.map((item) => {
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <ul className="flex max-h-60 flex-col overflow-y-auto">
+            {convertedItems.map((item) => {
               const isCredit = item.balance > 0;
               const initials = item.user.name ? item.user.name[0] : "?";
               return (
-                <div
+                <li
                   key={item.user.id}
-                  className="flex items-center justify-between p-2 rounded-xl bg-neutral-500/5 border border-(--card-border)/30 hover:bg-neutral-500/10 transition-colors"
+                  className="flex min-h-14 items-center justify-between gap-3 border-b py-2 last:border-b-0"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center font-bold text-[10px] uppercase shrink-0">
-                      {initials}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[11px] font-bold text-foreground truncate">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="size-9">
+                      <AvatarFallback className="bg-brand-soft font-semibold text-brand uppercase">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-semibold">
                         {item.user.name || "Amico"}
                       </span>
-                      <span className="text-[8px] text-(--text-muted) truncate">
-                        {item.user.email}
+                      <span className="truncate text-xs text-muted-foreground">
+                        {isCredit ? "Ti deve" : "Gli devi"}
                       </span>
                     </div>
                   </div>
-
                   <span
                     className={cn(
-                      "text-[10px] font-black shrink-0 ml-2",
-                      isCredit ? "text-emerald-500" : "text-rose-500",
+                      "num-display tabular shrink-0 text-sm font-bold",
+                      isCredit ? "text-income" : "text-expense",
                     )}
                   >
-                    {isCredit ? "+" : "-"}
+                    {isCredit ? "+" : "−"}
                     {formatCurrency(Math.abs(item.balance), displayCurrency)}
                   </span>
-                </div>
+                </li>
               );
-            })
-          )}
-        </div>
+            })}
+          </ul>
+        )}
       </CardContent>
 
-      <div className="border-t border-(--card-border) pt-3.5 mt-3 flex justify-between items-center text-[10px]">
-        <span className="text-[9px] text-(--text-muted) font-extrabold uppercase">
-          Stato Netto
-        </span>
+      <CardFooter className="justify-between border-t bg-transparent text-sm">
+        <span className="text-muted-foreground">Saldo netto</span>
         <span
           className={cn(
-            "font-black",
+            "num-display tabular font-bold",
             netBalance > 0
-              ? "text-emerald-500"
+              ? "text-income"
               : netBalance < 0
-                ? "text-rose-500"
-                : "text-(--text-muted)",
+                ? "text-expense"
+                : "text-muted-foreground",
           )}
         >
           {netBalance > 0 ? "+" : ""}
           {formatCurrency(netBalance, displayCurrency)}
         </span>
-      </div>
+      </CardFooter>
     </Card>
   );
 }

@@ -1,17 +1,17 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useReducer, useState } from "react";
+import { useReducer } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useTRPC } from "@/lib/trpc/client";
 
+import { AddFriendCard } from "./components/add-friend-card";
 import { BalanceSummarySection } from "./components/balance-summary-section";
 import { FriendsHeader } from "./components/friends-header";
 import { FriendsLeftColumn } from "./components/friends-left-column";
 import { FriendsModals } from "./components/friends-modals";
 import { FriendsRightColumn } from "./components/friends-right-column";
-import { MobileTabBar } from "./components/mobile-tab-bar";
 import type { SharedExpensePayload } from "./components/shared-expense-dialog";
 
 type FriendItem = {
@@ -30,7 +30,8 @@ type GroupItem = {
 };
 
 type UIState = {
-  activeMobileTab: "friends" | "groups" | "manage";
+  activeMobileTab: "friends" | "groups";
+  isAddFriendOpen: boolean;
   isSharedExpenseOpen: boolean;
   isCreateGroupOpen: boolean;
   selectedFriend: FriendItem | null;
@@ -85,6 +86,7 @@ export default function FriendsView() {
   // ── State ─────────────────────────────────────────────────────────────────
   const [uiState, dispatch] = useReducer(uiReducer, {
     activeMobileTab: "friends",
+    isAddFriendOpen: false,
     isSharedExpenseOpen: false,
     isCreateGroupOpen: false,
     selectedFriend: null,
@@ -96,6 +98,7 @@ export default function FriendsView() {
 
   const {
     activeMobileTab,
+    isAddFriendOpen,
     isSharedExpenseOpen,
     isCreateGroupOpen,
     selectedFriend,
@@ -105,8 +108,10 @@ export default function FriendsView() {
     groupToDelete,
   } = uiState;
 
-  const setActiveMobileTab = (val: "friends" | "groups" | "manage") =>
+  const setActiveMobileTab = (val: "friends" | "groups") =>
     dispatch({ type: "SET_FIELD", field: "activeMobileTab", value: val });
+  const setIsAddFriendOpen = (val: boolean) =>
+    dispatch({ type: "SET_FIELD", field: "isAddFriendOpen", value: val });
   const setIsSharedExpenseOpen = (val: boolean) =>
     dispatch({ type: "SET_FIELD", field: "isSharedExpenseOpen", value: val });
   const setIsCreateGroupOpen = (val: boolean) =>
@@ -204,8 +209,6 @@ export default function FriendsView() {
       .reduce((s, b) => s + b.balanceNok, 0),
   );
   const netBalanceNok = totalYouAreOwedNok - totalYouOweNok;
-  const pendingCount =
-    (pendingData?.incoming?.length ?? 0) + (pendingData?.outgoing?.length ?? 0);
 
   const convertNokAmount = (val: number | string): number =>
     convertCurrency(
@@ -271,7 +274,7 @@ export default function FriendsView() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto px-4 py-3 pb-24 md:pb-12 text-foreground select-none">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-3 pb-24 text-foreground md:px-8 md:pb-12">
       <FriendsHeader
         hasFriends={!!friendsData && friendsData.length > 0}
         onAddExpense={() => setIsSharedExpenseOpen(true)}
@@ -285,27 +288,26 @@ export default function FriendsView() {
         convertAmount={convertNokAmount}
       />
 
-      <MobileTabBar
-        activeTab={activeMobileTab}
-        onTabChange={setActiveMobileTab}
-        pendingCount={pendingCount}
-        hidden={!!(selectedFriend || selectedGroup)}
-      />
-
-      <div className="flex flex-col md:grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:items-start">
         <FriendsLeftColumn
-          activeMobileTab={activeMobileTab}
+          activeTab={activeMobileTab}
+          onTabChange={setActiveMobileTab}
           isSelecting={!!(selectedFriend || selectedGroup)}
           pendingIncoming={pendingData?.incoming ?? []}
           pendingOutgoing={pendingData?.outgoing ?? []}
+          friends={friendsData ?? []}
+          balances={balances}
           groups={groupsData ?? []}
+          selectedFriendId={selectedFriend?.user.id}
           selectedGroupId={selectedGroup?.id}
-          onAddFriendSuccess={() =>
-            queryClient.invalidateQueries({
-              queryKey: trpc.friend.listPendingRequests.queryKey(),
-            })
-          }
+          displayCurrency={displayCurrency}
+          convertNokAmount={convertNokAmount}
+          onAddFriend={() => setIsAddFriendOpen(true)}
           onPendingActionSuccess={handleRespondSuccess}
+          onSelectFriend={(friend) => {
+            setSelectedFriend(friend);
+            setSelectedGroup(null);
+          }}
           onSelectGroup={(group) => {
             setSelectedGroup(group);
             setSelectedFriend(null);
@@ -315,10 +317,8 @@ export default function FriendsView() {
         />
 
         <FriendsRightColumn
-          activeMobileTab={activeMobileTab}
           selectedFriend={selectedFriend}
           selectedGroup={selectedGroup}
-          friends={friendsData ?? []}
           balances={balances}
           transactions={transactionsData ?? []}
           proposals={proposalsData ?? []}
@@ -329,10 +329,6 @@ export default function FriendsView() {
           convertCurrency={convertCurrency}
           onClearFriend={() => setSelectedFriend(null)}
           onClearGroup={() => setSelectedGroup(null)}
-          onSelectFriend={(friend) => {
-            setSelectedFriend(friend);
-            setSelectedGroup(null);
-          }}
           onOpenSharedExpense={() => setIsSharedExpenseOpen(true)}
           onOpenSettleDebt={setSettleConfirmFriend}
           onOpenDeleteFriend={setFriendToDelete}
@@ -340,6 +336,16 @@ export default function FriendsView() {
           onSettle={handleSettle}
         />
       </div>
+
+      <AddFriendCard
+        open={isAddFriendOpen}
+        onOpenChange={setIsAddFriendOpen}
+        onSuccess={() =>
+          queryClient.invalidateQueries({
+            queryKey: trpc.friend.listPendingRequests.queryKey(),
+          })
+        }
+      />
 
       <FriendsModals
         isSharedExpenseOpen={isSharedExpenseOpen}

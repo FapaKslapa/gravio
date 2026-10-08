@@ -1,16 +1,25 @@
 "use client";
 
+import { it } from "date-fns/locale";
 import dayjs from "dayjs";
-import { AnimatePresence, m } from "framer-motion";
+import { Calendar as CalendarIcon, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  X,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { useIsMounted } from "@/hooks/use-is-mounted";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { pickerTriggerClass } from "@/components/ui/picker-shell";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 import "dayjs/locale/it";
 
@@ -33,221 +42,104 @@ export function CustomDatePicker({
   popoverClassName,
   placeholder,
 }: CustomDatePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [popoverPlacement, setPopoverPlacement] = useState<{
-    valign: "top" | "bottom";
-    top?: number;
-    bottom?: number;
-    left?: number;
-    right?: number;
-  }>({ valign: "bottom" });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
-  const mounted = useIsMounted();
-
-  const selectedDate = value ? dayjs(value) : dayjs();
-  const [navDate, setNavDate] = useState(() => dayjs(selectedDate));
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+  const selected = value ? dayjs(value).toDate() : undefined;
+  const [month, setMonth] = useState<Date>(selected ?? new Date());
 
   const prevValueRef = useRef<string | null>(null);
-  if (value !== prevValueRef.current) {
+  if (prevValueRef.current !== value) {
     prevValueRef.current = value;
-    if (value) {
-      setNavDate(dayjs(value));
-    }
+    if (value) setMonth(dayjs(value).toDate());
   }
 
-  const updatePlacement = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const spaceOnRight = window.innerWidth - rect.left;
-      const spaceOnBottom = window.innerHeight - rect.bottom;
-      const spaceOnTop = rect.top;
-      const newAlign = spaceOnRight < 260 ? "right" : "left";
-      const newValign =
-        spaceOnBottom < 280 && spaceOnTop > spaceOnBottom ? "top" : "bottom";
-      setPopoverPlacement({
-        valign: newValign,
-        top: newValign === "bottom" ? rect.bottom + 6 : undefined,
-        bottom:
-          newValign === "top" ? window.innerHeight - rect.top + 6 : undefined,
-        left: newAlign === "left" ? rect.left : undefined,
-        right:
-          newAlign === "right" ? window.innerWidth - rect.right : undefined,
-      });
-    }
-  };
-
-  const handleToggleOpen = () => {
-    const nextOpen = !isOpen;
-    if (nextOpen) {
-      updatePlacement();
-    }
-    setIsOpen(nextOpen);
-  };
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node;
-      const insideTrigger = containerRef.current?.contains(target);
-      const insideCalendar = calendarRef.current?.contains(target);
-      if (!insideTrigger && !insideCalendar) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handlePrevMonth = () => setNavDate(navDate.subtract(1, "month"));
-  const handleNextMonth = () => setNavDate(navDate.add(1, "month"));
-
-  const daysInMonth = navDate.daysInMonth();
-  const firstDayIndex = navDate.startOf("month").day();
-  const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
-  const spacers = Array.from({ length: offset }, (_, i) => i);
-  const dayCells = Array.from({ length: daysInMonth }, (_, i) =>
-    navDate.date(i + 1),
-  );
-
-  const handleSelectDay = (date: dayjs.Dayjs) => {
-    onChange(date.format("YYYY-MM-DD"));
-    setIsOpen(false);
-  };
-
-  const formattedValue = value
-    ? selectedDate.format("D MMMM YYYY")
+  const label = value
+    ? dayjs(value).format("D MMMM YYYY")
     : placeholder || "Seleziona data...";
 
   const calendar = (
-    <AnimatePresence>
-      {isOpen && (
-        <m.div
-          ref={calendarRef}
-          initial={{
-            opacity: 0,
-            y: popoverPlacement.valign === "bottom" ? -4 : 4,
-            scale: 0.98,
-          }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{
-            opacity: 0,
-            y: popoverPlacement.valign === "bottom" ? -4 : 4,
-            scale: 0.98,
-          }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
-          style={{
-            position: "fixed",
-            zIndex: 9999,
-            width: 256,
-            top: popoverPlacement.top,
-            bottom: popoverPlacement.bottom,
-            left: popoverPlacement.left,
-            right: popoverPlacement.right,
-          }}
-          className={cn(
-            "p-4 rounded-2xl border border-(--card-border) bg-(--card-solid) shadow-xl flex flex-col",
-            popoverClassName,
-          )}
-        >
-          <div className="flex justify-between items-center mb-3">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              aria-label="Mese precedente"
-              className="p-1 rounded-lg hover:bg-neutral-500/10 text-foreground cursor-pointer"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-xs font-bold capitalize">
-              {navDate.format("MMMM YYYY")}
-            </span>
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              aria-label="Mese successivo"
-              className="p-1 rounded-lg hover:bg-neutral-500/10 text-foreground cursor-pointer"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 text-center text-[9px] text-(--text-muted) font-extrabold uppercase mb-2">
-            <span>L</span>
-            <span>M</span>
-            <span>M</span>
-            <span>G</span>
-            <span>V</span>
-            <span>S</span>
-            <span>D</span>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {spacers.map((spacer) => (
-              <div key={`spacer-${spacer}`} className="aspect-square" />
-            ))}
-            {dayCells.map((day) => {
-              const isSelected = day.isSame(selectedDate, "day");
-              const isToday = day.isSame(dayjs(), "day");
-
-              return (
-                <button
-                  key={day.format("YYYY-MM-DD")}
-                  type="button"
-                  onClick={() => handleSelectDay(day)}
-                  className={cn(
-                    "aspect-square rounded-lg flex items-center justify-center text-[10px] cursor-pointer transition-all border border-transparent",
-                    isSelected
-                      ? "bg-blue-500 text-white font-bold"
-                      : isToday
-                        ? "border-blue-500 text-blue-500 font-bold"
-                        : "hover:bg-neutral-500/10 text-foreground",
-                  )}
-                >
-                  {day.date()}
-                </button>
-              );
-            })}
-          </div>
-        </m.div>
+    <Calendar
+      mode="single"
+      locale={it}
+      weekStartsOn={1}
+      selected={selected}
+      month={month}
+      onMonthChange={setMonth}
+      onSelect={(date) => {
+        if (!date) return;
+        onChange(dayjs(date).format("YYYY-MM-DD"));
+        setOpen(false);
+      }}
+      className={cn(
+        "mx-auto [--cell-size:--spacing(11)] md:[--cell-size:--spacing(9)]",
       )}
-    </AnimatePresence>
+    />
+  );
+
+  const trigger = (
+    <button
+      type="button"
+      aria-label="Apri calendario"
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      className={cn(
+        pickerTriggerClass,
+        "justify-start pr-10",
+        value ? "" : "text-muted-foreground",
+        triggerClassName,
+      )}
+    >
+      <CalendarIcon
+        aria-hidden
+        className="size-4 shrink-0 text-muted-foreground"
+      />
+      <span className="truncate tabular">{label}</span>
+    </button>
   );
 
   return (
-    <div ref={containerRef} className={cn("relative w-full", className)}>
-      <div className="relative w-full flex items-center">
+    <div className={cn("relative w-full", className)}>
+      {isMobile ? (
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader className="text-left">
+              <DrawerTitle>Seleziona data</DrawerTitle>
+              <DrawerDescription className="sr-only">
+                Scegli un giorno dal calendario
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {calendar}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+          <PopoverContent
+            align="start"
+            sideOffset={6}
+            className={cn(
+              "w-auto rounded-md p-2 elevation-2",
+              popoverClassName,
+            )}
+          >
+            {calendar}
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {value && (
         <button
           type="button"
-          className={cn(
-            "w-full h-11 pl-3 pr-10 rounded-xl flex items-center justify-between gap-2 text-xs bg-neutral-500/5 dark:bg-zinc-800/30 text-foreground hover:bg-neutral-500/10 dark:hover:bg-zinc-800/50 transition-all outline-none cursor-pointer border border-transparent focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:focus-visible:ring-blue-500/20 select-none text-left",
-            triggerClassName,
-          )}
-          onClick={handleToggleOpen}
-          aria-label="Apri calendario"
+          onClick={() => onChange("")}
+          aria-label="Resetta data"
+          className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
         >
-          <div className="flex items-center gap-2.5 min-w-0 pointer-events-none">
-            <CalendarIcon size={14} className="text-neutral-500 shrink-0" />
-            <span className="truncate">{formattedValue}</span>
-          </div>
+          <X aria-hidden className="size-4" />
         </button>
-
-        {value && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange("");
-            }}
-            className="absolute right-2 text-neutral-400 hover:text-foreground hover:bg-neutral-500/10 rounded-full h-6 w-6 flex items-center justify-center transition-colors cursor-pointer border-0 bg-transparent shrink-0"
-            aria-label="Resetta data"
-          >
-            <X size={12} />
-          </button>
-        )}
-      </div>
-
-      {mounted && createPortal(calendar, document.body)}
+      )}
     </div>
   );
 }

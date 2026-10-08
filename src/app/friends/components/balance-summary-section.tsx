@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight, Coins, Scale } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
-import { formatCurrency } from "@/lib/utils";
+import { m } from "motion/react";
+import { Card } from "@/components/ui/card";
+import { fadeUp } from "@/lib/motion";
+import { cn, formatCurrency } from "@/lib/utils";
 
 interface BalanceSummarySectionProps {
   totalYouAreOwed: number;
@@ -19,51 +20,61 @@ export function BalanceSummarySection({
   displayCurrency,
   convertAmount,
 }: BalanceSummarySectionProps) {
+  const netLabel =
+    netBalance > 0.005
+      ? "In positivo"
+      : netBalance < -0.005
+        ? "In negativo"
+        : "In pari";
+
   const stats = [
     {
-      label: "Ti devono in totale",
+      label: "Ti devono",
       value: formatCurrency(convertAmount(totalYouAreOwed), displayCurrency),
-      color: "text-emerald-500",
-      icon: <Coins size={16} />,
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-500",
-      delayIndex: 0,
+      color: "text-income",
     },
     {
-      label: "Devi dare in totale",
+      label: "Devi dare",
       value: formatCurrency(convertAmount(totalYouOwe), displayCurrency),
-      color: "text-rose-500",
-      icon: <ArrowUpRight size={16} />,
-      iconBg: "bg-rose-500/10",
-      iconColor: "text-rose-500",
-      delayIndex: 1,
+      color: "text-expense",
     },
     {
-      label: "Bilancio Netto Amici",
+      label: `Netto, ${netLabel.toLowerCase()}`,
       value: formatCurrency(convertAmount(netBalance), displayCurrency),
-      color: netBalance >= 0 ? "text-emerald-500" : "text-rose-500",
-      icon: <Scale size={16} />,
-      iconBg: netBalance >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10",
-      iconColor: netBalance >= 0 ? "text-emerald-500" : "text-rose-500",
-      delayIndex: 2,
+      color:
+        netBalance > 0.005
+          ? "text-income"
+          : netBalance < -0.005
+            ? "text-expense"
+            : "text-foreground",
     },
   ];
 
   return (
-    <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto pb-1 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
-      {stats.map((stat) => (
-        <StatCard
-          key={stat.label}
-          title={stat.label}
-          value={stat.value}
-          valueClassName={stat.color}
-          icon={stat.icon}
-          iconBgColor={stat.iconBg}
-          iconColor={stat.iconColor}
-          delayIndex={stat.delayIndex}
-          className="w-[85vw] md:w-full shrink-0 snap-start scroll-ml-4 bg-(--card) border border-(--card-border) rounded-[2rem] p-5 shadow-(--card-shadow)"
-        />
-      ))}
-    </div>
+    <m.div variants={fadeUp} initial="hidden" animate="show" custom={1}>
+      <Card className="grid grid-cols-3 gap-0 p-0 elevation-1">
+        {stats.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={cn(
+              "flex min-w-0 flex-col gap-1 px-4 py-4",
+              i > 0 && "border-l",
+            )}
+          >
+            <span className="text-xs font-semibold text-muted-foreground">
+              {stat.label}
+            </span>
+            <span
+              className={cn(
+                "num-display truncate text-base font-bold md:text-xl",
+                stat.color,
+              )}
+            >
+              {stat.value}
+            </span>
+          </div>
+        ))}
+      </Card>
+    </m.div>
   );
 }

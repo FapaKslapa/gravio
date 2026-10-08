@@ -1,8 +1,11 @@
 "use client";
 
-import { Button, Card, CardContent } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Handshake, X } from "lucide-react";
+import { Check, Clock, X } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useTRPC } from "@/lib/trpc/client";
 
 type PendingUser = {
@@ -43,106 +46,94 @@ export function PendingRequestsCard({
     await respondRequestMutation.mutateAsync({ requestId, action });
   };
 
-  const totalCount = incomingRequests.length + outgoingRequests.length;
+  if (incomingRequests.length === 0 && outgoingRequests.length === 0) {
+    return null;
+  }
 
   return (
-    <Card className="border border-(--card-border) bg-(--card) shadow-(--card-shadow) p-5 rounded-[2rem]">
-      <div className="p-0 flex flex-row justify-between items-center pb-4 border-b border-(--card-border) mb-4 w-full">
-        <div className="flex gap-2.5 items-center">
-          <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 rounded-xl">
-            <Handshake size={15} />
+    <Card className="gap-0 bg-brand-soft p-0 elevation-1">
+      {incomingRequests.length > 0 && (
+        <section aria-label="Richieste ricevute" className="flex flex-col">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <h2 className="text-base font-semibold">Richieste ricevute</h2>
+            <Badge className="bg-brand text-brand-foreground">
+              {incomingRequests.length}
+            </Badge>
           </div>
-          <span className="font-bold text-xs">Richieste Pendenti</span>
-        </div>
-        {totalCount > 0 && (
-          <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-500 px-2 py-0.5 rounded-full">
-            {totalCount}
-          </span>
-        )}
-      </div>
-
-      <CardContent className="p-0 flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider pl-1">
-            Ricevute
-          </span>
-          <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1">
-            {incomingRequests.length === 0 ? (
-              <span className="text-[10px] text-(--text-muted) font-semibold pl-1 py-1">
-                Nessuna richiesta ricevuta
-              </span>
-            ) : (
-              incomingRequests.map((req) => (
-                <div
-                  key={req.id}
-                  className="flex justify-between items-center p-2.5 rounded-2xl bg-neutral-500/5 border border-(--card-border) shrink-0"
-                >
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold truncate text-foreground">
-                      {req.user.name}
-                    </span>
-                    <span className="text-[9px] text-(--text-muted) truncate">
-                      {req.user.email}
-                    </span>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button
-                      isIconOnly
-                      variant="ghost"
-                      className="h-7 w-7 text-emerald-500 hover:bg-emerald-500/15 border-0 rounded-lg cursor-pointer flex items-center justify-center"
-                      onPress={() => handleRespond(req.id, "accept")}
-                      isDisabled={respondRequestMutation.isPending}
-                    >
-                      <Check size={14} />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      variant="ghost"
-                      className="h-7 w-7 text-rose-500 hover:bg-rose-500/15 border-0 rounded-lg cursor-pointer flex items-center justify-center"
-                      onPress={() => handleRespond(req.id, "decline")}
-                      isDisabled={respondRequestMutation.isPending}
-                    >
-                      <X size={14} />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 border-t border-(--card-border) pt-3">
-          <span className="text-[9px] text-(--text-muted) font-black uppercase tracking-wider pl-1">
-            Inviate
-          </span>
-          <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1">
-            {outgoingRequests.length === 0 ? (
-              <span className="text-[10px] text-(--text-muted) font-semibold pl-1 py-1">
-                Nessuna richiesta inviata
-              </span>
-            ) : (
-              outgoingRequests.map((req) => (
-                <div
-                  key={req.id}
-                  className="flex justify-between items-center p-2.5 rounded-2xl bg-neutral-500/5 border border-(--card-border) opacity-85 shrink-0"
-                >
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold truncate text-foreground">
-                      {req.user.name}
-                    </span>
-                    <span className="text-[9px] text-(--text-muted) truncate">
-                      {req.user.email}
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-black text-amber-500 bg-amber-500/5 border border-amber-500/10 px-1.5 py-0.5 rounded-lg shrink-0">
-                    Pendente
+          <ul className="flex flex-col">
+            {incomingRequests.map((req) => (
+              <li
+                key={req.id}
+                className="flex items-center gap-3 px-4 py-3 not-last:border-b"
+              >
+                <Avatar>
+                  <AvatarFallback className="bg-card font-semibold text-brand">
+                    {req.user.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">
+                    {req.user.name}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {req.user.email}
                   </span>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-      </CardContent>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-11 rounded-full"
+                    aria-label={`Rifiuta la richiesta di ${req.user.name}`}
+                    onClick={() => handleRespond(req.id, "decline")}
+                    disabled={respondRequestMutation.isPending}
+                  >
+                    <X />
+                  </Button>
+                  <Button
+                    size="icon"
+                    className="size-11 rounded-full bg-brand text-brand-foreground hover:bg-brand/90"
+                    aria-label={`Accetta la richiesta di ${req.user.name}`}
+                    onClick={() => handleRespond(req.id, "accept")}
+                    disabled={respondRequestMutation.isPending}
+                  >
+                    <Check />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {outgoingRequests.length > 0 && (
+        <section
+          aria-label="Richieste inviate"
+          className="flex flex-col border-t first:border-t-0"
+        >
+          <h2 className="px-4 pt-3 pb-1 text-sm font-semibold text-muted-foreground">
+            Inviate
+          </h2>
+          <ul className="flex flex-col pb-2">
+            {outgoingRequests.map((req) => (
+              <li key={req.id} className="flex items-center gap-3 px-4 py-2">
+                <Avatar size="sm">
+                  <AvatarFallback className="bg-card text-[11px] font-semibold">
+                    {req.user.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {req.user.name}
+                </span>
+                <Badge variant="outline" className="gap-1 bg-card">
+                  <Clock />
+                  In attesa
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </Card>
   );
 }

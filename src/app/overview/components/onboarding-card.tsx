@@ -1,8 +1,11 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
 import { BarChart3, Globe, Settings, ShieldCheck, X } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { springs } from "@/lib/motion";
 
 type OnboardingCardProps = {
   showOnboarding: boolean;
@@ -18,74 +21,56 @@ export function OnboardingCard({
   return (
     <AnimatePresence>
       {showOnboarding && (
-        <m.div
-          initial={{ opacity: 0, y: -10, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden rounded-3xl"
-          style={{
-            background:
-              "linear-gradient(135deg, #3b82f6 0%, #6366f1 60%, #8b5cf6 100%)",
-          }}
+        <m.section
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={springs.snappy}
+          aria-label="Benvenuto in Gravio"
+          className="relative rounded-xl bg-brand-soft p-5 md:p-6"
         >
-          <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-white/5 -translate-y-20 translate-x-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-10 w-32 h-32 rounded-full bg-white/5 translate-y-12 pointer-events-none" />
-
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 size-11 rounded-full"
             onClick={onDismiss}
-            className="absolute top-2 right-2 h-10 w-10 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer bg-transparent border-0 transition-all z-30"
             aria-label="Chiudi onboarding"
           >
-            <X size={15} />
-          </button>
+            <X />
+          </Button>
 
-          <div className="relative z-10 p-6 pb-5">
-            <div className="h-11 w-11 rounded-2xl bg-white/15 flex items-center justify-center mb-4 text-white">
-              <Globe size={22} />
+          <div className="flex max-w-xl flex-col items-start gap-4">
+            <span className="flex size-11 items-center justify-center rounded-lg bg-brand text-brand-foreground">
+              <Globe className="size-5" aria-hidden="true" />
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="font-display text-lg font-bold tracking-[-0.02em]">
+                Benvenuto in Gravio
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Tieni traccia delle tue spese in qualsiasi valuta con tassi di
+                cambio in tempo reale. Inizia configurando la tua valuta e il
+                budget mensile.
+              </p>
             </div>
-
-            <h2 className="text-base font-black text-white mb-1 tracking-tight">
-              Benvenuto in Gravio
-            </h2>
-            <p className="text-xs text-white/65 leading-relaxed max-w-md">
-              Tieni traccia delle tue spese in qualsiasi valuta con tassi di
-              cambio in tempo reale. Inizia configurando la tua valuta e il
-              budget mensile.
-            </p>
-
-            <div className="flex items-center gap-3 mt-5">
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
-                <BarChart3 size={13} className="text-white/70" />
-                <span className="text-[10px] font-bold text-white">
-                  Analytics
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
-                <Globe size={13} className="text-white/70" />
-                <span className="text-[10px] font-bold text-white">
-                  Multi-valuta
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
-                <ShieldCheck size={13} className="text-white/70" />
-                <span className="text-[10px] font-bold text-white">Budget</span>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="h-7 gap-1.5 px-2.5">
+                <BarChart3 aria-hidden="true" /> Analytics
+              </Badge>
+              <Badge variant="outline" className="h-7 gap-1.5 px-2.5">
+                <Globe aria-hidden="true" /> Multi-valuta
+              </Badge>
+              <Badge variant="outline" className="h-7 gap-1.5 px-2.5">
+                <ShieldCheck aria-hidden="true" /> Budget
+              </Badge>
             </div>
-
-            <m.button
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+            <Button
+              className="h-11 rounded-full px-5"
               onClick={() => router.push("/settings?tab=general")}
-              className="mt-5 flex items-center gap-2 bg-white text-blue-600 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer border-0 shadow-lg shadow-black/10 transition-all"
             >
-              <Settings size={12} />
+              <Settings data-icon="inline-start" />
               Configura ora
-            </m.button>
+            </Button>
           </div>
-        </m.div>
+        </m.section>
       )}
     </AnimatePresence>
   );

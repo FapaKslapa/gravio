@@ -1,4 +1,4 @@
-import type { Transition, Variants } from "framer-motion";
+import type { Transition, Variants } from "motion/react";
 
 export const springs = {
   snappy: { type: "spring", stiffness: 520, damping: 34, mass: 0.8 },
