@@ -36,9 +36,9 @@ export const CURATED_ICONS = [
 ] as const;
 
 export const ACCENT_COLORS = [
-  { id: "blue", name: "Apple Blue", primary: "#007aff" },
-  { id: "green", name: "Emerald Green", primary: "#34c759" },
-  { id: "purple", name: "Royal Purple", primary: "#af52de" },
-  { id: "orange", name: "Sunset Orange", primary: "#ff9500" },
-  { id: "red", name: "Crimson Red", primary: "#ff3b30" },
+  { id: "blue", name: "Indaco", primary: "oklch(0.55 0.23 285)" },
+  { id: "green", name: "Smeraldo", primary: "oklch(0.56 0.15 160)" },
+  { id: "purple", name: "Orchidea", primary: "oklch(0.56 0.25 330)" },
+  { id: "orange", name: "Mandarino", primary: "oklch(0.66 0.19 48)" },
+  { id: "red", name: "Corallo", primary: "oklch(0.58 0.22 20)" },
 ] as const;

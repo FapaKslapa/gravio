@@ -1,20 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Onest } from "next/font/google";
 import "./globals.css";
 
 export const runtime = "edge";
 
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider, ThemeScript } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/lib/trpc/Provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const onest = Onest({
+  variable: "--font-onest",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
 });
 
@@ -38,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#007aff",
+  themeColor: "#6d4aff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -53,15 +55,18 @@ export default function RootLayout({
   return (
     <html
       lang="it"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${onest.variable} ${bricolage.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-full flex flex-col selection:bg-blue-500/30">
+      <body className="min-h-full flex flex-col ">
         <ThemeProvider>
-          <TRPCProvider>{children}</TRPCProvider>
+          <TRPCProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </TRPCProvider>
+          <Toaster position="top-center" />
         </ThemeProvider>
         <PwaRegister />
       </body>

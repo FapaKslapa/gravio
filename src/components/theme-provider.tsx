@@ -13,44 +13,6 @@ import {
 
 type Theme = "light" | "dark";
 
-const ACCENTS = [
-  {
-    id: "blue",
-    name: "Apple Blue",
-    primary: "#007aff",
-    hover: "#0066d6",
-    light: "#3395ff",
-  },
-  {
-    id: "green",
-    name: "Emerald Green",
-    primary: "#34c759",
-    hover: "#28a745",
-    light: "#5cd67d",
-  },
-  {
-    id: "purple",
-    name: "Royal Purple",
-    primary: "#af52de",
-    hover: "#9333ea",
-    light: "#c084fc",
-  },
-  {
-    id: "orange",
-    name: "Sunset Orange",
-    primary: "#ff9500",
-    hover: "#e07b00",
-    light: "#ffb033",
-  },
-  {
-    id: "red",
-    name: "Crimson Red",
-    primary: "#ff3b30",
-    hover: "#d62828",
-    light: "#ff6659",
-  },
-];
-
 const ThemeContext = createContext<{
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -93,11 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    const selectedAccent = ACCENTS.find((a) => a.id === accent) || ACCENTS[0];
-    root.style.setProperty("--color-blue-500", selectedAccent.primary);
-    root.style.setProperty("--color-blue-600", selectedAccent.hover);
-    root.style.setProperty("--color-blue-400", selectedAccent.light);
-    root.style.setProperty("--apple-blue", selectedAccent.primary);
+    root.dataset.accent = accent;
     localStorage.setItem("theme-accent", accent);
   }, [accent]);
 
@@ -145,23 +103,7 @@ export function ThemeScript() {
             document.documentElement.style.colorScheme = 'light';
           }
           
-          var accent = localStorage.getItem('theme-accent') || 'blue';
-          var primaryColor = '#007aff';
-          var hoverColor = '#0066d6';
-          var lightColor = '#3395ff';
-          if (accent === 'green') {
-            primaryColor = '#34c759'; hoverColor = '#28a745'; lightColor = '#5cd67d';
-          } else if (accent === 'purple') {
-            primaryColor = '#af52de'; hoverColor = '#9333ea'; lightColor = '#c084fc';
-          } else if (accent === 'orange') {
-            primaryColor = '#ff9500'; hoverColor = '#e07b00'; lightColor = '#ffb033';
-          } else if (accent === 'red') {
-            primaryColor = '#ff3b30'; hoverColor = '#d62828'; lightColor = '#ff6659';
-          }
-          document.documentElement.style.setProperty('--color-blue-500', primaryColor);
-          document.documentElement.style.setProperty('--color-blue-600', hoverColor);
-          document.documentElement.style.setProperty('--color-blue-400', lightColor);
-          document.documentElement.style.setProperty('--apple-blue', primaryColor);
+          document.documentElement.dataset.accent = localStorage.getItem('theme-accent') || 'blue';
         } catch (e) {}
       `}
     </Script>
