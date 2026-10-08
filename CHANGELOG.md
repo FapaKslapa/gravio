@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.1.1
+
+### Patch Changes
+
+- Fix the category picker and transaction sheet layout, add the production custom domain, and redesign the transactional emails.
+
 ## 1.1.0
 
 ### Minor Changes
