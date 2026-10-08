@@ -50,7 +50,7 @@ next-env.d.ts
 .wrangler
 .dev.vars
 
-# markdown: only the root README is tracked
-*.md
-*.mdx
-!/README.md
+# agent/design documentation, not tracked
+/PRODUCT.md
+/DESIGN.md
+/docs/
