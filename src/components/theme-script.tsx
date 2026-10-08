@@ -12,5 +12,6 @@ try {
 `;
 
 export function ThemeScript() {
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: static inline script avoids a theme flash
   return <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />;
 }

@@ -40,11 +40,11 @@ export function AddFriendCard({
     }),
   );
 
-  const handleInviteSubmit = async (e: React.FormEvent) => {
+  const handleInviteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) return;
     setErrorMsg("");
-    await sendRequestMutation.mutateAsync({ email: emailInput.trim() });
+    sendRequestMutation.mutate({ email: emailInput.trim() });
   };
 
   return (

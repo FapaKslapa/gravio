@@ -301,9 +301,9 @@ export function CustomDatePicker(props: SingleProps) {
   const maxDate = parse(props.max);
   const [month, setMonth] = useState<Date>(selected ?? new Date());
 
-  const prevValueRef = useRef<string | null>(null);
-  if (prevValueRef.current !== value) {
-    prevValueRef.current = value;
+  const [prevValue, setPrevValue] = useState<string | null>(null);
+  if (prevValue !== value) {
+    setPrevValue(value);
     if (selected) setMonth(selected);
   }
 

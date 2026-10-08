@@ -25,4 +25,3 @@ const isAuthed = t.middleware(({ next, ctx }) => {
 });
 
 export const protectedProcedure = t.procedure.use(isAuthed);
-const createCallerFactory = t.createCallerFactory;

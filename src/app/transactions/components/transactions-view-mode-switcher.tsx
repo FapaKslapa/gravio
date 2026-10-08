@@ -28,6 +28,7 @@ export function PillSegments<T extends string>({
   className?: string;
 }) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: pill layout, fieldset does not support it
     <div
       role="group"
       aria-label={label}

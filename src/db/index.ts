@@ -10,7 +10,7 @@ const getD1 = () => {
     if (env?.DB) {
       return drizzle(env.DB, { schema });
     }
-  } catch (e) {
+  } catch {
     // Ignore error when outside of request context (e.g. module load or build time)
   }
 
@@ -26,7 +26,7 @@ const getD1 = () => {
 };
 
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(target, prop, receiver) {
+  get(_target, prop) {
     const actualDb = getD1();
     const value = Reflect.get(actualDb, prop);
     if (typeof value === "function") {

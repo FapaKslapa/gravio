@@ -1,5 +1,6 @@
 import { ArrowRight, LinkIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             Richiedi un nuovo link di accesso dalla pagina di login.
           </p>
         </div>
-        <a
+        <Link
           href="/login"
           className={cn(
             buttonVariants({ variant: "outline" }),
@@ -51,7 +52,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
           )}
         >
           Torna al login
-        </a>
+        </Link>
       </Shell>
     );
   }

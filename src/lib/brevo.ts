@@ -209,24 +209,3 @@ export function activationEmail(
   const text = `Benvenuto su Gravio, ${name}!\n\nAttiva il tuo account:\n${url}\n\nIl link vale 24 ore. Se non hai creato tu questo account, ignora questa email.`;
   return { html, text };
 }
-
-function verifyEmailTemplate(url: string): {
-  html: string;
-  text: string;
-} {
-  const content = card({
-    title: "Conferma la tua email",
-    intro:
-      "Ci siamo quasi: conferma il tuo indirizzo per completare la registrazione su Gravio.",
-    url,
-    cta: "Conferma email",
-    footnote:
-      "Se non hai creato un account su Gravio, puoi ignorare questa email in tutta sicurezza.",
-  });
-  const html = emailBase(
-    content,
-    "Conferma il tuo indirizzo email per Gravio.",
-  );
-  const text = `Conferma la tua email per Gravio:\n${url}`;
-  return { html, text };
-}

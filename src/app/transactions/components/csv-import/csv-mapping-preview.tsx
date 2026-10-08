@@ -94,15 +94,13 @@ export function CsvMappingStep({
                 <SelectContent position="popper">
                   <SelectGroup>
                     <SelectItem value={NONE}>Ignora</SelectItem>
-                    {table.headers.map((header, i) => (
-                      <SelectItem
-                        // biome-ignore lint/suspicious/noArrayIndexKey: columns are positional
-                        key={i}
-                        value={String(i)}
-                      >
-                        {header.trim() || `Colonna ${i + 1}`}
-                      </SelectItem>
-                    ))}
+                    {table.headers
+                      .map((header, index) => ({ header, index }))
+                      .map(({ header, index }) => (
+                        <SelectItem key={index} value={String(index)}>
+                          {header.trim() || `Colonna ${index + 1}`}
+                        </SelectItem>
+                      ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>

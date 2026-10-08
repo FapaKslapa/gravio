@@ -212,8 +212,8 @@ function headerScore(field: Field, header: string): number {
     return 0;
   }
   if (kw.exact.includes(header)) return 10;
-  const tokens = header.split(" ");
-  if (kw.words.some((w) => tokens.includes(w))) return 5;
+  const tokens = new Set(header.split(" "));
+  if (kw.words.some((w) => tokens.has(w))) return 5;
   return 0;
 }
 

@@ -13,16 +13,18 @@ import { protectedProcedure, router } from "@/server/trpc";
 export const savingsGoalRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    const goals = await ctx.db
-      .select()
-      .from(savingsGoal)
-      .where(eq(savingsGoal.userId, userId))
-      .orderBy(desc(savingsGoal.createdAt));
-    const contributions = await ctx.db
-      .select()
-      .from(savingsContribution)
-      .where(eq(savingsContribution.userId, userId))
-      .orderBy(desc(savingsContribution.date));
+    const [goals, contributions] = await Promise.all([
+      ctx.db
+        .select()
+        .from(savingsGoal)
+        .where(eq(savingsGoal.userId, userId))
+        .orderBy(desc(savingsGoal.createdAt)),
+      ctx.db
+        .select()
+        .from(savingsContribution)
+        .where(eq(savingsContribution.userId, userId))
+        .orderBy(desc(savingsContribution.date)),
+    ]);
 
     return goals.map((goal) => {
       const own = contributions.filter((c) => c.goalId === goal.id);

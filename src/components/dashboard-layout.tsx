@@ -81,7 +81,7 @@ const preferredCurrencyStore = {
   },
   set(val: string) {
     localStorage.setItem("preferred_currency", val);
-    preferredCurrencyStore.listeners.forEach((listener) => listener());
+    for (const listener of preferredCurrencyStore.listeners) listener();
   },
 };
 

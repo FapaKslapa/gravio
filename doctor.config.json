@@ -4,5 +4,12 @@
     "react-doctor/no-layout-property-animation": "off",
     "react-doctor/unused-dev-dependency": "off",
     "unused-dev-dependency": "off"
+  },
+  "ignore": {
+    "files": [
+      ".open-next/**",
+      ".next/**",
+      ".wrangler/**"
+    ]
   }
 }

@@ -121,7 +121,7 @@ export function GroupExpenseList({
                     {tx.description || "Spesa gruppo"}
                   </span>
                   <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                    <span>{new Date(tx.date).toLocaleDateString()}</span>
+                    <span>{new Date(tx.date).toLocaleDateString("it-IT")}</span>
                     <span aria-hidden>·</span>
                     <span>
                       {isPayer

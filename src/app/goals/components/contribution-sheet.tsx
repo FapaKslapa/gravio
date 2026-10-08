@@ -58,7 +58,7 @@ function ContributionForm({
   onSubmit: ContributionSheetProps["onSubmit"];
 }) {
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [date, setDate] = useState(() => dayjs().format("YYYY-MM-DD"));
   const [note, setNote] = useState("");
   const parsed = Number.parseFloat(amount);
   const valid = parsed > 0 && !!date;

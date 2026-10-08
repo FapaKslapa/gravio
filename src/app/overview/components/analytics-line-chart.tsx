@@ -230,7 +230,7 @@ export function AnalyticsLineChart({
               fill="var(--income)"
               stroke="var(--card)"
               strokeWidth={hoveredIndex === idx ? 3 : 1.5}
-              className="transition-all duration-150"
+              className="transition-[r,stroke-width] duration-150"
             />
           </g>
         ))}
@@ -244,7 +244,7 @@ export function AnalyticsLineChart({
               fill="var(--expense)"
               stroke="var(--card)"
               strokeWidth={hoveredIndex === idx ? 3 : 1.5}
-              className="transition-all duration-150"
+              className="transition-[r,stroke-width] duration-150"
             />
           </g>
         ))}

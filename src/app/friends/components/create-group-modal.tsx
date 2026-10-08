@@ -78,11 +78,11 @@ export function CreateGroupModal({
 
   const nameInvalid = !name.trim();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setAttempted(true);
     if (nameInvalid) return;
-    await createGroupMutation.mutateAsync({
+    createGroupMutation.mutate({
       name: name.trim(),
       memberUserIds: selectedIds,
     });

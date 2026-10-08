@@ -17,14 +17,14 @@ const envSchema = z.object({
 
 type EnvType = z.infer<typeof envSchema>;
 
-function getEnvValue<K extends keyof EnvType>(key: K): any {
-  let ctxEnv: any = {};
+function getEnvValue<K extends keyof EnvType>(key: K): unknown {
+  let ctxEnv: Record<string, unknown> = {};
   try {
-    const ctx = getCloudflareContext() as any;
+    const ctx = getCloudflareContext();
     if (ctx?.env) {
-      ctxEnv = ctx.env;
+      ctxEnv = ctx.env as unknown as Record<string, unknown>;
     }
-  } catch (e) {
+  } catch {
     // Ignore error when outside request context (e.g. module load or build time)
   }
 

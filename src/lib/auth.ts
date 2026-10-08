@@ -7,9 +7,6 @@ import * as schema from "@/db/schema";
 import { env } from "@/env";
 import { magicLinkEmail, sendEmail } from "./brevo";
 
-type DbRecord = Record<PropertyKey, unknown>;
-type AnyFn = (...args: unknown[]) => unknown;
-
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",

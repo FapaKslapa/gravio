@@ -28,9 +28,13 @@ export async function parsePdf(file: File | Blob): Promise<ParseResult> {
 
   const lines: PdfLine[] = [];
   let chars = 0;
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
+  const pageContents = await Promise.all(
+    Array.from({ length: doc.numPages }, async (_, i) => {
+      const page = await doc.getPage(i + 1);
+      return page.getTextContent();
+    }),
+  );
+  for (const content of pageContents) {
     const items: PdfItem[] = [];
     for (const it of content.items) {
       if (!("str" in it) || !it.str) continue;

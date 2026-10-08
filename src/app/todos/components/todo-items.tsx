@@ -201,7 +201,7 @@ export function TodoItems({
           </Empty>
         ) : (
           <>
-            {activeTodos.length === 0 ? (
+            {activeTodos.length === 0 && (
               <Empty className="border py-10">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -214,24 +214,23 @@ export function TodoItems({
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                <AnimatePresence initial={false}>
-                  {activeTodos.map((todoItem) => (
-                    <TodoItemRow
-                      key={todoItem.id}
-                      todoItem={todoItem}
-                      categories={categories}
-                      isSelectionMode={isSelectionMode}
-                      isSelected={selectedSet.has(todoItem.id)}
-                      onToggleTodo={onToggleTodo}
-                      onDeleteTodo={onDeleteTodo}
-                      onToggleSelectTodo={onToggleSelectTodo}
-                    />
-                  ))}
-                </AnimatePresence>
-              </ul>
             )}
+            <ul className="flex flex-col gap-2">
+              <AnimatePresence initial={false}>
+                {activeTodos.map((todoItem) => (
+                  <TodoItemRow
+                    key={todoItem.id}
+                    todoItem={todoItem}
+                    categories={categories}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedSet.has(todoItem.id)}
+                    onToggleTodo={onToggleTodo}
+                    onDeleteTodo={onDeleteTodo}
+                    onToggleSelectTodo={onToggleSelectTodo}
+                  />
+                ))}
+              </AnimatePresence>
+            </ul>
 
             {completedTodos.length > 0 && (
               <section className="flex flex-col gap-2">

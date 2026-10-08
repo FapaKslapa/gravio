@@ -104,6 +104,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
   }
 }
 
+const NO_RECENT: RecentTx[] = [];
+
 const TYPES = [
   { value: "expense", label: "Spesa", Icon: ArrowUpRight },
   { value: "income", label: "Entrata", Icon: ArrowDownLeft },
@@ -113,7 +115,7 @@ export function QuickAddForm({
   isOpen,
   onClose,
   categories,
-  recentTransactions = [],
+  recentTransactions = NO_RECENT,
   onSave,
 }: QuickAddFormProps) {
   const { convertCurrency, displayCurrency } = useDashboard();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useReducer, useRef, useState } from "react";
+import { useMemo, useReducer, useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
 import type {
   FormAction,
@@ -111,9 +111,9 @@ export function useSharedExpenseForm({
     dispatch({ type: "SET", payload });
 
   // ── Sync isOpen / defaults ──────────────────────────────────────────────────
-  const prevIsOpenRef = useRef(false);
-  if (isOpen !== prevIsOpenRef.current) {
-    prevIsOpenRef.current = isOpen;
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       if (defaultGroupId) {
         set({ shareType: "group", groupId: defaultGroupId });
@@ -124,9 +124,9 @@ export function useSharedExpenseForm({
   }
 
   // ── Sync members when group changes ─────────────────────────────────────────
-  const prevGroupIdRef = useRef("");
-  if (state.groupId !== prevGroupIdRef.current) {
-    prevGroupIdRef.current = state.groupId;
+  const [prevGroupId, setPrevGroupId] = useState("");
+  if (state.groupId !== prevGroupId) {
+    setPrevGroupId(state.groupId);
     const grp = groups.find((g) => g.id === state.groupId);
     set({ checkedMemberIds: grp ? grp.members.map((m) => m.id) : [] });
   }

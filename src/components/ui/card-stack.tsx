@@ -367,8 +367,8 @@ export function CardStack({
   );
   const [exitDirection, setExitDirection] = useState<0 | 1 | -1>(0);
   const [collapsed, setCollapsed] = useState(false);
-  const hadItems = useRef(false);
-  const hadMany = useRef(false);
+  const [hadItems, setHadItems] = useState(false);
+  const [hadMany, setHadMany] = useState(false);
   const deckX = useMotionValue(0);
   const canHint = swipeHint && items.length > 1 && !reduceMotion;
   const showControls = controls === "visible" || reduceMotion;
@@ -388,10 +388,12 @@ export function CardStack({
     : items;
   const count = stack.length;
 
-  if (items.length > 0) hadItems.current = true;
-  if (items.length > 1) hadMany.current = true;
-  if (!hadItems.current || collapsed) return null;
-  if (count === 1 && !isDismiss && !hadMany.current) {
+  const nowHasItems = hadItems || items.length > 0;
+  const nowHasMany = hadMany || items.length > 1;
+  if (nowHasItems !== hadItems) setHadItems(nowHasItems);
+  if (nowHasMany !== hadMany) setHadMany(nowHasMany);
+  if (!nowHasItems || collapsed) return null;
+  if (count === 1 && !isDismiss && !nowHasMany) {
     return (
       <div
         className={cn(

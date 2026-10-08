@@ -64,7 +64,7 @@ export function ReceiptScanSheet({
   const [preview, setPreview] = useState<string | null>(null);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(today());
+  const [date, setDate] = useState(() => today());
   const [currency, setCurrency] = useState("EUR");
   const [categoryId, setCategoryId] = useState("");
   const [hint, setHint] = useState("");
@@ -396,6 +396,7 @@ function PreviewImage({
         src={src}
         alt="Anteprima dello scontrino"
         fill
+        sizes="(min-width: 640px) 28rem, 100vw"
         unoptimized
         className="object-contain"
       />

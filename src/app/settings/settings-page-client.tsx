@@ -248,9 +248,11 @@ export function SettingsPageClient() {
     }
   }, [categoryBudgetsData, toDisplayCurrency]);
 
-  const prevSettingsRef = useRef<typeof settings | null>(null);
-  if (settings !== prevSettingsRef.current) {
-    prevSettingsRef.current = settings;
+  const [prevSettings, setPrevSettings] = useState<typeof settings | null>(
+    null,
+  );
+  if (settings !== prevSettings) {
+    setPrevSettings(settings);
     if (settings) {
       dispatch({
         type: "SET_FIELDS",
@@ -270,9 +272,9 @@ export function SettingsPageClient() {
     }
   }
 
-  const prevUserRef = useRef<typeof user | null>(null);
-  if (user !== prevUserRef.current) {
-    prevUserRef.current = user;
+  const [prevUser, setPrevUser] = useState<typeof user | null>(null);
+  if (user !== prevUser) {
+    setPrevUser(user);
     if (user) {
       dispatch({
         type: "SET_FIELDS",

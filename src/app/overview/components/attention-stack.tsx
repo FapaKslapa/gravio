@@ -139,9 +139,9 @@ export function AttentionStack({
       })
       .filter((x) => x.limit > 0 && x.ratio >= 0.8)
       .sort((a, z) => z.ratio - a.ratio);
+    const categoryNames = new Map(categories.map((c) => [c.id, c.name]));
     for (const x of overBudget) {
-      const name =
-        categories.find((c) => c.id === x.b.categoryId)?.name ?? "Categoria";
+      const name = categoryNames.get(x.b.categoryId) ?? "Categoria";
       const over = x.ratio > 1;
       result.push({
         id: `budget-${x.b.categoryId}`,
