@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.2.0
+
+### Minor Changes
+
+- New logo and app icons, swipe navigation for date picker months, analytics months, tabs, pages and lists, every source file split under 150 lines, and fixes for the issues reported by lint and React Doctor.
+
 ## 1.1.3
 
 ### Patch Changes
