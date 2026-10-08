@@ -207,7 +207,7 @@ function ItemIcon({ icon: Icon }: { icon: LucideIcon }) {
   );
 }
 
-const itemClass = "min-h-11 gap-3 px-2 py-1.5 md:min-h-10";
+const itemClass = "min-h-12 gap-3 px-2 py-2 md:min-h-11";
 
 function PaletteBody({
   onClose,

@@ -36,7 +36,7 @@ export function TransactionsPageHeader({
           onClick={onNewTransaction}
           className="h-11 gap-1.5 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90 active:scale-[0.97]"
         >
-          <Plus />
+          <Plus data-icon="inline-start" />
           <span className="hidden sm:inline">Nuova transazione</span>
           <span className="sm:hidden">Nuova</span>
         </Button>

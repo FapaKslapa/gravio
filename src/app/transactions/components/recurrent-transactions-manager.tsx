@@ -107,7 +107,7 @@ export function RecurrentTransactionsManager({
           className="h-11 shrink-0 gap-1.5 rounded-full px-4 active:scale-[0.97]"
           onClick={() => setIsFormOpen(true)}
         >
-          <Plus />
+          <Plus data-icon="inline-start" />
           Nuova ricorrente
         </Button>
       </div>
@@ -208,7 +208,7 @@ export function RecurrentTransactionsManager({
               className="h-11 gap-1.5 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90"
               onClick={() => setIsFormOpen(true)}
             >
-              <Plus />
+              <Plus data-icon="inline-start" />
               Nuova ricorrente
             </Button>
           </EmptyContent>

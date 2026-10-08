@@ -157,7 +157,7 @@ export function FriendDetailCard({
             className="h-11 gap-1.5 rounded-full bg-brand px-4 font-semibold text-brand-foreground hover:bg-brand/90"
             onClick={onOpenSharedExpense}
           >
-            <Plus />
+            <Plus data-icon="inline-start" />
             Aggiungi spesa
           </Button>
           {hasBal && balVal < 0 && (

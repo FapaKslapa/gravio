@@ -64,7 +64,7 @@ export function FriendListPanel({
               onClick={onAddFriend}
               className="h-11 gap-1.5 rounded-full bg-brand px-5 font-semibold text-brand-foreground hover:bg-brand/90"
             >
-              <UserPlus />
+              <UserPlus data-icon="inline-start" />
               Aggiungi amico
             </Button>
           </EmptyContent>
@@ -82,7 +82,7 @@ export function FriendListPanel({
           className="h-11 gap-1.5 rounded-full px-3 font-semibold text-brand"
           onClick={onAddFriend}
         >
-          <UserPlus />
+          <UserPlus data-icon="inline-start" />
           Aggiungi
         </Button>
       </div>
