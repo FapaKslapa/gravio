@@ -1,4 +1,5 @@
 import { m } from "motion/react";
+import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { METRICS, type Metric } from "./trend-metrics";
@@ -10,8 +11,18 @@ export function TrendMetricTabs({
   metric: Metric;
   onChange: (metric: Metric) => void;
 }) {
+  const idx = METRICS.findIndex((x) => x.id === metric);
+  const { bind, style } = useSwipeNav({
+    onPrev: idx > 0 ? () => onChange(METRICS[idx - 1].id) : undefined,
+    onNext:
+      idx < METRICS.length - 1
+        ? () => onChange(METRICS[idx + 1].id)
+        : undefined,
+  });
   return (
-    <div
+    <m.div
+      {...bind}
+      style={style}
       role="tablist"
       aria-label="Metrica del trend"
       className="flex w-full rounded-full bg-muted p-1 sm:w-fit"
@@ -43,6 +54,6 @@ export function TrendMetricTabs({
           </button>
         );
       })}
-    </div>
+    </m.div>
   );
 }

@@ -5,6 +5,7 @@ import { CalendarHeader } from "./datepicker-header";
 import { DatePresets } from "./datepicker-presets";
 import type { DateRangePreset, DateRangeValue } from "./datepicker-range";
 import { CELL_SIZE, disabledDays } from "./datepicker-shared";
+import { MonthSwipe } from "./datepicker-swipe";
 
 type RangeBodyProps = {
   presets?: DateRangePreset[];
@@ -38,27 +39,34 @@ export function RangeBody({
       {presets && presets.length > 0 && (
         <DatePresets presets={presets} value={value} onSelect={onPreset} />
       )}
-      <CalendarHeader
+      <MonthSwipe
         month={month}
         onMonthChange={onMonthChange}
         min={minDate}
         max={maxDate}
-      />
-      <Calendar
-        mode="range"
-        locale={it}
-        weekStartsOn={1}
-        hideNavigation
-        selected={shownFrom ? { from: shownFrom, to: shownTo } : undefined}
-        onDayClick={onDayClick}
-        month={month}
-        onMonthChange={onMonthChange}
-        startMonth={minDate}
-        endMonth={maxDate}
-        disabled={disabledDays(minDate, maxDate)}
-        classNames={{ month_caption: "hidden" }}
-        className={cn("mx-auto", CELL_SIZE)}
-      />
+      >
+        <CalendarHeader
+          month={month}
+          onMonthChange={onMonthChange}
+          min={minDate}
+          max={maxDate}
+        />
+        <Calendar
+          mode="range"
+          locale={it}
+          weekStartsOn={1}
+          hideNavigation
+          selected={shownFrom ? { from: shownFrom, to: shownTo } : undefined}
+          onDayClick={onDayClick}
+          month={month}
+          onMonthChange={onMonthChange}
+          startMonth={minDate}
+          endMonth={maxDate}
+          disabled={disabledDays(minDate, maxDate)}
+          classNames={{ month_caption: "hidden" }}
+          className={cn("mx-auto", CELL_SIZE)}
+        />
+      </MonthSwipe>
       <p
         aria-live="polite"
         className="mx-auto min-h-5 text-center text-xs text-muted-foreground"

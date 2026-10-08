@@ -1,7 +1,9 @@
+import { SwipeArea } from "@/components/ui/swipe-area";
 import { CategoryTotalsCard } from "./category-totals-card";
 import { RecurrentTransactionsManager } from "./recurrent-transactions-manager";
 import { TransactionListTimeline } from "./transaction-list-timeline";
 import { TransactionTable } from "./transaction-table";
+import { ITEMS_PER_PAGE } from "./transaction-table-pagination";
 import type { MobileTab } from "./transactions-mobile-tabs";
 import type {
   NormalizedTransaction,
@@ -22,6 +24,8 @@ type CategoryTotal = {
 interface TransactionsContentGridProps {
   viewMode: ViewMode;
   activeMobileTab: MobileTab;
+  onMobileTabChange: (tab: MobileTab) => void;
+  onViewModeChange: (mode: ViewMode) => void;
   groupedTx: { date: string; list: NormalizedTransaction[] }[];
   paginatedTxList: NormalizedTransaction[];
   totalItems: number;
@@ -41,6 +45,8 @@ interface TransactionsContentGridProps {
 export function TransactionsContentGrid({
   viewMode,
   activeMobileTab,
+  onMobileTabChange,
+  onViewModeChange,
   groupedTx,
   paginatedTxList,
   totalItems,
@@ -57,13 +63,36 @@ export function TransactionsContentGrid({
   onEditClick,
 }: TransactionsContentGridProps) {
   if (viewMode === "recurrent") {
-    return <RecurrentTransactionsManager categories={categories} />;
+    return (
+      <SwipeArea onPrev={() => onViewModeChange("table")}>
+        <RecurrentTransactionsManager categories={categories} />
+      </SwipeArea>
+    );
   }
 
   const showList = activeMobileTab === "list";
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+  const isTable = viewMode === "table";
+  const canPagePrev = showList && isTable && currentPage > 1;
+  const canPageNext = showList && isTable && currentPage < totalPages;
+
+  const onPrev = canPagePrev
+    ? () => onChangePage(currentPage - 1)
+    : showList
+      ? undefined
+      : () => onMobileTabChange("list");
+  const onNext = canPageNext
+    ? () => onChangePage(currentPage + 1)
+    : showList
+      ? () => onMobileTabChange("summary")
+      : undefined;
 
   return (
-    <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <SwipeArea
+      onPrev={onPrev}
+      onNext={onNext}
+      className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
+    >
       <div className={showList ? "block" : "hidden xl:block"}>
         {viewMode === "timeline" ? (
           <TransactionListTimeline
@@ -105,6 +134,6 @@ export function TransactionsContentGrid({
           convertCurrency={convertCurrency}
         />
       </aside>
-    </div>
+    </SwipeArea>
   );
 }

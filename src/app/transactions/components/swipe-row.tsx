@@ -104,6 +104,7 @@ export function SwipeRow({
         </button>
       </m.div>
       <m.div
+        data-no-swipe
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: -LEFT_REVEAL, right: RIGHT_REVEAL }}

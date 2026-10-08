@@ -115,6 +115,8 @@ export default function TransactionsView() {
       <TransactionsContentGrid
         viewMode={viewMode}
         activeMobileTab={activeMobileTab}
+        onMobileTabChange={setActiveMobileTab}
+        onViewModeChange={setViewMode}
         groupedTx={groupedTx}
         paginatedTxList={paginatedTxList}
         totalItems={totalItems}

@@ -78,6 +78,7 @@ export function CardStack({
   return (
     <div className={className}>
       <m.section
+        data-no-swipe
         aria-label={ariaLabel}
         aria-roledescription="carousel"
         tabIndex={0}

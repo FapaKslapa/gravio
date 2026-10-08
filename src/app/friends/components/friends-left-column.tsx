@@ -1,6 +1,7 @@
 "use client";
 
 import { m } from "motion/react";
+import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import { fadeUp } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { FriendListPanel } from "./friend-list-panel";
@@ -91,8 +92,15 @@ export function FriendsLeftColumn({
       r.user !== null,
   );
 
+  const { bind, style } = useSwipeNav({
+    onPrev: activeTab === "groups" ? () => onTabChange("friends") : undefined,
+    onNext: activeTab === "friends" ? () => onTabChange("groups") : undefined,
+  });
+
   return (
     <m.div
+      {...bind}
+      style={style}
       variants={fadeUp}
       initial="hidden"
       animate="show"

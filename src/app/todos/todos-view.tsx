@@ -1,6 +1,7 @@
 "use client";
 
 import { m } from "motion/react";
+import { SwipeArea } from "@/components/ui/swipe-area";
 import { fadeUp } from "@/lib/motion";
 import { TodoEmptyState } from "./components/todo-empty-state";
 import { TodoForm } from "./components/todo-form";
@@ -21,6 +22,7 @@ export default function TodosView() {
   const lists = v.listsData || [];
   const categories = v.categoriesData || [];
   const todos = v.todosData || [];
+  const activeIdx = lists.findIndex((l) => l.id === v.actualActiveListId);
 
   return (
     <div className="flex flex-col gap-5">
@@ -43,7 +45,20 @@ export default function TodosView() {
             />
           </div>
 
-          <div className="flex min-w-0 flex-col gap-4">
+          <SwipeArea
+            className="flex min-w-0 flex-col gap-4"
+            disabled={v.isSelectionMode}
+            onPrev={
+              activeIdx > 0
+                ? () => v.handleSelectActiveList(lists[activeIdx - 1].id)
+                : undefined
+            }
+            onNext={
+              activeIdx >= 0 && activeIdx < lists.length - 1
+                ? () => v.handleSelectActiveList(lists[activeIdx + 1].id)
+                : undefined
+            }
+          >
             <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 -mx-4 bg-background/90 px-4 py-2 backdrop-blur-md md:static md:mx-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
               <TodoForm
                 key={v.actualActiveListId}
@@ -74,7 +89,7 @@ export default function TodosView() {
               }}
               onTriggerBulkImport={() => v.setIsBulkImportOpen(true)}
             />
-          </div>
+          </SwipeArea>
         </m.div>
       )}
 

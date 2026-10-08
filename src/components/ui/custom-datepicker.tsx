@@ -18,6 +18,7 @@ import {
   triggerProps,
 } from "./datepicker-shared";
 import { ClearButton, PickerSurface } from "./datepicker-surface";
+import { MonthSwipe } from "./datepicker-swipe";
 
 type SingleProps = CommonProps & {
   value: string;
@@ -70,29 +71,36 @@ export function CustomDatePicker(props: SingleProps) {
         popoverClassName={props.popoverClassName}
       >
         <div className={cn("flex flex-col gap-1", CELL_SIZE)}>
-          <CalendarHeader
+          <MonthSwipe
             month={month}
             onMonthChange={setMonth}
             min={minDate}
             max={maxDate}
-          />
-          <Calendar
-            mode="single"
-            locale={it}
-            weekStartsOn={1}
-            hideNavigation
-            selected={selected}
-            month={month}
-            onMonthChange={setMonth}
-            startMonth={minDate}
-            endMonth={maxDate}
-            disabled={disabledDays(minDate, maxDate)}
-            onSelect={(date) => {
-              if (date) pick(date);
-            }}
-            classNames={{ month_caption: "hidden" }}
-            className={cn("mx-auto", CELL_SIZE)}
-          />
+          >
+            <CalendarHeader
+              month={month}
+              onMonthChange={setMonth}
+              min={minDate}
+              max={maxDate}
+            />
+            <Calendar
+              mode="single"
+              locale={it}
+              weekStartsOn={1}
+              hideNavigation
+              selected={selected}
+              month={month}
+              onMonthChange={setMonth}
+              startMonth={minDate}
+              endMonth={maxDate}
+              disabled={disabledDays(minDate, maxDate)}
+              onSelect={(date) => {
+                if (date) pick(date);
+              }}
+              classNames={{ month_caption: "hidden" }}
+              className={cn("mx-auto", CELL_SIZE)}
+            />
+          </MonthSwipe>
           {todayAllowed && (
             <Button
               type="button"

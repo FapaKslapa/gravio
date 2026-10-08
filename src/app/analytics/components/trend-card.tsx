@@ -42,7 +42,7 @@ export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
         <TrendMetricTabs metric={metric} onChange={setMetric} />
       </div>
 
-      <div className="h-60 w-full md:h-72">
+      <div data-no-swipe className="h-60 w-full md:h-72">
         <TrendChart
           trendData={trendData}
           metric={metric}

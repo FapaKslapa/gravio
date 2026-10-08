@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useDashboard } from "@/components/dashboard-layout";
+import { SwipeArea } from "@/components/ui/swipe-area";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/lib/trpc/client";
 import { SettingsHeader } from "./components/settings-header";
@@ -24,6 +25,7 @@ const handleLogout = async () => {
 };
 
 const VALID_TABS: Tab[] = ["general", "budget", "profile", "notifications"];
+const SWIPE_ORDER: Tab[] = ["profile", "general", "budget", "notifications"];
 
 export function SettingsPageClient() {
   const router = useRouter();
@@ -57,6 +59,8 @@ export function SettingsPageClient() {
     }
   };
 
+  const swipeIdx = SWIPE_ORDER.indexOf(activeTab);
+
   const selectTab = (tab: Tab) => {
     setActiveTab(tab);
     setMobileOpen(true);
@@ -83,7 +87,20 @@ export function SettingsPageClient() {
           />
         </div>
 
-        <div className={mobileOpen ? "block" : "hidden md:block"}>
+        <SwipeArea
+          className={mobileOpen ? "block" : "hidden md:block"}
+          onPrev={
+            swipeIdx > 0
+              ? () => setActiveTab(SWIPE_ORDER[swipeIdx - 1])
+              : undefined
+          }
+          onNext={
+            swipeIdx < SWIPE_ORDER.length - 1
+              ? () => setActiveTab(SWIPE_ORDER[swipeIdx + 1])
+              : undefined
+          }
+          disabled={!mobileOpen}
+        >
           <h2 className="mb-4 hidden font-display text-xl font-bold tracking-tight md:block">
             {SECTIONS[activeTab].title}
           </h2>
@@ -96,7 +113,7 @@ export function SettingsPageClient() {
             isCategoriesLoading={isCategoriesLoading}
             handleLogout={handleLogout}
           />
-        </div>
+        </SwipeArea>
       </div>
     </div>
   );

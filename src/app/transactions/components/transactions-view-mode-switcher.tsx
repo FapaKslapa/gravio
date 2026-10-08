@@ -2,6 +2,7 @@
 
 import { Repeat, Rows3, Table2 } from "lucide-react";
 import { m } from "motion/react";
+import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { ViewMode } from "./transactions-utils";
@@ -27,9 +28,19 @@ export function PillSegments<T extends string>({
   label: string;
   className?: string;
 }) {
+  const index = options.findIndex((o) => o.value === value);
+  const go = (i: number) => {
+    const next = options[i];
+    if (next) onChange(next.value);
+  };
+  const { bind, style } = useSwipeNav({
+    onPrev: index > 0 ? () => go(index - 1) : undefined,
+    onNext: index < options.length - 1 ? () => go(index + 1) : undefined,
+  });
   return (
-    // biome-ignore lint/a11y/useSemanticElements: pill layout, fieldset does not support it
-    <div
+    <m.div
+      {...bind}
+      style={style}
       role="group"
       aria-label={label}
       className={cn(
@@ -66,7 +77,7 @@ export function PillSegments<T extends string>({
           </button>
         );
       })}
-    </div>
+    </m.div>
   );
 }
 
