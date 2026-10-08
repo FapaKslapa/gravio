@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.1.0
+
+### Minor Changes
+
+- Complete redesign: shadcn components with drawers on mobile, new colour system, new shell and navigation, bank statement import (CSV, Excel, PDF), receipt scanning and savings advice on Workers AI, savings goals, global search and swipe actions. Migrated hosting from Cloudflare Pages to Workers with OpenNext.
+
 ## 1.0.27
 
 ### Patch Changes
