@@ -92,7 +92,7 @@ export function TransactionDayGroup({
                 <div className="relative flex items-center gap-1 pr-1">
                   <span
                     aria-hidden="true"
-                    className="absolute inset-y-2 left-1 w-1 rounded-full"
+                    className="absolute inset-y-3.5 left-2.5 w-[3px] rounded-full"
                     style={{
                       backgroundColor: cat?.color ?? FALLBACK_CATEGORY_COLOR,
                     }}
@@ -100,7 +100,7 @@ export function TransactionDayGroup({
                   <button
                     type="button"
                     onClick={() => onEditClick(tx)}
-                    className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 pr-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                    className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pl-6 pr-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
                   >
                     <CategoryTile category={cat} />
                     <span className="flex min-w-0 flex-1 flex-col">

@@ -36,7 +36,7 @@ export function AnalyticsHeader({
         </p>
       </div>
 
-      <div className="elevation-1 flex w-fit items-center rounded-full bg-card p-1">
+      <div className="elevation-1 flex w-full items-center rounded-full bg-card p-1 md:w-fit">
         <Button
           variant="ghost"
           size="icon"
@@ -52,7 +52,7 @@ export function AnalyticsHeader({
             setPickerYear(currentYear);
             setOpen(true);
           }}
-          className="flex h-11 min-w-44 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-11 flex-1 items-center md:min-w-44 md:flex-none justify-center gap-2 rounded-full px-4 text-sm font-semibold outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Scegli il mese"
         >
           <CalendarDays className="size-4 text-brand" aria-hidden />

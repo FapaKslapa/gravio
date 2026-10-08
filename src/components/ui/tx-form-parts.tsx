@@ -25,9 +25,11 @@ export function TxTypeSegment({
     { id: "income" as const, label: incomeLabel, Icon: TrendingUp },
   ];
   return (
-    <fieldset
+    // biome-ignore lint/a11y/useSemanticElements: fieldset cannot stretch grid rows to the pill height
+    <div
+      role="group"
       aria-label="Tipo di operazione"
-      className="m-0 grid min-w-0 border-0 h-11 grid-cols-2 rounded-full bg-muted p-1"
+      className="grid h-11 grid-cols-2 grid-rows-1 rounded-full bg-muted p-1"
     >
       {options.map(({ id, label, Icon }) => {
         const active = value === id;
@@ -38,7 +40,7 @@ export function TxTypeSegment({
             aria-pressed={active}
             onClick={() => onChange(id)}
             className={cn(
-              "relative flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+              "relative flex h-full items-center justify-center gap-1.5 rounded-full text-sm font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
               active ? "text-white" : "text-muted-foreground",
             )}
           >
@@ -59,7 +61,7 @@ export function TxTypeSegment({
           </button>
         );
       })}
-    </fieldset>
+    </div>
   );
 }
 
