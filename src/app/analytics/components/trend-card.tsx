@@ -50,23 +50,25 @@ export function TrendCard({ trendData, displayCurrency }: TrendCardProps) {
         />
       </div>
 
-      <table className="sr-only">
-        <caption>{active.title}, ultimi 6 mesi</caption>
-        <thead>
-          <tr>
-            <th scope="col">Mese</th>
-            <th scope="col">Importo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {trendData.map((d) => (
-            <tr key={d.label}>
-              <th scope="row">{d.label}</th>
-              <td>{formatCurrency(d[metric], displayCurrency)}</td>
+      <div className="sr-only">
+        <table>
+          <caption>{active.title}, ultimi 6 mesi</caption>
+          <thead>
+            <tr>
+              <th scope="col">Mese</th>
+              <th scope="col">Importo</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {trendData.map((d) => (
+              <tr key={d.label}>
+                <th scope="row">{d.label}</th>
+                <td>{formatCurrency(d[metric], displayCurrency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
