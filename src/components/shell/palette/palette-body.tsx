@@ -82,7 +82,7 @@ export function PaletteBody({
       </div>
       <CommandList
         className={cn(
-          "px-1 py-1 no-scrollbar",
+          "px-2 pt-1 pb-3 scrollbar-none",
           mobile
             ? "max-h-none flex-1 pb-[max(1rem,env(safe-area-inset-bottom))]"
             : "max-h-[min(26rem,60dvh)]",
