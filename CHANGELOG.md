@@ -1,5 +1,11 @@
 # norway_financial
 
+## 1.2.2
+
+### Patch Changes
+
+- Fix the global search highlighting every result instead of only the selected one, hide its scrollbar and keep results clear of the rounded corners, and stop the hidden accessible table caption of the Statistics trend chart from showing over the title.
+
 ## 1.2.1
 
 ### Patch Changes
